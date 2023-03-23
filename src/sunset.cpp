@@ -55,9 +55,9 @@ int main() {
   int day = ltm->tm_mday;
 
   // Set the location and timezone
-  double latitude = 37.7749; // San Francisco
-  double longitude = -122.4194;
-  int timezone = -8;
+  double latitude = 30.4275784357249; // New Orleans
+  double longitude = -90.0914955109431;
+  int timezone = -5;
 
   // Calculate the sunset time
   double sunset = getSunset(year, month, day, latitude, longitude, timezone);
