@@ -22,11 +22,22 @@ double getJulianDate(int year, int month, int day) {
 
 double getSunset(int year, int month, int day, double latitude, double longitude, int timezone) {
   double jd = getJulianDate(year, month, day);
-  double t = (jd - 2451545.0) / 36525.0;
+  double t = (jd - 2451545.0) / 36525.0; // fraction of a century since Jan 1, 2000
+
+  // Geometric Mean Longitude of the Sun
+  double geom_mean_long = 280.46646 + t *(36000.76983+t*0.0003032)  ;
+  cout << "The Geometric Mean Longitude of the Sun is " << geom_mean_long << " or " << fmod(geom_mean_long,360) << " degrees" << endl; 
+
+  double L = 280.460 + 36000.771 * t;
+  cout << "L = " << L << endl;
+
+  // Mean Anomaly of the Sun
+  double g = 357.528 + 35999.050 * t;
+
+  double M =357.52911+t*(35999.05029 - 0.0001537*t);
+  cout << "The Mean Anomaly of the Sun is " << M << " or " << g << endl;
 
   // Calculate the solar declination angle
-  double L = 280.460 + 36000.771 * t;
-  double g = 357.528 + 35999.050 * t;
   double lambda = L + 1.915 * sin(g * deg2rad) + 0.020 * sin(2 * g * deg2rad);
   double epsilon = 23.439 - 0.013 * t;
   double delta = asin(sin(epsilon * deg2rad) * sin(lambda * deg2rad)) * rad2deg;
