@@ -10,11 +10,14 @@ const double rad2deg = 180.0 / PI;
 const double sunRadius = 0.26667; // Sun's apparent radius, in degrees
 
 double getJulianDate(int year, int month, int day) {
+  cout << "the input date is " << year << "-" << month << "-" << day << endl;
   int a = (14 - month) / 12;
   int y = year + 4800 - a;
   int m = month + 12 * a - 3;
   int jd = day + (153 * m + 2) / 5 + 365 * y + y / 4 - y / 100 + y / 400 - 32045;
+  cout << "the Julian Date is " << jd << endl;
   return jd + 0.5;
+  
 }
 
 double getSunset(int year, int month, int day, double latitude, double longitude, int timezone) {
