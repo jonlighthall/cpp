@@ -25,8 +25,8 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double t = (jd - 2451545.0) / 36525.0; // fraction of a century since Jan 1, 2000
 
   // Geometric Mean Longitude of the Sun
-  double geom_mean_long = 280.46646 + t *(36000.76983+t*0.0003032)  ;
-  cout << "The Geometric Mean Longitude of the Sun is " << geom_mean_long << " or " << fmod(geom_mean_long,360) << " degrees" << endl; 
+  double L0 = 280.46646 + t *(36000.76983+t*0.0003032)  ;
+  cout << "The Geometric Mean Longitude of the Sun is " << L0 << " or " << fmod(L0,360) << " degrees" << endl; 
 
   double L = 280.460 + 36000.771 * t;
   cout << "L = " << L << endl;
@@ -36,6 +36,66 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   double M =357.52911+t*(35999.05029 - 0.0001537*t);
   cout << "The Mean Anomaly of the Sun is " << M << " or " << g << endl;
+
+  //// eccentricity of Earth's orbit (25.4)
+  double e = 0.016708634 - (0.000042037 * t) - (0.0000001267 * pow(t, 2));
+
+  // Sun's equation of center
+  double C =
+    +(1.914602 - (0.004817 * t) - (0.000014 * pow(t, 2))) * sin(M * deg2rad)
+    + (0.019993 - (0.000101 * t)) * sin(M * deg2rad * 2)
+    + (0.000289 * sin(M * deg2rad * 3));
+
+  // Sun's true geometric longitude
+  double Ltrue = (L0 + C);
+  Ltrue = Ltl0rue.CorrectDegreeRange();
+
+  // Sun's true anomaly
+  double n = (M + C);
+  n = n.CorrectDegreeRange();
+
+  // U.S. Naval Observatory function for radius vector.
+  // Compare to Meeus (25.5)
+  double R = 1.00014
+    - 0.01671 * cos(M * deg2rad)
+    - 0.00014 * cos(2 * M * deg2rad);
+
+  // correction "omega" for nutation and aberration
+  double O = 125.04 - (1934.136 * t);
+
+  // apparent longitude L (lambda) of the Sun
+  double Lapp = Ltrue - 0.00569 - (0.00478 * sin(O * deg2rad));
+
+  // obliquity of the ecliptic (22.2)
+  double U = t / 100;
+  double e0 =
+    new Angle(23, 26, 21.448).Degrees
+    - new Angle(0, 0, 4680.93).Degrees * U
+    - 1.55 * pow(U, 2)
+    + 1999.25 * pow(U, 3)
+    - 51.38 * pow(U, 4)
+    - 249.67 * pow(U, 5)
+    - 39.05 * pow(U, 6)
+    + 7.12 * pow(U, 7)
+    + 27.87 * pow(U, 8)
+    + 5.79 * pow(U, 9)
+    + 2.45 * pow(U, 10);
+
+
+  // correction for parallax (25.8)
+  double eCorrected = e0 + 0.00256 * cos(O * deg2rad);
+
+  // Sun's right ascension a
+  double a = atan2(
+			cos(eCorrected * deg2rad) * sin(Lapp * deg2rad),
+			cos(Lapp * deg2rad));
+
+  // declination d
+  double d = Math.Asin(sin(eCorrected * deg2rad) * sin(Lapp * deg2rad));
+
+  // solar coordinates
+  RightAscension ra = new RightAscension(a.ToDegrees());
+  Angle dec = new Angle(d.ToDegrees());
 
   // Calculate the solar declination angle
   double lambda = L + 1.915 * sin(g * deg2rad) + 0.020 * sin(2 * g * deg2rad);
