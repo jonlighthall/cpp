@@ -74,9 +74,11 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   // obliquity of the ecliptic (22.2)
   double U = t / 100;
+  double theta1=23/60+26/pow(60,2)+21.448/pow(60,3);
+  double theta2=4680.93/pow(60,3);
   double e0 =
-    new Angle(23, 26, 21.448).Degrees
-    - new Angle(0, 0, 4680.93).Degrees * U
+    theta1
+    - theta2 * U
     - 1.55 * pow(U, 2)
     + 1999.25 * pow(U, 3)
     - 51.38 * pow(U, 4)
@@ -87,7 +89,6 @@ double getSunset(int year, int month, int day, double latitude, double longitude
     + 5.79 * pow(U, 9)
     + 2.45 * pow(U, 10);
 
-
   // correction for parallax (25.8)
   double eCorrected = e0 + 0.00256 * cos(O * deg2rad);
 
@@ -97,7 +98,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 			cos(Lapp * deg2rad));
 
   // declination d
-  double d = Math.Asin(sin(eCorrected * deg2rad) * sin(Lapp * deg2rad));
+  double d = asin(sin(eCorrected * deg2rad) * sin(Lapp * deg2rad));
 
   // solar coordinates
   RightAscension ra = new RightAscension(a.ToDegrees());
