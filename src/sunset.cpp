@@ -24,18 +24,23 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double jd = getJulianDate(year, month, day);
   double t = (jd - 2451545.0) / 36525.0; // fraction of a century since Jan 1, 2000
 
-  // Geometric Mean Longitude of the Sun
-  double L0 = 280.46646 + t *(36000.76983+t*0.0003032)  ;
-  cout << "The Geometric Mean Longitude of the Sun is " << L0 << " or " << fmod(L0,360) << " degrees" << endl; 
-
+  // Geometric Mean Longitude of the Sun, referred to the mean equinox of the time
   double L = 280.460 + 36000.771 * t;
-  cout << "L = " << L << endl;
+  cout << "The Geometric Mean Longitude of the Sun is " << endl;
+  cout << "\t   linear: L = " << L << endl;
+
+  double L0 = 280.46646 + t *(36000.76983+t*0.0003032)  ;
+  //  cout << "The Geometric Mean Longitude of the Sun is " << L0 << " or " << fmod(L0,360) << " degrees" << endl;
+  cout << "\t quadratic: L0 = "<< L0 << " or " ;
+  L0=fmod(L0,360);
+  cout << L0 << " degrees" << endl; 
 
   // Mean Anomaly of the Sun
   double g = 357.528 + 35999.050 * t;
-
   double M =357.52911+t*(35999.05029 - 0.0001537*t);
-  cout << "The Mean Anomaly of the Sun is " << M << " or " << g << endl;
+  cout << "The Mean Anomaly of the Sun is " << endl;
+  cout << "\t    linear: g = " << g << endl;
+  cout << "\t quadratic: M = " << M << endl;
 
   //// eccentricity of Earth's orbit (25.4)
   double e = 0.016708634 - (0.000042037 * t) - (0.0000001267 * pow(t, 2));
@@ -48,11 +53,12 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   // Sun's true geometric longitude
   double Ltrue = (L0 + C);
-  Ltrue = Ltl0rue.CorrectDegreeRange();
+  cout << "true geometric longitude = " << Ltrue << " or ";
+  Ltrue = fmod(Ltrue,360);
+  cout << Ltrue << " degrees" << endl;
 
   // Sun's true anomaly
   double n = (M + C);
-  n = n.CorrectDegreeRange();
 
   // U.S. Naval Observatory function for radius vector.
   // Compare to Meeus (25.5)
