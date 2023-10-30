@@ -16,8 +16,7 @@ double getJulianDate(int year, int month, int day) {
   int m = month + 12 * a - 3;
   int jd = day + (153 * m + 2) / 5 + 365 * y + y / 4 - y / 100 + y / 400 - 32045;
   cout << "the Julian Date is " << jd << endl;
-  return jd + 0.5;
-  
+  return jd + 0.5;  
 }
 
 double getSunset(int year, int month, int day, double latitude, double longitude, int timezone) {
@@ -59,6 +58,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   // Sun's true anomaly
   double n = (M + C);
+  cout << "true anomaly = " << n << endl;
 
   // U.S. Naval Observatory function for radius vector.
   // Compare to Meeus (25.5)
@@ -101,8 +101,8 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double d = asin(sin(eCorrected * deg2rad) * sin(Lapp * deg2rad));
 
   // solar coordinates
-  RightAscension ra = new RightAscension(a.ToDegrees());
-  Angle dec = new Angle(d.ToDegrees());
+  //RightAscension ra = new RightAscension(a.ToDegrees());
+  //Angle dec = new Angle(d.ToDegrees());
 
   // Calculate the solar declination angle
   double lambda = L + 1.915 * sin(g * deg2rad) + 0.020 * sin(2 * g * deg2rad);
