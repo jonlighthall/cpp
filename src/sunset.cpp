@@ -4,10 +4,17 @@
 
 using namespace std;
 
-const double PI = 3.14159265;
+const double PI = atan(1)*4;
 const double deg2rad = PI / 180.0;
 const double rad2deg = 180.0 / PI;
-const double sunRadius = 0.26667; // Sun's apparent radius, in degrees
+//const double sunRadius = 0.26667; // Sun's apparent radius, in degrees
+
+const double au = 149597870700; // Astronomical unit in m
+const double sun_radi_m = 696342e3;  // measured solar radius from Mercury transits
+const double sun_diam_m = sun_radi_m*2; // diameter of the sun in m
+const double sun_diam_rad = 2*atan(sun_diam_m/(2*au)); // angular size in radians
+const double sun_diam_deg = sun_diam_rad*rad2deg;
+const double sun_radi_deg = sun_diam_deg/2;
 
 double getJulianDate(int year, int month, int day) {
   cout << "the input date is " << year << "-" << month << "-" << day << endl;
@@ -25,13 +32,14 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   // Geometric Mean Longitude of the Sun, referred to the mean equinox of the time
   double L = 280.460 + 36000.771 * t;
+  double L0 = 280.46646 + t *(36000.76983+t*0.0003032);
   cout << "The Geometric Mean Longitude of the Sun is " << endl;
-  cout << "\t   linear: L = " << L << endl;
-
-  double L0 = 280.46646 + t *(36000.76983+t*0.0003032)  ;
-  //  cout << "The Geometric Mean Longitude of the Sun is " << L0 << " or " << fmod(L0,360) << " degrees" << endl;
-  cout << "\t quadratic: L0 = "<< L0 << " or " ;
-  L0=fmod(L0,360);
+  cout << "\t    linear: L  = " << L << endl;
+  cout << "\t quadratic: L0 = ";
+  if (L0>=360 || L0<0) {
+    cout << L0 << " or " ;
+    L0=fmod(L0,360);
+  }
   cout << L0 << " degrees" << endl; 
 
   // Mean Anomaly of the Sun
@@ -49,11 +57,15 @@ double getSunset(int year, int month, int day, double latitude, double longitude
     +(1.914602 - (0.004817 * t) - (0.000014 * pow(t, 2))) * sin(M * deg2rad)
     + (0.019993 - (0.000101 * t)) * sin(M * deg2rad * 2)
     + (0.000289 * sin(M * deg2rad * 3));
+  cout << "sun's equation of center = " << C << endl;
 
   // Sun's true geometric longitude
   double Ltrue = (L0 + C);
-  cout << "true geometric longitude = " << Ltrue << " or ";
-  Ltrue = fmod(Ltrue,360);
+  cout << "true geometric longitude = ";
+  if (Ltrue>=360 || Ltrue<0) {
+    cout << Ltrue << " or ";
+    Ltrue = fmod(Ltrue,360);
+  }
   cout << Ltrue << " degrees" << endl;
 
   // Sun's true anomaly
@@ -94,8 +106,8 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   // Sun's right ascension a
   double a = atan2(
-			cos(eCorrected * deg2rad) * sin(Lapp * deg2rad),
-			cos(Lapp * deg2rad));
+		   cos(eCorrected * deg2rad) * sin(Lapp * deg2rad),
+		   cos(Lapp * deg2rad));
 
   // declination d
   double d = asin(sin(eCorrected * deg2rad) * sin(Lapp * deg2rad));
@@ -110,7 +122,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double delta = asin(sin(epsilon * deg2rad) * sin(lambda * deg2rad)) * rad2deg;
 
   // Calculate the local hour angle
-  double zenith = 90.0 - sunRadius;
+  double zenith = 90.0 - sun_radi_deg;
   double cosz = cos(zenith * deg2rad);
   double sinz = sin(zenith * deg2rad);
   double cosphi = cos(latitude * deg2rad);
