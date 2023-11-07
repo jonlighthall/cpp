@@ -7,14 +7,23 @@ using namespace std;
 const double PI = atan(1)*4;
 const double deg2rad = PI / 180.0;
 const double rad2deg = 180.0 / PI;
-//const double sunRadius = 0.26667; // Sun's apparent radius, in degrees
 
-const double au = 149597870700; // Astronomical unit in m
-const double sun_radi_m = 696342e3;  // measured solar radius from Mercury transits
-const double sun_diam_m = sun_radi_m*2; // diameter of the sun in m
-const double sun_diam_rad = 2*atan(sun_diam_m/(2*au)); // angular size in radians
-const double sun_diam_deg = sun_diam_rad*rad2deg;
-const double sun_radi_deg = sun_diam_deg/2;
+double getSunSize() {
+  //const double sunRadius = 0.26667; // Sun's apparent radius, in degrees
+
+  const double au = 149597870700; // Astronomical unit in m
+  const double sun_radi_m = 696342e3;  // measured solar radius from Mercury transits
+  const double sun_diam_m = sun_radi_m*2; // diameter of the sun in m
+  const double sun_diam_rad = 2*atan(sun_diam_m/(2*au)); // angular size in radians
+  const double sun_diam_deg = sun_diam_rad*rad2deg; // angular size in degrees
+
+  cout << "The angular size of the sun is " << sun_diam_deg << " degrees" << endl;
+  
+  const double sun_radi_deg = sun_diam_deg/2;  
+  return sun_radi_deg;
+}
+
+const double sunnum = getSunSize();
 
 double getJulianDate(int year, int month, int day) {
   cout << "the input date is " << year << "-" << month << "-" << day << endl;
@@ -122,7 +131,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double delta = asin(sin(epsilon * deg2rad) * sin(lambda * deg2rad)) * rad2deg;
 
   // Calculate the local hour angle
-  double zenith = 90.0 - sun_radi_deg;
+  double zenith = 90.0 - sunnum; //getSunSize();
   double cosz = cos(zenith * deg2rad);
   double sinz = sin(zenith * deg2rad);
   double cosphi = cos(latitude * deg2rad);
