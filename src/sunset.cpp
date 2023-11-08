@@ -1,3 +1,9 @@
+/** 
+    Most of this code is developed from James Still's post on calculating solar coordinates:
+    https://squarewidget.com/solar-coordinates/
+    https://aa.usno.navy.mil/faq/sun_approx
+*/
+
 #include <iostream>
 #include <cmath>
 #include <ctime>
@@ -53,12 +59,12 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   // Mean Anomaly of the Sun
   double g = 357.528 + 35999.050 * t;
-  double M =357.52911+t*(35999.05029 - 0.0001537*t);
+  double M = 357.52911 + 35999.05029 * t - 0.0001537 * pow(t,2);
   cout << "The Mean Anomaly of the Sun is " << endl;
   cout << "\t    linear: g = " << g << endl;
   cout << "\t quadratic: M = " << M << endl;
 
-  //// eccentricity of Earth's orbit (25.4)
+  // eccentricity of Earth's orbit (25.4)
   double e = 0.016708634 - (0.000042037 * t) - (0.0000001267 * pow(t, 2));
 
   // Sun's equation of center
