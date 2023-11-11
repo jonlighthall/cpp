@@ -58,7 +58,7 @@ double meanLongitude(double t) {
   double L_3 = 280.46646   + 36000.76983    * t + 0.0003032  * pow(t,2); // NOAA
   double L_5 = 280.4664567 + 36000.76982779 * t + 0.03032028 * pow(t,2) + pow(t,3)/49931-pow(t,4)/15300 - pow(t,5)/2e6;
   cout << "The Geometric Mean Longitude of the Sun is " << endl;
-  cout << "\t    linear: L = " << setprecision(7); printDeg(L_1); cout << endl;
+  cout << "\t    linear: L = " << setprecision(7); printDeg(L_1); cout << " (USNO)" << endl;
   cout << "\t quadratic: L = "; printDeg(L_3); cout << " (NOAA)" << endl;
   cout << "\t   quintic: L = "; printDeg(L_5); cout << endl;
   return fmod(L_3,360);
@@ -70,7 +70,7 @@ double meanAnomaly(double t) {
   double M_1 = 357.528   + 35999.050   * t;
   double M_2 = 357.52911 + 35999.05029 * t - 0.0001537 * pow(t,2); // NOAA
   cout << "The Mean Anomaly of the Sun is " << endl;
-  cout << "\t    linear: M = "; printDeg(M_1); cout << endl;
+  cout << "\t    linear: M = "; printDeg(M_1); cout << " (USNO)" << endl;
   cout << "\t quadratic: M = "; printDeg(M_2); cout << " (NOAA)" << endl;
   return fmod(M_2,360.0);
 }
@@ -86,8 +86,8 @@ double equationOfCenter(double t, double M) {
     + (0.000289 * sin(3 * M * deg2rad));
 
   cout << "The Sun's equation of center" << endl;
-  cout << "\t  constant: C = " << C_0 << endl;
-  cout << "\t quadratic: C = " << C_2 << " (NOAA)" <<endl;
+  cout << "\t  constant: C = " << C_0 << " (USNO)" << endl;
+  cout << "\t quadratic: C = " << C_2 << " (NOAA)" << endl;
   
   return C_2;
 }
@@ -111,9 +111,9 @@ double radiusVector(double e, double nu) {
 
   double R_NOAA = (1.000001018 * (1 - pow(e,2))) / (1 + e * cos(nu*deg2rad));
   cout << "radius vector" << endl;
-  cout << "\t R = " << R << " au" << endl;
+  cout << "\t R = " << R << " au (USNO)" << endl;
 
-  cout << "\t  or " << R_NOAA << " au" << endl;  
+  cout << "\t  or " << R_NOAA << " au (NOAA)" << endl;  
   return R_NOAA;
 }
 
@@ -157,6 +157,7 @@ double getSunSize(double rad_vec_au = 1) {
 // A function to calculate the obliquity of the ecliptic in degrees
 double obliquityOfEcliptic(double T) {
   // input is Julian Ephemeris Century
+  // output in degrees
     
   // define reference angles
   double theta1=23.0+(26.0/60.0)+(21.448/pow(60.0,2));
@@ -170,7 +171,6 @@ double obliquityOfEcliptic(double T) {
   cout << "      or " << otheta2 << endl;
   
   double epsilon_1 = otheta1 - otheta2 * T/100;
-  cout << " or linear: " << epsilon_1 << endl;
 
   // Calculate the obliquity of the ecliptic in arcseconds
   double epsilon_NOAA = 84381.448 - 46.815 * T - 0.00059 * T * T + 0.001813 * T * T * T;
@@ -193,9 +193,11 @@ double obliquityOfEcliptic(double T) {
     + 27.87 * pow(U, 8)
     + 5.79 * pow(U, 9)
     + 2.45 * pow(U, 10);
-  
-  cout << "     cubic: " << epsilon_NOAA << " degrees" << endl;
-  cout << " or series: " << epsilon_10 << endl;
+
+  cout << "The obliquity of the ecliptic is " << endl;
+  cout << "\t linear: "; printDeg(epsilon_1); cout << " (USNO)" << endl;
+  cout << "\t  cubic: "; printDeg(epsilon_NOAA); cout << " (NOAA)" << endl;
+  cout << "\t series: " << epsilon_10 << endl;
    
   return epsilon_NOAA;
 }
@@ -224,42 +226,38 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   cout << "true anomaly" << endl;
   cout << "\t           nu = "; printDeg(nu); cout << endl;
  
-  double e = eccentricity(t);
-  double R = radiusVector(e,nu);
-  getSunSize();
-  getSunSize(R);
-
   // correction "omega" for nutation and aberration
   double O = 125.04 - (1934.136 * t);
 
   // apparent longitude L (lambda) of the Sun
   double Lapp = l - 0.00569 - (0.00478 * sin(O * deg2rad));
   cout << "apparent longitude  = " << Lapp << endl;
-
-  // Calculate the solar declination angle
   
   double epsilon=obliquityOfEcliptic(t);
 
-  // Print the obliquity of the ecliptic for this date
-  cout << "The obliquity of the ecliptic for " << year << "-" << month << "-" << day << " is: " << endl;
-  
   // correction for parallax (25.8)
   double eCorrected = epsilon + 0.00256 * cos(O * deg2rad);
-  cout << "         or " << eCorrected << " corrected for parallax" << endl;
+  cout << "              or " << eCorrected << " corrected for parallax" << endl;
 
+  cout << "Solar coordinates:" << endl;
   // Sun's right ascension a
   double alpha = atan2(
 		       cos(eCorrected * deg2rad) * sin(Lapp * deg2rad),
 		       cos(Lapp * deg2rad)) *rad2deg ;
-  cout << "right ascension = " << alpha << " degrees" << endl;
+  cout << "\tright ascension = " << alpha << " degrees" << endl;
 
-  // declination d
+  // Calculate the solar declination angle
+  // declination d or delta
   double delta = asin(sin(eCorrected * deg2rad) * sin(Lapp * deg2rad)) * rad2deg;
-  cout << "declination = " << delta << " degrees" << endl;
+  cout << "\t    declination = " << delta << " degrees" << endl;
   double delta2 = asin(sin(epsilon * deg2rad) * sin(l * deg2rad)) * rad2deg;
-  cout << "         or = " << delta2 << " degrees" << endl;
+  cout << "\t             or = " << delta2 << " degrees" << endl;
 
   // Calculate the local hour angle
+  double e = eccentricity(t);
+  double R = radiusVector(e,nu);
+  getSunSize();
+  getSunSize(R);
   const double sun_radi_deg = getSunSize();
   double zenith = 90.0 - sun_radi_deg;
   double cosz = cos(zenith * deg2rad);
