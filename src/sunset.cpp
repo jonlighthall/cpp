@@ -18,6 +18,7 @@ double getSunSize() {
   //const double sunRadius = 0.26667; // Sun's apparent radius, in degrees
 
   const double au = 149597870700; // Astronomical unit in m
+  const double sol_radi_m = 6.95700e8; // solar radius in m
   const double sun_radi_m = 696342e3;  // measured solar radius from Mercury transits
   const double sun_diam_m = sun_radi_m*2; // diameter of the sun in m
   const double sun_diam_rad = 2*atan(sun_diam_m/(2*au)); // angular size in radians
@@ -42,9 +43,10 @@ double getJulianDate(int year, int month, int day) {
 }
 
 double cent_frac(int jd) {
+  // Julian Ephemeris Century
   // Calculate the number of Julian centuries since J2000.0
   double t = (jd - 2451545.0) / 36525.0; // fraction of a century since Jan 1, 2000
-  return T;
+  return t;
 }
 
 // A function to calculate the obliquity of the ecliptic in degrees
@@ -71,6 +73,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   // Geometric Mean Longitude of the Sun, referred to the mean equinox of the time
   double L = 280.460 + 36000.771 * t;
   double L0 = 280.46646 + t *(36000.76983+t*0.0003032);
+  double L5 = 280.4664567 + 36000.76982779 * t + 0.03032028 * pow(t,2) + pow(t,3)/49931-pow(t,4)/15300 - pow(t,5)/2e6;
   cout << "The Geometric Mean Longitude of the Sun is " << endl;
   cout << "\t    linear: L  = " << L << endl;
   cout << "\t quadratic: L0 = ";
@@ -79,6 +82,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
     L0=fmod(L0,360);
   }
   cout << L0 << " degrees" << endl; 
+  cout << "\t   quintic: L  = " << L5 << endl;
 
   // Mean Anomaly of the Sun
   double g = 357.528 + 35999.050 * t;
@@ -89,6 +93,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   // eccentricity of Earth's orbit (25.4)
   double e = 0.016708634 - (0.000042037 * t) - (0.0000001267 * pow(t, 2));
+  cout << "eccentricity = " << e << endl;
 
   // Sun's equation of center
   double C =
@@ -113,7 +118,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   // U.S. Naval Observatory function for radius vector.
   // Compare to Meeus (25.5)
   double R = 1.00014
-    - 0.01671 * cos(M * deg2rad)
+    - e * cos(M * deg2rad)
     - 0.00014 * cos(2 * M * deg2rad);
 
   // correction "omega" for nutation and aberration
