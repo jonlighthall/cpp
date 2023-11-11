@@ -46,16 +46,13 @@ double cent_frac(int jd) {
   // Julian Ephemeris Century
   // Calculate the number of Julian centuries since J2000.0
   double t = (jd - 2451545.0) / 36525.0; // fraction of a century since Jan 1, 2000
+  cout << "the Julian Ephemeris Century is " << t << endl;
   return t;
 }
 
 // A function to calculate the obliquity of the ecliptic in degrees
-double obliquityOfEcliptic(int year, int month, int day) {
-  // Convert Gregorian date to Julian date
-  double jd = getJulianDate(year, month, day);
-    
-  // Calculate the number of Julian centuries since J2000.0
-  double T = cent_frac(jd) ;
+double obliquityOfEcliptic(double T) {
+  // input is Julian Ephemeris Century
     
   // Calculate the obliquity of the ecliptic in arcseconds
   double epsilon = 84381.448 - 46.815 * T - 0.00059 * T * T + 0.001813 * T * T * T;
@@ -120,12 +117,14 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double R = 1.00014
     - e * cos(M * deg2rad)
     - 0.00014 * cos(2 * M * deg2rad);
+  cout << "radius vector = " << R << endl;
 
   // correction "omega" for nutation and aberration
   double O = 125.04 - (1934.136 * t);
 
   // apparent longitude L (lambda) of the Sun
   double Lapp = Ltrue - 0.00569 - (0.00478 * sin(O * deg2rad));
+  cout << "apparent longitude  = " << Lapp << endl;
 
   // obliquity of the ecliptic (22.2)
   double U = t / 100;
@@ -148,10 +147,9 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   // Print the obliquity of the ecliptic for this date
   cout << "The obliquity of the ecliptic for " << year << "-" << month << "-" << day << " is: " << endl;
-  cout << "     cubic: " << obliquityOfEcliptic(year, month, day) << " degrees" << endl;
+  cout << "     cubic: " << obliquityOfEcliptic(t) << " degrees" << endl;
   cout << " or series: " << e0 << endl;
  
-
   // correction for parallax (25.8)
   double eCorrected = e0 + 0.00256 * cos(O * deg2rad);
   cout << "         or " << eCorrected << " corrected for parallax" << endl;
@@ -186,6 +184,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   // Convert to local solar time
   double solarNoon = 12.0 - longitude / 15.0 - timezone;
+  cout << "solar noon = " << solarNoon << endl;
   double sunsetTime = solarNoon - H / 15.0;
 
   return sunsetTime;
@@ -202,7 +201,7 @@ int main() {
   // Set the location and timezone
   double latitude = 30.4275784357249; // New Orleans
   double longitude = -90.0914955109431;
-  int timezone = -5;
+  int timezone = -6;
 
   // Calculate the sunset time
   double sunset = getSunset(year, month, day, latitude, longitude, timezone);
