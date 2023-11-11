@@ -99,6 +99,10 @@ double getSunset(int year, int month, int day, double latitude, double longitude
     + (0.000289 * sin(M * deg2rad * 3));
   cout << "sun's equation of center = " << C << endl;
 
+  double C2 = 1.915 * sin(g * deg2rad) + 0.020 * sin(2 * g * deg2rad);
+  cout << "                        or " << C2 << endl;  
+
+  
   // Sun's true geometric longitude
   double Ltrue = (L0 + C);
   cout << "true geometric longitude = ";
@@ -126,12 +130,22 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double Lapp = Ltrue - 0.00569 - (0.00478 * sin(O * deg2rad));
   cout << "apparent longitude  = " << Lapp << endl;
 
+    // Calculate the solar declination angle
+  double lambda = L + C2;
+  cout << "        or " << lambda << " or " << fmod(lambda,360) << endl;
+
   // obliquity of the ecliptic (22.2)
   double U = t / 100;
   double theta1=23.0+(26.0/60)+(21.448/pow(60,2));
   cout << "theta1 = " << theta1 << endl;
+  double otheta1 =   23.439;
+  cout << "      or " << otheta1 << endl;
+  
   double theta2=4680.93/pow(60,2);
   cout << "theta2 = " << theta2 << endl;
+  double otheta2 = 0.013 * 100;
+  cout << "      or " << otheta2 << endl;
+  
   double e0 =
     theta1
     - theta2 * U
@@ -149,7 +163,10 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   cout << "The obliquity of the ecliptic for " << year << "-" << month << "-" << day << " is: " << endl;
   cout << "     cubic: " << obliquityOfEcliptic(t) << " degrees" << endl;
   cout << " or series: " << e0 << endl;
- 
+
+  double epsilon = otheta1 - otheta2 * t/100;
+  cout << " or linear: " << epsilon << endl;
+  
   // correction for parallax (25.8)
   double eCorrected = e0 + 0.00256 * cos(O * deg2rad);
   cout << "         or " << eCorrected << " corrected for parallax" << endl;
@@ -158,26 +175,26 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double a = atan2(
 		   cos(eCorrected * deg2rad) * sin(Lapp * deg2rad),
 		   cos(Lapp * deg2rad)) *rad2deg ;
-
   cout << "right ascension = " << a << " degrees" << endl;
 
   // declination d
   double d = asin(sin(eCorrected * deg2rad) * sin(Lapp * deg2rad)) * rad2deg;
   cout << "declination = " << d << " degrees" << endl;
-
-  // Calculate the solar declination angle
-  double lambda = L + 1.915 * sin(g * deg2rad) + 0.020 * sin(2 * g * deg2rad);
-  double epsilon = 23.439 - 0.013 * t;
   double delta = asin(sin(epsilon * deg2rad) * sin(lambda * deg2rad)) * rad2deg;
+  cout << "         or = " << delta << " degrees" << endl;
+  
 
   // Calculate the local hour angle
   double zenith = 90.0 - sunnum; //getSunSize();
   double cosz = cos(zenith * deg2rad);
   double sinz = sin(zenith * deg2rad);
+
   double cosphi = cos(latitude * deg2rad);
   double sinphi = sin(latitude * deg2rad);
+
   double cosdelta = cos(delta * deg2rad);
   double sindelta = sin(delta * deg2rad);
+
   double cosH = (cosz - sindelta * sinphi) / (cosdelta * cosphi);
   double H = acos(cosH) * rad2deg;
   cout << "equation of time = " << H << " degrees" << endl;
