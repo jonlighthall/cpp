@@ -5,6 +5,7 @@
 */
 
 #include <iostream>
+#include <iomanip>   
 #include <cmath>
 #include <ctime>
 
@@ -58,7 +59,7 @@ double obliquityOfEcliptic(double T) {
   double epsilon = 84381.448 - 46.815 * T - 0.00059 * T * T + 0.001813 * T * T * T;
     
   // Convert arcseconds to degrees
-  epsilon = epsilon / 3600;
+  epsilon = epsilon / 3600.0;
     
   return epsilon;
 }
@@ -72,7 +73,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double L0 = 280.46646 + t *(36000.76983+t*0.0003032);
   double L5 = 280.4664567 + 36000.76982779 * t + 0.03032028 * pow(t,2) + pow(t,3)/49931-pow(t,4)/15300 - pow(t,5)/2e6;
   cout << "The Geometric Mean Longitude of the Sun is " << endl;
-  cout << "\t    linear: L  = " << L << endl;
+  cout << "\t    linear: L  = " << setprecision(7) <<L << endl;
   cout << "\t quadratic: L0 = ";
   if (L0>=360 || L0<0) {
     cout << L0 << " or " ;
@@ -101,7 +102,6 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   double C2 = 1.915 * sin(g * deg2rad) + 0.020 * sin(2 * g * deg2rad);
   cout << "                        or " << C2 << endl;  
-
   
   // Sun's true geometric longitude
   double Ltrue = (L0 + C);
@@ -130,20 +130,20 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double Lapp = Ltrue - 0.00569 - (0.00478 * sin(O * deg2rad));
   cout << "apparent longitude  = " << Lapp << endl;
 
-    // Calculate the solar declination angle
+  // Calculate the solar declination angle
   double lambda = L + C2;
-  cout << "        or " << lambda << " or " << fmod(lambda,360) << endl;
+  cout << "       or " << lambda << " or " << fmod(lambda,360) << endl;
 
   // obliquity of the ecliptic (22.2)
-  double U = t / 100;
-  double theta1=23.0+(26.0/60)+(21.448/pow(60,2));
+  double U = t / 100.0;
+  double theta1=23.0+(26.0/60.0)+(21.448/pow(60.0,2));
   cout << "theta1 = " << theta1 << endl;
   double otheta1 =   23.439;
   cout << "      or " << otheta1 << endl;
   
-  double theta2=4680.93/pow(60,2);
+  double theta2=4680.93/pow(60.0,2);
   cout << "theta2 = " << theta2 << endl;
-  double otheta2 = 0.013 * 100;
+  double otheta2 = 0.013 * 100.0;
   cout << "      or " << otheta2 << endl;
   
   double e0 =
