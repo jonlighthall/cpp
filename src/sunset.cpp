@@ -41,9 +41,32 @@ double getJulianDate(int year, int month, int day) {
   return jd + 0.5;  
 }
 
+double cent_frac(int jd) {
+  // Calculate the number of Julian centuries since J2000.0
+  double t = (jd - 2451545.0) / 36525.0; // fraction of a century since Jan 1, 2000
+  return T;
+}
+
+// A function to calculate the obliquity of the ecliptic in degrees
+double obliquityOfEcliptic(int year, int month, int day) {
+  // Convert Gregorian date to Julian date
+  double jd = getJulianDate(year, month, day);
+    
+  // Calculate the number of Julian centuries since J2000.0
+  double T = cent_frac(jd) ;
+    
+  // Calculate the obliquity of the ecliptic in arcseconds
+  double epsilon = 84381.448 - 46.815 * T - 0.00059 * T * T + 0.001813 * T * T * T;
+    
+  // Convert arcseconds to degrees
+  epsilon = epsilon / 3600;
+    
+  return epsilon;
+}
+
 double getSunset(int year, int month, int day, double latitude, double longitude, int timezone) {
   double jd = getJulianDate(year, month, day);
-  double t = (jd - 2451545.0) / 36525.0; // fraction of a century since Jan 1, 2000
+  double t = cent_frac(jd);
 
   // Geometric Mean Longitude of the Sun, referred to the mean equinox of the time
   double L = 280.460 + 36000.771 * t;
@@ -102,7 +125,9 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   // obliquity of the ecliptic (22.2)
   double U = t / 100;
   double theta1=23/60+26/pow(60,2)+21.448/pow(60,3);
+  cout << "theta1 = " << theta1 << endl;
   double theta2=4680.93/pow(60,3);
+  cout << "theta2 = " << theta2 << endl;
   double e0 =
     theta1
     - theta2 * U
@@ -116,8 +141,16 @@ double getSunset(int year, int month, int day, double latitude, double longitude
     + 5.79 * pow(U, 9)
     + 2.45 * pow(U, 10);
 
+// Print the obliquity of the ecliptic for this date
+    cout << "The obliquity of the ecliptic for " << year << "-" << month << "-" << day << " is: " << endl;
+    cout << obliquityOfEcliptic(year, month, day) << " degrees" << endl;
+    cout << " or " << e0 << endl;
+ 
+
   // correction for parallax (25.8)
   double eCorrected = e0 + 0.00256 * cos(O * deg2rad);
+  cout << " or " << eCorrected << endl;
+
 
   // Sun's right ascension a
   double a = atan2(
