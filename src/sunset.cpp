@@ -13,8 +13,8 @@ using namespace std;
 
 // define constants
 const double PI = atan(1)*4;
-const double deg2rad = PI / 180.0;
-const double rad2deg = 180.0 / PI;
+const double deg2rad = PI / 180.;
+const double rad2deg = 180. / PI;
 
 double getJulianDate(int year, int month, int day) {
   cout << "the input date is " << year << "-" << month << "-" << day << endl;
@@ -23,7 +23,7 @@ double getJulianDate(int year, int month, int day) {
   int m = month + 12 * a - 3;
   int jd = day + (153 * m + 2) / 5 + 365 * y + y / 4 - y / 100 + y / 400 - 32045;
   cout << "the Julian Date is " << jd << endl;
-  return jd + 0.5;  
+  return jd; // are we supposed to return noon?  
 }
 
 double getJ2000 (double jd) {
@@ -35,7 +35,7 @@ double getJ2000 (double jd) {
 
 double getJulianCentury (double J2000) {
   // convert J2000 date to Julian Ephemeris Century, that is, fraction of a Julian century 
-  double T = J2000  / 36525.0;
+  double T = J2000  / 36525.;
   cout << "the Julian Ephemeris Century is " << T << endl;
   return T;
 }
@@ -54,7 +54,7 @@ double meanLongitude(double t) {
   // calculated in degrees
   // Meeus pg. 163, eq. 25.2
   // based on J2000 longitude
-  double L_1 = 280.460     + 36000.771      * t;
+  double L_1 = 280.460     + 36000.771      * t; // USNO
   double L_3 = 280.46646   + 36000.76983    * t + 0.0003032  * pow(t,2); // NOAA
   double L_5 = 280.4664567 + 36000.76982779 * t + 0.03032028 * pow(t,2) + pow(t,3)/49931-pow(t,4)/15300 - pow(t,5)/2e6;
   cout << "The Geometric Mean Longitude of the Sun is " << endl;
@@ -78,12 +78,16 @@ double meanAnomaly(double t) {
 double equationOfCenter(double t, double M) {
   // Sun's equation of center
   // Geocentric apparent ecliptic longitude of the Sun (adjusted for aberration):
-  double C_0 = 1.915 * sin(M * deg2rad)
-    + 0.020 * sin(2 * M * deg2rad);
 
-  double C_2 = (1.914602 - (0.004817 * t) - (0.000014 * pow(t, 2))) * sin(M * deg2rad)
-    + (0.019993 - (0.000101 * t)) * sin(2 * M * deg2rad)
-    + (0.000289 * sin(3 * M * deg2rad));
+  // convert inputs to radians
+  M*=deg2rad;
+
+  double C_0 = 1.915 * sin(M)
+    + 0.020 * sin(2*M);
+
+  double C_2 = (1.914602 - (0.004817 * t) - (0.000014 * pow(t,2))) * sin(M)
+    + (0.019993 - (0.000101 * t)) * sin(2*M)
+    + (0.000289 * sin(3*M));
 
   cout << "The Sun's equation of center" << endl;
   cout << "\t  constant: C = " << C_0 << " (USNO)" << endl;
@@ -102,14 +106,18 @@ double eccentricity(double t) {
 }
 
 double radiusVector(double e, double nu) {
+  // the distance between the centres of the Sun and the Earth, in au
   // U.S. Naval Observatory function for radius vector.
   // Compare to Meeus (25.5)
-  double M = nu;
-  double R = 1.00014
-    - e * cos(M * deg2rad)
-    - 0.00014 * cos(2 * M * deg2rad);
 
-  double R_NOAA = (1.000001018 * (1 - pow(e,2))) / (1 + e * cos(nu*deg2rad));
+  // convert inputs to radians
+  nu*=deg2rad;
+
+  double R = 1.00014
+    - e * cos(nu)
+    - 0.00014 * cos(2*nu);
+
+  double R_NOAA = (1.000001018 * (1 - pow(e,2))) / (1 + e * cos(nu));
   cout << "radius vector" << endl;
   cout << "\t R = " << R << " au (USNO)" << endl;
 
@@ -202,7 +210,68 @@ double obliquityOfEcliptic(double T) {
   return epsilon_NOAA;
 }
 
+double equationOfTime1(double e, double nu, double latitude, double delta) {
+ // Calculate the local hour angle
+  
+ // convert inputs to radians
+  latitude*=deg2rad;
+  delta*=deg2rad;  
 
+  double R = radiusVector(e,nu);
+  getSunSize();
+  getSunSize(R);
+  const double sun_radi_deg = getSunSize();
+  double zenith = 90.0 - sun_radi_deg;
+  zenith*=deg2rad;
+  double cosz = cos(zenith);
+  //double sinz = sin(zenith);
+
+  double cosphi = cos(latitude);
+  double sinphi = sin(latitude);
+
+  double cosdelta = cos(delta);
+  double sindelta = sin(delta);
+
+  double cosH = (cosz - sindelta * sinphi) / (cosdelta * cosphi);
+  double H = acos(cosH) * rad2deg;
+  cout << "equation of time = " << H << " degrees" << endl;
+  cout << "                or " << H/15.0 << " hours" << endl;
+
+  return H;
+}
+
+double equationOfTime2(double q, double RA) {
+  double EqT = q/15.0 - RA;
+  cout << "equation of time = " << EqT << " (NOAA)" << endl;  
+  return EqT;
+}
+
+double equationOfTime3(double y,double L,double e,double M) {
+  // We use the approximation of the equation of time given by W.M. Smart, Text-Book on Spherical
+  // Astronomy, Cambridge University Press, 1956, p. 149:
+
+  // convert inputs to radians
+  L*=deg2rad;
+  M*=deg2rad;
+
+  cout << y*sin(2*L)<< endl;
+  cout << -2*e*sin(M)<< endl;
+  cout << +4*e*y*sin(M)*cos(2*L)<< endl;
+  cout << -(1/2.)*pow(y,2)*sin(4*L)<< endl;
+  cout << -(5/4.)*pow(e,2)*sin(2*M)<< endl;
+  
+  double E = y*sin(2*L)
+    -2*e*sin(M)
+    +4*e*y*sin(M)*cos(2*L)
+    -(1/2.)*pow(y,2)*sin(4*L)
+    -(5/4.)*pow(e,2)*sin(2*M);
+
+  cout << "equation of time" << endl;
+  cout << "\t E = " << E << " radians" << endl;
+  cout << "\t E = " << E*rad2deg << " degrees" << endl;
+  cout << "\t E = " << E*rad2deg*4 << " minutes" << endl;
+  return E;
+}
 
 double getSunset(int year, int month, int day, double latitude, double longitude, int timezone) {
   // date
@@ -226,53 +295,50 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   cout << "true anomaly" << endl;
   cout << "\t           nu = "; printDeg(nu); cout << endl;
  
-  // correction "omega" for nutation and aberration
-  double O = 125.04 - (1934.136 * t);
+    // correction "omega" for nutation and aberration
+  double omega = 125.04 - (1934.136 * t);
+  omega*=deg2rad;
 
   // apparent longitude L (lambda) of the Sun
-  double Lapp = l - 0.00569 - (0.00478 * sin(O * deg2rad));
-  cout << "apparent longitude  = " << Lapp << endl;
-  
+  // true equinox of the date
+  double lambda = l - 0.00569 - (0.00478 * sin(omega));
+  cout << "  apparent longitude  = " << lambda << endl;
+  lambda*=deg2rad;
+
   double epsilon=obliquityOfEcliptic(t);
-
+ 
   // correction for parallax (25.8)
-  double eCorrected = epsilon + 0.00256 * cos(O * deg2rad);
-  cout << "              or " << eCorrected << " corrected for parallax" << endl;
-
+  double eCorrected = epsilon + 0.00256 * cos(omega);
+  cout << "              or " << eCorrected << " corrected for parallax (NOAA)" << endl;
+ 
   cout << "Solar coordinates:" << endl;
   // Sun's right ascension a
   double alpha = atan2(
-		       cos(eCorrected * deg2rad) * sin(Lapp * deg2rad),
-		       cos(Lapp * deg2rad)) *rad2deg ;
+		       cos(eCorrected * deg2rad) * sin(lambda),
+		       cos(lambda)) *rad2deg ;
   cout << "\tright ascension = " << alpha << " degrees" << endl;
 
   // Calculate the solar declination angle
   // declination d or delta
-  double delta = asin(sin(eCorrected * deg2rad) * sin(Lapp * deg2rad)) * rad2deg;
+  double delta = asin(sin(eCorrected * deg2rad) * sin(lambda)) * rad2deg;
   cout << "\t    declination = " << delta << " degrees" << endl;
   double delta2 = asin(sin(epsilon * deg2rad) * sin(l * deg2rad)) * rad2deg;
   cout << "\t             or = " << delta2 << " degrees" << endl;
 
-  // Calculate the local hour angle
   double e = eccentricity(t);
-  double R = radiusVector(e,nu);
-  getSunSize();
-  getSunSize(R);
-  const double sun_radi_deg = getSunSize();
-  double zenith = 90.0 - sun_radi_deg;
-  double cosz = cos(zenith * deg2rad);
-  //double sinz = sin(zenith * deg2rad);
+  double H=equationOfTime1(e,nu,latitude,delta);
+  double EqT=equationOfTime2(L,alpha);
 
-  double cosphi = cos(latitude * deg2rad);
-  double sinphi = sin(latitude * deg2rad);
+  double e2 = eCorrected / 2.0 * deg2rad;
+  cout << "e/2 rad = " << e2  << endl;
+  double te2 = tan(e2);
+  cout << "tan e/2 = " << te2 << endl;
+  cout << "y = " << te2*te2 << endl;
 
-  double cosdelta = cos(delta * deg2rad);
-  double sindelta = sin(delta * deg2rad);
-
-  double cosH = (cosz - sindelta * sinphi) / (cosdelta * cosphi);
-  double H = acos(cosH) * rad2deg;
-  cout << "equation of time = " << H << " degrees" << endl;
-  cout << "                or " << H/15.0 << " hours" << endl;
+  double y = pow(tan(eCorrected / 2.0 * deg2rad),2);
+  cout << "y = " << y << endl;
+  double E=equationOfTime3(y,L,e,M);
+  equationOfTime3(y,l,e,nu);
 
   // Convert to local solar time
   double solarNoon = 12.0 - longitude / 15.0 - timezone;
