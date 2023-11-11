@@ -11,31 +11,10 @@
 
 using namespace std;
 
+// define constants
 const double PI = atan(1)*4;
 const double deg2rad = PI / 180.0;
 const double rad2deg = 180.0 / PI;
-
-double getSunSize(double rad_vec_au = 1) {
-  // input is radial vector in au
-
-  //const double sunRadius = 0.26667; // Sun's apparent radius, in degrees
-
-  const double au = 149597870700; // Astronomical unit in m
-  //  const double sol_radi_m = 6.95700e8; // solar radius in m
-  const double sun_radi_m = 696342e3;  // measured solar radius from Mercury transits
-  const double sun_diam_m = sun_radi_m*2; // diameter of the sun in m
-
-  // convert radial vector to m
-  const double rad_vec_m=rad_vec_au*au;  
- 
-  const double sun_diam_rad = 2*atan(sun_diam_m/(2*rad_vec_m)); // angular size in radians
-  const double sun_diam_deg = sun_diam_rad*rad2deg; // angular size in degrees
-
-  cout << "The angular size of the sun is " << sun_diam_deg << " degrees" << endl;
-  
-  const double sun_radi_deg = sun_diam_deg/2;  
-  return sun_radi_deg;
-}
 
 double getJulianDate(int year, int month, int day) {
   cout << "the input date is " << year << "-" << month << "-" << day << endl;
@@ -129,11 +108,50 @@ double radiusVector(double e, double nu) {
   double R = 1.00014
     - e * cos(M * deg2rad)
     - 0.00014 * cos(2 * M * deg2rad);
-  cout << "radius vector = " << R << endl;
 
   double R_NOAA = (1.000001018 * (1 - pow(e,2))) / (1 + e * cos(nu*deg2rad));
-  cout << "             or " << R_NOAA << endl;  
+  cout << "radius vector" << endl;
+  cout << "\t R = " << R << " au" << endl;
+
+  cout << "\t  or " << R_NOAA << " au" << endl;  
   return R_NOAA;
+}
+
+double getSunSize(double rad_vec_au = 1) {
+  // angular semidiameter of the Sun, in degrees
+  // Sun's apparent radius
+  // input is radial vector in au
+  
+  // constants
+  const double au = 149597870700; // Astronomical unit in m
+  const double sol_radi_m = 6.95700e8; // solar radius in m
+
+  // physical size of the sun
+  // measured solar radius from Mercury transits
+  // https://arxiv.org/abs/1203.4898
+  // 696,342 ± 65km
+  const double sun_radi_m = 696342e3;
+  cout << "The radius of the sun is" << "\n\t " << sun_radi_m/sol_radi_m << " R_sol" << endl;
+  const double sun_diam_m = sun_radi_m*2; // diameter of the sun in m
+
+  // distance to the sun
+  // convert radial vector to m
+  const double rad_vec_m=rad_vec_au*au;
+
+ 
+  // apparent size of the sun
+  const double sun_diam_rad = 2*atan(sun_diam_m/(2*rad_vec_m)); // angular size in radians
+  const double sun_diam_deg = sun_diam_rad*rad2deg; // angular size in degrees
+
+  cout << "The angular size of the sun is " << endl;
+  cout << "\t" << sun_diam_deg << " degrees";
+  cout << " or " << sun_diam_deg*60 << " arcminutes"; //should be between ~31.5 32.5 arcminutes
+  cout << endl;
+  
+  // return semidiameter
+  const double sun_radi_deg = sun_diam_deg/2;  
+  return sun_radi_deg;
+  //const double sunRadius = 0.26667; 
 }
 
 // A function to calculate the obliquity of the ecliptic in degrees
