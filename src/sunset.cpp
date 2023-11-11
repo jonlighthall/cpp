@@ -217,10 +217,11 @@ double equationOfTime1(double e, double nu, double latitude, double delta) {
   latitude*=deg2rad;
   delta*=deg2rad;  
 
+  // get the apparent size of the sun
   double R = radiusVector(e,nu);
-  getSunSize();
   getSunSize(R);
   const double sun_radi_deg = getSunSize();
+  
   double zenith = 90.0 - sun_radi_deg;
   zenith*=deg2rad;
   double cosz = cos(zenith);
@@ -321,7 +322,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   // Calculate the solar declination angle
   // declination d or delta
   double delta = asin(sin(eCorrected * deg2rad) * sin(lambda)) * rad2deg;
-  cout << "\t    declination = " << delta << " degrees" << endl;
+  cout << "\t    declination = " << delta << " degrees (NOAA)" << endl;
   double delta2 = asin(sin(epsilon * deg2rad) * sin(l * deg2rad)) * rad2deg;
   cout << "\t             or = " << delta2 << " degrees" << endl;
 
@@ -338,7 +339,6 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double y = pow(tan(eCorrected / 2.0 * deg2rad),2);
   cout << "y = " << y << endl;
   double E=equationOfTime3(y,L,e,M);
-  equationOfTime3(y,l,e,nu);
 
   // Convert to local solar time
   double solarNoon = 12.0 - longitude / 15.0 - timezone;
