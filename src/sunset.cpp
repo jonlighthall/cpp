@@ -129,9 +129,9 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   // obliquity of the ecliptic (22.2)
   double U = t / 100;
-  double theta1=23/60+26/pow(60,2)+21.448/pow(60,3);
+  double theta1=23.0+(26.0/60)+(21.448/pow(60,2));
   cout << "theta1 = " << theta1 << endl;
-  double theta2=4680.93/pow(60,3);
+  double theta2=4680.93/pow(60,2);
   cout << "theta2 = " << theta2 << endl;
   double e0 =
     theta1
@@ -146,16 +146,15 @@ double getSunset(int year, int month, int day, double latitude, double longitude
     + 5.79 * pow(U, 9)
     + 2.45 * pow(U, 10);
 
-// Print the obliquity of the ecliptic for this date
-    cout << "The obliquity of the ecliptic for " << year << "-" << month << "-" << day << " is: " << endl;
-    cout << obliquityOfEcliptic(year, month, day) << " degrees" << endl;
-    cout << " or " << e0 << endl;
+  // Print the obliquity of the ecliptic for this date
+  cout << "The obliquity of the ecliptic for " << year << "-" << month << "-" << day << " is: " << endl;
+  cout << "     cubic: " << obliquityOfEcliptic(year, month, day) << " degrees" << endl;
+  cout << " or series: " << e0 << endl;
  
 
   // correction for parallax (25.8)
   double eCorrected = e0 + 0.00256 * cos(O * deg2rad);
-  cout << " or " << eCorrected << endl;
-
+  cout << "         or " << eCorrected << " corrected for parallax" << endl;
 
   // Sun's right ascension a
   double a = atan2(
