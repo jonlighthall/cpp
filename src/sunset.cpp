@@ -18,7 +18,7 @@ double getSunSize() {
   //const double sunRadius = 0.26667; // Sun's apparent radius, in degrees
 
   const double au = 149597870700; // Astronomical unit in m
-  const double sol_radi_m = 6.95700e8; // solar radius in m
+  //  const double sol_radi_m = 6.95700e8; // solar radius in m
   const double sun_radi_m = 696342e3;  // measured solar radius from Mercury transits
   const double sun_diam_m = sun_radi_m*2; // diameter of the sun in m
   const double sun_diam_rad = 2*atan(sun_diam_m/(2*au)); // angular size in radians
@@ -157,14 +157,13 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   // Sun's right ascension a
   double a = atan2(
 		   cos(eCorrected * deg2rad) * sin(Lapp * deg2rad),
-		   cos(Lapp * deg2rad));
+		   cos(Lapp * deg2rad)) *rad2deg ;
+
+  cout << "right ascension = " << a << " degrees" << endl;
 
   // declination d
-  double d = asin(sin(eCorrected * deg2rad) * sin(Lapp * deg2rad));
-
-  // solar coordinates
-  //RightAscension ra = new RightAscension(a.ToDegrees());
-  //Angle dec = new Angle(d.ToDegrees());
+  double d = asin(sin(eCorrected * deg2rad) * sin(Lapp * deg2rad)) * rad2deg;
+  cout << "declination = " << d << " degrees" << endl;
 
   // Calculate the solar declination angle
   double lambda = L + 1.915 * sin(g * deg2rad) + 0.020 * sin(2 * g * deg2rad);
@@ -181,6 +180,8 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double sindelta = sin(delta * deg2rad);
   double cosH = (cosz - sindelta * sinphi) / (cosdelta * cosphi);
   double H = acos(cosH) * rad2deg;
+  cout << "equation of time = " << H << " degrees" << endl;
+  cout << "                or " << H/15.0 << " hours" << endl;
 
   // Convert to local solar time
   double solarNoon = 12.0 - longitude / 15.0 - timezone;
