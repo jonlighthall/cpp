@@ -55,7 +55,7 @@ void printDeg(double theta) {
 
 double meanLongitude(double t) {
   // Geometric Mean Longitude of the Sun
-  // referred to the mean equinox of the time or sidereal time
+  // referred to the mean equinox of the time or sidreal time at Greenwich or Universal Time
   // calculated in degrees
   // Meeus pg. 163, Eq. 25.2
   // based on J2000 longitude
@@ -210,7 +210,7 @@ double dms2deg(double deg, double min, double sec) {
       cout << deg << "\u00b0";
     if ((deg != 0) && (min != 0))
       cout << min << "'";
-    cout << sec << "'' = " << ang << " degrees" << endl;
+    cout << sec << "'' = " << setprecision(10) << ang << " degrees" << endl;
   }
   return ang;
 }
@@ -452,7 +452,11 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double Omega=longitudeAscendingNode(t);
   
   // nutation in longitude
+  // Longitude of the periapsis or longitude of the pericenter
   double DPsi = - 0.00569 - (0.00478 * sin(Omega));
+  cout << "Nutation in logitude... or longitude of the periapsis?" << endl;
+  cout << "  DPsi = " << DPsi << " radians" << endl;
+  cout << "  DPSi = " << DPsi * rad2deg << " degrees" << endl;
 
   // apparent longitude L (lambda) of the Sun
   // true equinox of the date
@@ -460,6 +464,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   cout << " apparent longitude  = " << lambda << endl;
   lambda*=deg2rad;
 
+  
   double epsilon0=obliquityOfEcliptic(t);
  
   // correction for parallax (Meeus Eq. 25.8)
@@ -473,12 +478,25 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   // Sun's right ascension a
   double alpha = atan2(cos(epsilon) * sin(lambda),
 		       cos(lambda));
-  // convert to degrees
-  alpha*=rad2deg;
 
   // Calculate the solar declination angle
   // declination d or delta
-  double delta = asin(sin(epsilon) * sin(lambda)) * rad2deg;
+  double delta = asin(sin(epsilon) * sin(lambda));
+
+  // Longitude of the periapsis or longitude of the pericenter
+  double tanbar=atan2(cos(alpha),
+		      sin(alpha)*cos(epsilon)+tan(delta)*sin(epsilon));
+  if (cos(alpha)<0)
+    tanbar+=PI;
+
+  cout << "Longitude of the periapsis" << endl;
+  cout << "tanbar = " << tanbar << " radians" << endl;
+  cout << "tanbar = " << tanbar * rad2deg << " degrees" << endl;
+  
+  cout << "\t      cos(R.A.) = " << cos(alpha) << endl;
+  // convert to degrees
+  alpha*=rad2deg;
+  delta*=rad2deg;
 
   if (debug>0) {
     cout << "Solar coordinates:" << endl;
