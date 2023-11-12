@@ -60,12 +60,12 @@ double meanLongitude(double t) {
   // Meeus pg. 163, Eq. 25.2
   // based on J2000 longitude
   double L_1 = 280.460     + 36000.771      * t; // USNO
-  double L_3 = 280.46646   + 36000.76983    * t + 0.0003032  * pow(t,2); // NOAA
+  double L_2 = 280.46646   + 36000.76983    * t + 0.0003032  * pow(t,2); // NOAA
   double L_5 = 280.4664567 + 36000.76982779 * t + 0.03032028 * pow(t,2) + pow(t,3)/49931-pow(t,4)/15300 - pow(t,5)/2e6;
   if (debug>0) {
-    cout << "The Geometric Mean Longitude of the Sun is " << endl;
-    cout << "\t   linear: L = " << setprecision(7); printDeg(L_1); cout << " (USNO)" << endl;
-    cout << "\tquadratic: L = "; printDeg(L_3); cout << " (NOAA)" << endl;
+    cout << "Geometric Mean Longitude of the Sun" << endl;
+    cout << "\t   linear: L = " << setprecision(6) << left; printDeg(L_1); cout << " (USNO)" << endl;
+    cout << "\tquadratic: L = "; printDeg(L_2); cout << " (NOAA)" << endl;
     cout << "\t  quintic: L = "; printDeg(L_5); cout << endl;
   }
   return fmod(L_5,360);
@@ -76,10 +76,10 @@ double meanAnomaly(double t) {
   //Meeus pg. 163, Eq. 25.3
   double M_1 = 357.528   + 35999.050   * t;
   double M_2 = 357.52911 + 35999.05029 * t - 0.0001537 * pow(t,2); // NOAA
-  double M_3 = 357.52772 + 35999.050340 *t - 0.0001603 * pow(t,2) + pow(t,3)/189474;
+  double M_3 = 357.52772 + 35999.050340 *t - 0.0001603 * pow(t,2) + pow(t,3)/300000; // X1 in Eq. 16, Reda & Andreas (2008)
   if (debug>0) {
-    cout << "The Mean Anomaly of the Sun is " << endl;
-    cout << "\t   linear: M = "; printDeg(M_1); cout << " (USNO)" << endl;
+    cout << "Mean Anomaly of the Sun" << endl;
+    cout << "\t   linear: M = " << setprecision(6); printDeg(M_1); cout << " (USNO)" << endl;
     cout << "\tquadratic: M = "; printDeg(M_2); cout << " (NOAA)" << endl;
     cout << "\t    cubic: M = "; printDeg(M_3); cout << " " << endl;
   }
@@ -101,7 +101,7 @@ double equationOfCenter(double t, double M) {
     + (0.000289 * sin(3*M));
 
   if (debug>0) {
-    cout << "The Sun's equation of center" << endl;
+    cout << "Equation of center" << endl;
     cout << "\t constant: C = " << C_0 << " (USNO)" << endl;
     cout << "\tquadratic: C = " << C_2 << " (NOAA)" << endl;
   }
@@ -110,9 +110,12 @@ double equationOfCenter(double t, double M) {
 
 double longitudeAscendingNode(double t) {
   // Longitude of the ascending node of the Moon's mean orbit on the ecliptic, measured form the
-  // mean equinox of the date. Used to correction for nutation and aberration.
+  // mean equinox of the date. Taken from Ibrahim Reda and Afshin Andreas, Solar position
+  // algorithm for solar radiation applications, NREL Technical Report NREL/TP-560-34302 (2008).
+
+  //Used to correction for nutation and aberration.
   double Omega_1 = 125.04    - 1934.136 * t;
-  double Omega_3 = 125.04452 - 1934.136261 * t + 0.0020708 * pow(t,2) + pow(t,3) / 450000;
+  double Omega_3 = 125.04452 - 1934.136261 * t + 0.0020708 * pow(t,2) + pow(t,3) / 450000;  // X4 in Eq. 19, Reda & Andreas (2008)
 
   if (debug>0) {
     cout << "Longitude of the ascending node" << endl;
@@ -120,6 +123,55 @@ double longitudeAscendingNode(double t) {
     cout << "\tcubic: Omega = " << Omega_3 << " degrees" << endl;
   }
   return Omega_3*deg2rad;
+}
+
+double longitudePeriapsis(double Omega, double JCE, double X1) {
+  // nutation in longitude
+  // Longitude of the periapsis or longitude of the pericenter
+  // omega is in radians
+  double DPsi = - 0.00569 - (0.00478 * sin(Omega));
+  cout << "Nutation in logitude\n\t... or longitude of the periapsis?" << endl;
+  cout << "\t       DPsi = " << DPsi << " radians" << endl;
+  cout << "\t       DPSi = " << DPsi * rad2deg << " degrees" << endl;
+
+  double X0 = 297.85036 + 44526.7111480 * JCE - 0.0019142 * pow(JCE,2) + pow(JCE,3)/189474.; // Eq. 15
+  double X3 =  93.27191 + 483202.017538 * JCE - 0.0036825 * pow(JCE,2) + pow(JCE,3)/327270.; // Eq. 18
+  double X4=Omega; // Eq. 19
+
+  // print values
+  cout << "\tX0 = " << X0 << " degrees" << endl;
+  cout << "\tX1 = " << X1 << " degrees" << endl;
+  cout << "\tX3 = " << X3 << " degrees" << endl;
+  cout << "\tX4 = " << X4*rad2deg << " degrees" << endl;
+
+  // convert to radians
+  X0*=deg2rad;
+  X1*=deg2rad;
+  X3*=deg2rad;
+  
+  // Eq. 20, Reda & Andreas (2008)
+  double DPsi0 = (-171996 -174.2 * JCE) * sin(X4);
+  double DPsi1 = (-13187 -1.6 * JCE) * sin(X0*-2 + X3*2 + X4*2);
+  double DPsi2 = (-2274 -0.2 * JCE) * sin(X3*2 + X4*2);
+  double DPsi3 = (-2062 + 0.2 * JCE) * sin(X4 * 2);
+  double DPsi4 = (1426 -3.4 * JCE) * sin(X1);
+
+  cout << "\t      DPsi0 = " << DPsi0 << " 0.1 milli arcseconds" << endl;
+  cout << "\t      DPsi1 = " << DPsi1 << " 0.1 milli arcseconds" << endl;
+  cout << "\t      DPsi2 = " << DPsi2 << " 0.1 milli arcseconds" << endl;
+  cout << "\t      DPsi3 = " << DPsi3 << " 0.1 milli arcseconds" << endl;
+  cout << "\t      DPsi4 = " << DPsi4 << " 0.1 milli arcseconds" << endl;
+
+  double SDPsi = DPsi0 + DPsi1 +DPsi2 + DPsi3 +DPsi4;  
+  cout << "\t      SDPsi = " << SDPsi << " 0.1 milli arcseconds" << endl;
+  SDPsi/=10000;
+  cout << "\t      SDPsi = " << SDPsi << " arcseconds" << endl;
+  SDPsi /= 3600;
+  cout << "\t      SDPsi = " << SDPsi << " degrees" << endl;
+  SDPsi*=deg2rad;
+  cout << "\t      SDPsi = " << SDPsi << " radians" << endl;
+  
+  return DPsi;
 }
 
 double eccentricity(double t) {
@@ -440,30 +492,25 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   // Sun's true geometric longitude
   double l = (L + C);
-  cout << "True longitude" << endl;
-  cout << "\t           l = "; printDeg(l); cout << endl;
+  cout << "True longitude of the sun is" << endl;
+  cout << "\t           l = " << setprecision(7); printDeg(l); cout << endl;
  
   // Sun's true anomaly
   double nu = (M + C);
-  cout << "True anomaly" << endl;
-  cout << "\t          nu = "; printDeg(nu); cout << endl;
+  cout << "True anomaly of the sun is" << endl;
+  cout << "\t          nu = "<< setprecision(5); printDeg(nu); cout << endl;
  
   // longitude of the ascending node
   double Omega=longitudeAscendingNode(t);
   
   // nutation in longitude
-  // Longitude of the periapsis or longitude of the pericenter
-  double DPsi = - 0.00569 - (0.00478 * sin(Omega));
-  cout << "Nutation in logitude... or longitude of the periapsis?" << endl;
-  cout << "  DPsi = " << DPsi << " radians" << endl;
-  cout << "  DPSi = " << DPsi * rad2deg << " degrees" << endl;
-
-  // apparent longitude L (lambda) of the Sun
+  double DPsi = longitudePeriapsis(Omega,t,L);
+  
+  // apparent longitude of the Sun
   // true equinox of the date
   double lambda = l + DPsi;
-  cout << " apparent longitude  = " << lambda << endl;
+  cout << "Apparent longitude\n\t    lambda  = " << lambda << endl;
   lambda*=deg2rad;
-
   
   double epsilon0=obliquityOfEcliptic(t);
  
