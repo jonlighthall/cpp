@@ -12,7 +12,7 @@
 using namespace std;
 
 // settings
-const int debug=1;
+const int debug=2;
 
 // define constants
 const double PI = atan(1)*4;
@@ -142,8 +142,10 @@ double radiusVector(double e, double nu) {
     - e * cos(nu)
     - 0.00014 * cos(2*nu);
 
-  // probably initial value for the semi-major axis for J2000
-  double a = 1.000001018; // in au
+  // initial value for the semi-major axis for J2000
+  // Bretagnon, P.: 1982, Astron. Astrophys. 114, 278
+  double a = 1.00000101778; // in au
+  
   double R_NOAA = (a * (1 - pow(e,2))) / (1 + e * cos(nu));
 
   if (debug>0) {
@@ -194,39 +196,60 @@ double getSunSize(double rad_vec_au = 1) {
   //const double sunRadius = 0.26667; 
 }
 
+double dgm2deg(double deg, double min, double sec) {
+  double ang = deg
+    + min/60.
+    + sec/3600.;
+  if (debug>0) {
+    cout << deg << "\u00b0" << min << "'" << sec << "'' = " << ang << " degrees" << endl;
+  }
+  return ang;
+}
+
 // A function to calculate the obliquity of the ecliptic in degrees
 double obliquityOfEcliptic(double T) {
+  // obliquity of the ecliptic (22.2)
   // input is Julian Ephemeris Century
   // output in degrees
     
   // define reference angles
-  double theta1  = 23.0+(26.0/60.0)+(21.448/pow(60.0,2));
-  double otheta1 = 23.439;
-
+  // the initial values adopted by the JAU (Grenoble, 1976):
+  double epsilon0 = dgm2deg(23,26,21.448);
+  double eps0arcsec = epsilon0 * 3600.;
+  
   double theta2 = 4680.93/pow(60.0,2);
   double otheta2 = 0.013 * 100.0;
 
   if (debug > 1) {
-    cout << "theta1 = " << theta1 << endl;
-    cout << "      or " << otheta1 << endl;
+    cout << "epsilon0 = " << epsilon0 << " degrees" << endl;
+    cout << "        or " << eps0arcsec << " arcseconds" << endl;
     cout << "theta2 = " << theta2 << endl;
     cout << "      or " << otheta2 << endl;
   }
   
-  double epsilon_1 = otheta1 - otheta2 * T/100;
+  double epsilon_1 = epsilon0 - otheta2 * T/100;
 
   // Calculate the obliquity of the ecliptic in arcseconds
-  double epsilon_NOAA = 84381.448 - 46.815 * T - 0.00059 * T * T + 0.001813 * T * T * T;
+  double epsilon_NOAA = eps0arcsec - 46.815 * T - 0.00059 * pow(T,2) + 0.001813 * pow(T,3);
     
-  // Convert arcseconds to degrees
-  epsilon_NOAA = epsilon_NOAA / 3600.0;
+  // This uses Laskar’s tenth-degree polynomial fit:
+  // Laskar, J., Astronomy and Astrophysics, 157: 68 (1986).
+  // Table 8. Formulas for the precession. The obliquity is given in arcseconds and the time t is
+  // measured in units of 10,000 Julian years from J2000 (JD 2451545.0). NGT denotes our solution
+  // (Numerical General Theory). L denotes the solution of Lieske et al. (1977).
 
-  // obliquity of the ecliptic (22.2)
+  // convert Julian centuries to 10,000 Julian years
   double U = T / 100.0;
+
+  // Lieske et al. (1977).
+  // Used by NOAA
+  double epsilon_L = eps0arcsec
+    - 4681.50 * U
+    - 5.9 * pow(U,2)
+    + 1813. * pow(T,3);   
   
-  double epsilon_10 =
-    theta1
-    - theta2 * U
+  double epsilon_10 = eps0arcsec
+    - 4680.93 * U
     - 1.55 * pow(U, 2)
     + 1999.25 * pow(U, 3)
     - 51.38 * pow(U, 4)
@@ -236,12 +259,18 @@ double obliquityOfEcliptic(double T) {
     + 27.87 * pow(U, 8)
     + 5.79 * pow(U, 9)
     + 2.45 * pow(U, 10);
+  
+  // Convert arcseconds to degrees
+  epsilon_NOAA = epsilon_NOAA / 3600.;
+  epsilon_L*= 1/3600.;
+  epsilon_10*= 1/3600.;  
 
   if (debug>0) {
-  cout << "The obliquity of the ecliptic is " << endl;
-  cout << "\t linear: "; printDeg(epsilon_1); cout << " (USNO)" << endl;
-  cout << "\t  cubic: "; printDeg(epsilon_NOAA); cout << " (NOAA)" << endl;
-  cout << "\t series: " << epsilon_10 << endl;
+    cout << "The obliquity of the ecliptic is " << endl;
+    cout << "\t linear: "; printDeg(epsilon_1); cout << " (USNO)" << endl;
+    cout << "\t  cubic: "; printDeg(epsilon_NOAA); cout << " (NOAA)" << endl;
+    cout << "\t  cubic: "; printDeg(epsilon_L); cout << " Lieske et al. 1977 (NOAA)" << endl;
+    cout << "\t series: " << epsilon_10 << " Laskar 1985" << endl;
   }
    
   return epsilon_NOAA;
