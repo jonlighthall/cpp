@@ -185,15 +185,17 @@ double getSunSize(double rad_vec_au = 1) {
   const double sun_diam_rad = 2*atan(sun_diam_m/(2*rad_vec_m)); // angular size in radians
   const double sun_diam_deg = sun_diam_rad*rad2deg; // angular size in degrees
 
+  // return semidiameter
+  const double sun_radi_deg = sun_diam_deg/2;  
+  
   if (debug>0) {
     cout << "The angular size of the sun is " << endl;
     cout << "\t" << sun_diam_deg << " degrees";
     cout << " or " << sun_diam_deg*60 << " arcminutes"; //should be between ~31.5 32.5 arcminutes
+    cout << "\t" << sun_radi_deg << " degrees (semidiameter)";
     cout << endl;
   }
   
-  // return semidiameter
-  const double sun_radi_deg = sun_diam_deg/2;  
   return sun_radi_deg;
   //const double sunRadius = 0.26667; 
 }
