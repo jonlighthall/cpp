@@ -14,7 +14,7 @@
 using namespace std;
 
 // settings
-const int debug=1;
+const int debug=2;
 
 // define constants
 const double PI = atan(1)*4;
@@ -125,51 +125,54 @@ double longitudeAscendingNode(double t) {
   return Omega_3*deg2rad;
 }
 
-double longitudePeriapsis(double Omega, double JCE, double X1) {
+double nutationInLongitude(double Omega, double JCE, double X1) {
   // nutation in longitude
   // Longitude of the periapsis or longitude of the pericenter
   // omega is in radians
   double DPsi = - 0.00569 - (0.00478 * sin(Omega));
-  cout << "Nutation in logitude\n\t... or longitude of the periapsis?" << endl;
-  cout << "\t       DPsi = " << DPsi << " radians" << endl;
-  cout << "\t       DPSi = " << DPsi * rad2deg << " degrees" << endl;
+  cout << "Nutation in logitude" << endl;
+  cout << "\t        DPsi = " << DPsi << " degrees" << endl;
 
-  double X0 = 297.85036 + 44526.7111480 * JCE - 0.0019142 * pow(JCE,2) + pow(JCE,3)/189474.; // Eq. 15
-  double X3 =  93.27191 + 483202.017538 * JCE - 0.0036825 * pow(JCE,2) + pow(JCE,3)/327270.; // Eq. 18
-  double X4=Omega; // Eq. 19
+  if (debug>1) {
+    cout << "\t        DPSi = " << DPsi * deg2rad << " radians" << endl;
+    
+    double X0 = 297.85036 + 44526.7111480 * JCE - 0.0019142 * pow(JCE,2) + pow(JCE,3)/189474.; // Eq. 15
+    double X3 =  93.27191 + 483202.017538 * JCE - 0.0036825 * pow(JCE,2) + pow(JCE,3)/327270.; // Eq. 18
+    double X4=Omega; // Eq. 19
 
-  // print values
-  cout << "\tX0 = " << X0 << " degrees" << endl;
-  cout << "\tX1 = " << X1 << " degrees" << endl;
-  cout << "\tX3 = " << X3 << " degrees" << endl;
-  cout << "\tX4 = " << X4*rad2deg << " degrees" << endl;
+    // print values
+    cout << "\tX0 = " << X0 << " degrees" << endl;
+    cout << "\tX1 = " << X1 << " degrees" << endl;
+    cout << "\tX3 = " << X3 << " degrees" << endl;
+    cout << "\tX4 = " << X4*rad2deg << " degrees" << endl;
 
-  // convert to radians
-  X0*=deg2rad;
-  X1*=deg2rad;
-  X3*=deg2rad;
+    // convert to radians
+    X0*=deg2rad;
+    X1*=deg2rad;
+    X3*=deg2rad;
   
-  // Eq. 20, Reda & Andreas (2008)
-  double DPsi0 = (-171996 -174.2 * JCE) * sin(X4);
-  double DPsi1 = (-13187 -1.6 * JCE) * sin(X0*-2 + X3*2 + X4*2);
-  double DPsi2 = (-2274 -0.2 * JCE) * sin(X3*2 + X4*2);
-  double DPsi3 = (-2062 + 0.2 * JCE) * sin(X4 * 2);
-  double DPsi4 = (1426 -3.4 * JCE) * sin(X1);
+    // Eq. 20, Reda & Andreas (2008)
+    double DPsi0 = (-171996 -174.2 * JCE) * sin(X4);
+    double DPsi1 = (-13187 -1.6 * JCE) * sin(X0*-2 + X3*2 + X4*2);
+    double DPsi2 = (-2274 -0.2 * JCE) * sin(X3*2 + X4*2);
+    double DPsi3 = (-2062 + 0.2 * JCE) * sin(X4 * 2);
+    double DPsi4 = (1426 -3.4 * JCE) * sin(X1);
 
-  cout << "\t      DPsi0 = " << DPsi0 << " 0.1 milli arcseconds" << endl;
-  cout << "\t      DPsi1 = " << DPsi1 << " 0.1 milli arcseconds" << endl;
-  cout << "\t      DPsi2 = " << DPsi2 << " 0.1 milli arcseconds" << endl;
-  cout << "\t      DPsi3 = " << DPsi3 << " 0.1 milli arcseconds" << endl;
-  cout << "\t      DPsi4 = " << DPsi4 << " 0.1 milli arcseconds" << endl;
+    cout << "\t      DPsi0 = " << DPsi0 << " 0.1 milli arcseconds" << endl;
+    cout << "\t      DPsi1 = " << DPsi1 << " 0.1 milli arcseconds" << endl;
+    cout << "\t      DPsi2 = " << DPsi2 << " 0.1 milli arcseconds" << endl;
+    cout << "\t      DPsi3 = " << DPsi3 << " 0.1 milli arcseconds" << endl;
+    cout << "\t      DPsi4 = " << DPsi4 << " 0.1 milli arcseconds" << endl;
 
-  double SDPsi = DPsi0 + DPsi1 +DPsi2 + DPsi3 +DPsi4;  
-  cout << "\t      SDPsi = " << SDPsi << " 0.1 milli arcseconds" << endl;
-  SDPsi/=10000;
-  cout << "\t      SDPsi = " << SDPsi << " arcseconds" << endl;
-  SDPsi /= 3600;
-  cout << "\t      SDPsi = " << SDPsi << " degrees" << endl;
-  SDPsi*=deg2rad;
-  cout << "\t      SDPsi = " << SDPsi << " radians" << endl;
+    double SDPsi = DPsi0 + DPsi1 +DPsi2 + DPsi3 +DPsi4;  
+    cout << "\t      SDPsi = " << SDPsi << " 0.1 milli arcseconds" << endl;
+    SDPsi/=10000;
+    cout << "\t      SDPsi = " << SDPsi << " arcseconds" << endl;
+    SDPsi /= 3600;
+    cout << "\t      SDPsi = " << SDPsi << " degrees" << endl;
+    SDPsi*=deg2rad;
+    cout << "\t      SDPsi = " << SDPsi << " radians" << endl;
+  }
   
   return DPsi;
 }
@@ -181,7 +184,7 @@ double eccentricity(double t) {
   double e = 0.016708634 - (0.000042037 * t) - (0.0000001267 * pow(t, 2));
   
   if (debug>0) {
-    cout << "eccentricity = " << e << endl;
+    cout << "eccentricity\n\t e = " << e << endl;
   }
   return e;
 }
@@ -277,6 +280,10 @@ double obliquityOfEcliptic(double T) {
     
   // define reference angles
   // the initial values adopted by the JAU (Grenoble, 1976):
+  if (debug > 1) {
+    cout << "Initial obliquity of the ecliptic, J2000" << endl;
+    cout << "\t";
+  }
   double const epsilon0 = dms2deg(23,26,21.448);
     
   // This uses Laskar’s tenth-degree polynomial fit:
@@ -293,11 +300,12 @@ double obliquityOfEcliptic(double T) {
   double const t = 4680.93; // the O(1) term is included here for reference to earlier versions
 
   if (debug > 1) {
-    cout << "epsilon0 = " << epsilon0 << " degrees" << endl;
-    cout << "        or " << t0 << " arcseconds" << endl;
+    cout << "\t      epsilon0 = " << epsilon0 << " degrees" << endl;
+    cout << "\t              or " << t0 << " arcseconds" << endl;
+    cout << "\t     ";
     double const theta2 = dms2deg(0,0,t);
-    cout << "  theta2 = " << theta2 << endl;
-    cout << "        or " << t << endl;
+    cout << "\t        theta2 = " << theta2 << endl;
+    cout << "\t              or " << t << endl;
   }
   
   double epsilon_1 = t0 - t * U; // USNO
@@ -341,12 +349,13 @@ double equationOfTime2(double M, double alpha, double DPsi, double epsilon) {
   //  double EqT = q/15.0 - RA; //USNO
   double EqT = M - alpha; //degrees
   if (debug>0) {
-    cout << "EqT = " << EqT << " degrees" <<endl;
-    cout << "EqT = " << EqT*4 << " minutes" <<endl;
+    cout << "Equation of Time" << endl;
+    cout << "\tEqT = " << EqT << " degrees" <<endl;
+    cout << "\tEqT = " << EqT*4 << " minutes" <<endl;
   }
 
   double E = M - 0.0057183 - alpha + DPsi * cos(epsilon);
-  cout << "E = " << E << " degrees" <<endl;
+  cout << "\tE = " << E << " degrees" <<endl;
   return EqT;
 }
 
@@ -359,12 +368,13 @@ double equationOfTime3(double y,double L,double e,double M) {
   M*=deg2rad;
 
   if (debug > 1) {
+    cout << "Equation of time" << endl;
     // print individual terms
-    cout << y*sin(2*L)<< endl;
-    cout << -2*e*sin(M)<< endl;
-    cout << +4*e*y*sin(M)*cos(2*L)<< endl;
-    cout << -(1/2.)*pow(y,2)*sin(4*L)<< endl;
-    cout << -(5/4.)*pow(e,2)*sin(2*M)<< endl;
+    cout << "\t" << y*sin(2*L)<< endl;
+    cout << "\t" << -2*e*sin(M)<< endl;
+    cout << "\t" << +4*e*y*sin(M)*cos(2*L)<< endl;
+    cout << "\t" << -(1/2.)*pow(y,2)*sin(4*L)<< endl;
+    cout << "\t" << -(5/4.)*pow(e,2)*sin(2*M)<< endl;
   }
   
   double E = y*sin(2*L)
@@ -374,10 +384,9 @@ double equationOfTime3(double y,double L,double e,double M) {
     -(5/4.)*pow(e,2)*sin(2*M);
 
   if (debug>0) {
-    cout << "equation of time" << endl;
-    cout << "\t E = " << E << " radians" << endl;
-    cout << "\t E = " << E*rad2deg << " degrees" << endl;
-    cout << "\t E = " << E*rad2deg*4 << " minutes" << endl;
+    cout << "\tE = " << E << " radians" << endl;
+    cout << "\tE = " << E*rad2deg << " degrees" << endl;
+    cout << "\tE = " << E*rad2deg*4 << " minutes" << endl;
   }
   return E*rad2deg/15; // hours
 }
@@ -388,19 +397,19 @@ double getZenith(double e, double nu) {
   cout << "sun size:" << endl;
   double R = radiusVector(e,nu);
 
-  cout << "default: ";
+  cout << "   default: ";
   getSunSize();
   
-  cout << "calculated: ";
+  cout << "   calculated: ";
   const double sun_radi_deg = getSunSize(R);
 
   cout << "sun elevation h0" << endl;
-  cout << "default: " << endl;
+  cout << "   default: " << endl;
   cout << "\t " << -0.833 << " degrees (NOAA)" << endl;
   
   const double atmo_refrac = 0.5667;
   const double h0 = -(sun_radi_deg + atmo_refrac);
-  cout << "calculated: " << endl;
+  cout << "   calculated: " << endl;
   cout << "\t " << h0 << " degrees" << endl;
   
   double zenith = 90.0 - h0;
@@ -419,14 +428,14 @@ double hourAngle(double h0, double phi, double delta) {
   delta*=deg2rad;
 
   if (debug>1) {
-    cout << "h0" << endl;
-    cout << cos(h0)    << endl;
-    cout << "phi" << endl;
-    cout << sin(phi)   << endl;
-    cout << cos(phi)   << endl;
-    cout << "delta" << endl;
-    cout << sin(delta) << endl;
-    cout << cos(delta) << endl;
+    cout << "   h0" << endl;
+    cout << "\t" << cos(h0)    << endl;
+    cout << "   phi" << endl;
+    cout << "\t" << sin(phi)   << endl;
+    cout << "\t" << cos(phi)   << endl;
+    cout << "   delta" << endl;
+    cout << "\t" << sin(delta) << endl;
+    cout << "\t" << cos(delta) << endl;
   }
 
   double cosH =   ( cos(h0) - sin(phi) * sin(delta) ) / ( cos(phi) * cos(delta) );
@@ -447,9 +456,10 @@ string hour2time (double fhr) {
   int sec = floor(fsec);
 
   if (debug>1) {
-    cout << "hour = " << fhr << endl;
-    cout << "min = " << fmin << endl;
-    cout << "sec = " << fsec << endl;
+    cout << "\n\thour = " << fhr << endl;
+    cout << "\tmin = " << fmin << endl;
+    cout << "\tsec = " << fsec << endl;
+    cout << "\t";
   }
   char time[64];
   sprintf(time,"%02d:%02d:%06.3f",hr,min,fsec);
@@ -473,7 +483,7 @@ double getSolarNoon(double longitude, double timezone) {
     cout << "    The solar timezone is " << sol_tz << " hours" << endl;
     cout << "          a difference of " << tz_diff << " hours" << endl;
     cout << "                       or " << tz_diff*60 << " minutes" << endl;
-    cout << "Solar noon is " << sol_noon << " or " << hour2time(sol_noon) << endl;
+    cout << "Solar noon is \n\t" << sol_noon << " or " << hour2time(sol_noon) << endl;
   }
   return sol_noon;
 }
@@ -504,7 +514,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double Omega=longitudeAscendingNode(t);
   
   // nutation in longitude
-  double DPsi = longitudePeriapsis(Omega,t,L);
+  double DPsi = nutationInLongitude(Omega,t,L);
   
   // apparent longitude of the Sun
   // true equinox of the date
@@ -514,11 +524,13 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   
   double epsilon0=obliquityOfEcliptic(t);
  
+  // nutation in obliquity
   // correction for parallax (Meeus Eq. 25.8)
   // The true or instantaneous obliquity includes the nutation.
   double Depsilon = 0.00256 * cos(Omega);
+  cout << "Nutation in obliquity\n\      Depsilon =  " << Depsilon << endl;
   double epsilon = epsilon0 + Depsilon;
-  cout << "              or " << epsilon << " including nutation" << endl;
+  cout << "       epsilon = " << epsilon << " including nutation" << endl;
   // convert to radians
   epsilon*=deg2rad;
  
@@ -537,8 +549,8 @@ double getSunset(int year, int month, int day, double latitude, double longitude
     tanbar+=PI;
 
   cout << "Longitude of the periapsis" << endl;
-  cout << "tanbar = " << tanbar << " radians" << endl;
-  cout << "tanbar = " << tanbar * rad2deg << " degrees" << endl;
+  cout << "\ttanbar = " << tanbar << " radians" << endl;
+  cout << "\ttanbar = " << tanbar * rad2deg << " degrees" << endl;
   
   cout << "\t      cos(R.A.) = " << cos(alpha) << endl;
   // convert to degrees
@@ -559,20 +571,20 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   // Equation 3
   if (debug > 1) {
     double e2 = epsilon / 2.0;
-    cout << "e/2 rad = " << e2  << endl;
+    cout << "\te/2 rad = " << e2  << endl;
     double te2 = tan(e2);
-    cout << "tan e/2 = " << te2 << endl;
-    cout << "y = " << te2*te2 << endl;
+    cout << "\ttan e/2 = " << te2 << endl;
+    cout << "\ty = " << te2*te2 << endl;
   }
   double y = pow(tan(epsilon / 2.0),2);
-  cout << "y = " << y << endl;
+  cout << "\ty = " << y << endl;
   double e = eccentricity(t);
   double E=equationOfTime3(y,L,e,M);
 
   // adjust solar noon
   double solarNoon = getSolarNoon(longitude,timezone);
   solarNoon -= E;
-  cout << "solar noon = " << solarNoon << " or " << hour2time(solarNoon) << endl;
+  cout << "Corrected solar noon\n\t" << solarNoon << " or " << hour2time(solarNoon) << endl;
 
   // calculate zenith
   double zenith=getZenith(e,nu);
