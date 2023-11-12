@@ -6,15 +6,15 @@
     Meeus, Jean (1991). Astronomical Algorithms.
 */
 
-#include <iostream>
-#include <iomanip>   
 #include <cmath>
 #include <ctime>
+#include <iomanip>   
+#include <iostream>
 
 using namespace std;
 
 // settings
-const int debug=2;
+const int debug=1;
 
 // define constants
 const double PI = atan(1)*4;
@@ -22,26 +22,26 @@ const double deg2rad = PI / 180.;
 const double rad2deg = 180. / PI;
 
 double getJulianDate(int year, int month, int day) {
-  cout << "the input date is " << year << "-" << month << "-" << day << endl;
+  cout << "The input date is " << year << "-" << month << "-" << day << endl;
   int a = (14 - month) / 12;
   int y = year + 4800 - a;
   int m = month + 12 * a - 3;
   int jd = day + (153 * m + 2) / 5 + 365 * y + y / 4 - y / 100 + y / 400 - 32045;
-  cout << "the Julian Date is " << jd << endl;
+  cout << "\tthe Julian date is " << jd << endl;
   return jd; // are we supposed to return noon?  
 }
 
 double getJ2000 (double jd) {
   // convert Julian Date to J2000 epoch, that is, the Julian Date since Jan 1, 2000
   double J2000 = jd - 2451545.0;
-  cout << " the J2000 date is " << J2000 << endl;
+  cout << "\tthe J2000 date is " << J2000 << endl;
   return J2000;
 }
 
 double getJulianCentury (double J2000) {
   // convert J2000 date to Julian Ephemeris Century, that is, fraction of a Julian century 
   double T = J2000  / 36525.;
-  cout << "the Julian Ephemeris Century is " << T << endl;
+  cout << "\tthe Julian century is " << T << endl;
   return T;
 }
 
@@ -64,9 +64,9 @@ double meanLongitude(double t) {
   double L_5 = 280.4664567 + 36000.76982779 * t + 0.03032028 * pow(t,2) + pow(t,3)/49931-pow(t,4)/15300 - pow(t,5)/2e6;
   if (debug>0) {
     cout << "The Geometric Mean Longitude of the Sun is " << endl;
-    cout << "\t    linear: L = " << setprecision(7); printDeg(L_1); cout << " (USNO)" << endl;
-    cout << "\t quadratic: L = "; printDeg(L_3); cout << " (NOAA)" << endl;
-    cout << "\t   quintic: L = "; printDeg(L_5); cout << endl;
+    cout << "\t   linear: L = " << setprecision(7); printDeg(L_1); cout << " (USNO)" << endl;
+    cout << "\tquadratic: L = "; printDeg(L_3); cout << " (NOAA)" << endl;
+    cout << "\t  quintic: L = "; printDeg(L_5); cout << endl;
   }
   return fmod(L_3,360);
 }
@@ -78,8 +78,8 @@ double meanAnomaly(double t) {
   double M_2 = 357.52911 + 35999.05029 * t - 0.0001537 * pow(t,2); // NOAA
   if (debug>0) {
     cout << "The Mean Anomaly of the Sun is " << endl;
-    cout << "\t    linear: M = "; printDeg(M_1); cout << " (USNO)" << endl;
-    cout << "\t quadratic: M = "; printDeg(M_2); cout << " (NOAA)" << endl;
+    cout << "\t   linear: M = "; printDeg(M_1); cout << " (USNO)" << endl;
+    cout << "\tquadratic: M = "; printDeg(M_2); cout << " (NOAA)" << endl;
   }
   return fmod(M_2,360.0);
 }
@@ -100,8 +100,8 @@ double equationOfCenter(double t, double M) {
 
   if (debug>0) {
     cout << "The Sun's equation of center" << endl;
-    cout << "\t  constant: C = " << C_0 << " (USNO)" << endl;
-    cout << "\t quadratic: C = " << C_2 << " (NOAA)" << endl;
+    cout << "\t constant: C = " << C_0 << " (USNO)" << endl;
+    cout << "\tquadratic: C = " << C_2 << " (NOAA)" << endl;
   }
   return C_2;
 }
@@ -114,8 +114,8 @@ double nuation(double t) {
 
   if (debug>0) {
     cout << "Nuation" << endl;
-    cout << "\t linear: omega = " << omega_1 << " degrees (NOAA)" << endl;
-    cout << "\t  cubic: omega = " << omega_3 << " degrees" << endl;
+    cout << "\t  lin: omega = " << omega_1 << " degrees (NOAA)" << endl;
+    cout << "\tcubic: omega = " << omega_3 << " degrees" << endl;
   }
   return omega_1*deg2rad;
 }
@@ -368,13 +368,13 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   // Sun's true geometric longitude
   double l = (L + C);
-  cout << "true longitude" << endl;
-  cout << "\t            l = "; printDeg(l); cout << endl;
+  cout << "True longitude" << endl;
+  cout << "\t           l = "; printDeg(l); cout << endl;
  
   // Sun's true anomaly
   double nu = (M + C);
-  cout << "true anomaly" << endl;
-  cout << "\t           nu = "; printDeg(nu); cout << endl;
+  cout << "True anomaly" << endl;
+  cout << "\t          nu = "; printDeg(nu); cout << endl;
  
   // nuation
   double omega=nuation(t);
@@ -382,7 +382,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   // apparent longitude L (lambda) of the Sun
   // true equinox of the date
   double lambda = l - 0.00569 - (0.00478 * sin(omega));
-  cout << "  apparent longitude  = " << lambda << endl;
+  cout << " apparent longitude  = " << lambda << endl;
   lambda*=deg2rad;
 
   double epsilon=obliquityOfEcliptic(t);
