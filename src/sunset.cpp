@@ -354,6 +354,26 @@ double equationOfTime3(double y,double L,double e,double M) {
   return E;
 }
 
+string hour2time (double fhr) {
+
+  int hr = floor(fhr);
+  double fmin = (fhr - hr) * 60;
+  int min = floor(fmin);
+  double fsec = (fmin - min) * 60;
+  int sec = floor(fsec);
+
+  if (debug>1) {
+    cout << "hour = " << fhr << endl;
+    cout << "min = " << fmin << endl;
+    cout << "sec = " << fsec << endl;
+  }
+
+  char time[64];
+  sprintf(time,"%02d:%02d:%06.3f",hr,min,fsec);
+  
+  return string(time);
+}
+
 double getSunset(int year, int month, int day, double latitude, double longitude, int timezone) {
   // date
   double jd = getJulianDate(year, month, day);
@@ -427,8 +447,9 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   // Convert to local solar time
   double solarNoon = 12.0 - longitude / 15.0 - timezone;
-  cout << "solar noon = " << solarNoon << endl;
+  cout << "solar noon = " << solarNoon << " or " << hour2time(solarNoon) << endl;
   double sunsetTime = solarNoon - H / 15.0;
+  cout << "Sunset time: " << hour2time(sunsetTime) << endl;
 
   return sunsetTime;
 }
@@ -448,11 +469,9 @@ int main() {
 
   // Calculate the sunset time
   double sunset = getSunset(year, month, day, latitude, longitude, timezone);
-  int hours = static_cast<int>(sunset);
-  int minutes = static_cast<int>((sunset - hours) * 60);
 
   // Print the result
-  cout << "Sunset time: " << hours << ":" << minutes << endl;
+  cout << "Sunset time: " << hour2time(sunset) << endl;
 
   return 0;
 }
