@@ -14,7 +14,7 @@
 using namespace std;
 
 // settings
-const int debug=2;
+const int debug=1;
 
 // define constants
 const double PI = atan(1)*4;
@@ -208,9 +208,9 @@ double radiusVector(double e, double nu) {
   double R_NOAA = (a * (1 - pow(e,2))) / (1 + e * cos(nu));
 
   if (debug>0) {
-    cout << "radius vector" << endl;
-    cout << "\t R = " << R << " au (USNO)" << endl;
-    cout << "\t  or " << R_NOAA << " au (NOAA)" << endl;
+    cout << "Radius vector" << endl;
+    cout << "\tR = " << R << " au (USNO)" << endl;
+    cout << "\t or " << R_NOAA << " au (NOAA)" << endl;
   }
   return R_NOAA;
 }
@@ -230,7 +230,7 @@ double getSunSize(double rad_vec_au = 1) {
   const double sun_radi_m = 696342e3; 
   if (debug>1) {
     const double sol_radi_m = 6.95700e8; // solar radius in m
-    cout << "The radius of the sun is" << "\n\t " << sun_radi_m/sol_radi_m << " R_sol" << endl;
+    cout << "Radius of the sun" << "\n\t " << sun_radi_m/sol_radi_m << " R_sol" << endl;
   }
   const double sun_diam_m = sun_radi_m*2; // diameter of the sun in m
 
@@ -246,7 +246,7 @@ double getSunSize(double rad_vec_au = 1) {
   const double sun_radi_deg = sun_diam_deg/2;  
   
   if (debug>0) {
-    cout << "The angular size of the sun is " << endl;
+    cout << "Angular size of the sun" << endl;
     cout << "\t" << sun_diam_deg << " degrees";
     cout << " or " << sun_diam_deg*60 << " arcminutes" << endl; //should be between ~31.5 32.5 arcminutes
     cout << "\t" << sun_radi_deg << " degrees (semidiameter)" << endl;
@@ -336,7 +336,7 @@ double obliquityOfEcliptic(double T) {
   epsilon_NGT *= 1/3600.;  
 
   if (debug>0) {
-    cout << "The obliquity of the ecliptic is " << endl;
+    cout << "Obliquity of the ecliptic" << endl;
     cout << "\t linear: "; printDeg(epsilon_1); cout << " (USNO)" << endl;
     cout << "\t  cubic: "; printDeg(epsilon_L); cout << " Lieske et al. 1977 (NOAA)" << endl;
     cout << "\t 10poly: " << epsilon_NGT << " Laskar 1985" << endl;
@@ -355,7 +355,7 @@ double equationOfTime2(double M, double alpha, double DPsi, double epsilon) {
   }
 
   double E = M - 0.0057183 - alpha + DPsi * cos(epsilon);
-  cout << "\tE = " << E << " degrees" <<endl;
+  cout << "\t  E = " << E << " degrees" <<endl;
   return EqT;
 }
 
@@ -367,8 +367,8 @@ double equationOfTime3(double y,double L,double e,double M) {
   L*=deg2rad;
   M*=deg2rad;
 
+  cout << "Equation of time" << endl;
   if (debug > 1) {
-    cout << "Equation of time" << endl;
     // print individual terms
     cout << "\t" << y*sin(2*L)<< endl;
     cout << "\t" << -2*e*sin(M)<< endl;
@@ -391,30 +391,29 @@ double equationOfTime3(double y,double L,double e,double M) {
   return E*rad2deg/15; // hours
 }
 
-double getZenith(double e, double nu) {
-  
-  // get the apparent size of the sun
-  cout << "sun size:" << endl;
+double getZenith(double e, double nu) {  
   double R = radiusVector(e,nu);
 
+  // get the apparent size of the sun
+  cout << "Apparent size of the Sun" << endl;  
   cout << "   default: ";
   getSunSize();
   
   cout << "   calculated: ";
   const double sun_radi_deg = getSunSize(R);
 
-  cout << "sun elevation h0" << endl;
+  cout << "Elevation of the Sun" << endl;
   cout << "   default: " << endl;
-  cout << "\t " << -0.833 << " degrees (NOAA)" << endl;
+  cout << "\th0 = " << -0.833 << " degrees (NOAA)" << endl;
   
   const double atmo_refrac = 0.5667;
   const double h0 = -(sun_radi_deg + atmo_refrac);
   cout << "   calculated: " << endl;
-  cout << "\t " << h0 << " degrees" << endl;
+  cout << "\th0 = " << h0 << " degrees" << endl;
   
   double zenith = 90.0 - h0;
 
-  cout << "zenith = " << zenith << " degrees" << endl;
+  cout << "Zenith\n\tz = " << zenith << " degrees" << endl;
   
   return zenith;
 }
@@ -441,7 +440,7 @@ double hourAngle(double h0, double phi, double delta) {
   double cosH =   ( cos(h0) - sin(phi) * sin(delta) ) / ( cos(phi) * cos(delta) );
   double H = acos(cosH) * rad2deg;
   if (debug>0) {
-    cout << "hour angle = " << H << " degrees" << endl;
+    cout << "Hour angle\n\tHA = " << H << " degrees" << endl;
     cout << "          or " << H/15.0 << " hours" << endl;
   }
   return H;
@@ -483,7 +482,7 @@ double getSolarNoon(double longitude, double timezone) {
     cout << "    The solar timezone is " << sol_tz << " hours" << endl;
     cout << "          a difference of " << tz_diff << " hours" << endl;
     cout << "                       or " << tz_diff*60 << " minutes" << endl;
-    cout << "Solar noon is \n\t" << sol_noon << " or " << hour2time(sol_noon) << endl;
+    cout << "Solar noon\n\t" << sol_noon << " or " << hour2time(sol_noon) << endl;
   }
   return sol_noon;
 }
@@ -502,12 +501,12 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   // Sun's true geometric longitude
   double l = (L + C);
-  cout << "True longitude of the sun is" << endl;
+  cout << "True longitude of the Sun" << endl;
   cout << "\t           l = " << setprecision(7); printDeg(l); cout << endl;
  
   // Sun's true anomaly
   double nu = (M + C);
-  cout << "True anomaly of the sun is" << endl;
+  cout << "True anomaly of the Sun" << endl;
   cout << "\t          nu = "<< setprecision(5); printDeg(nu); cout << endl;
  
   // longitude of the ascending node
@@ -519,7 +518,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   // apparent longitude of the Sun
   // true equinox of the date
   double lambda = l + DPsi;
-  cout << "Apparent longitude\n\t    lambda  = " << lambda << endl;
+  cout << "Apparent longitude\n\t     lambda  = " << lambda << endl;
   lambda*=deg2rad;
   
   double epsilon0=obliquityOfEcliptic(t);
@@ -533,7 +532,17 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   cout << "       epsilon = " << epsilon << " including nutation" << endl;
   // convert to radians
   epsilon*=deg2rad;
- 
+
+  if (debug > 1) {
+    double e2 = epsilon / 2.0;
+    cout << "\te/2 rad = " << e2  << endl;
+    double te2 = tan(e2);
+    cout << "\ttan e/2 = " << te2 << endl;
+    cout << "\ty = " << te2*te2 << endl;
+  }
+  double y = pow(tan(epsilon / 2.0),2);
+  cout << "\t     y =  " << y << endl;
+  
   // Sun's right ascension a
   double alpha = atan2(cos(epsilon) * sin(lambda),
 		       cos(lambda));
@@ -542,17 +551,19 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   // declination d or delta
   double delta = asin(sin(epsilon) * sin(lambda));
 
-  // Longitude of the periapsis or longitude of the pericenter
-  double tanbar=atan2(cos(alpha),
-		      sin(alpha)*cos(epsilon)+tan(delta)*sin(epsilon));
-  if (cos(alpha)<0)
-    tanbar+=PI;
+  if (debug>1) {
+    // Longitude of the periapsis or longitude of the pericenter
+    double tanbar=atan2(cos(alpha),
+			sin(alpha)*cos(epsilon)+tan(delta)*sin(epsilon));
+    if (cos(alpha)<0)
+      tanbar+=PI;
 
-  cout << "Longitude of the periapsis" << endl;
-  cout << "\ttanbar = " << tanbar << " radians" << endl;
-  cout << "\ttanbar = " << tanbar * rad2deg << " degrees" << endl;
+    cout << "Longitude of the periapsis" << endl;
+    cout << "\ttanbar = " << tanbar << " radians" << endl;
+    cout << "\ttanbar = " << tanbar * rad2deg << " degrees" << endl;
   
-  cout << "\t      cos(R.A.) = " << cos(alpha) << endl;
+    cout << "\t      cos(R.A.) = " << cos(alpha) << endl;
+  }
   // convert to degrees
   alpha*=rad2deg;
   delta*=rad2deg;
@@ -569,15 +580,6 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double EqT=equationOfTime2(M,alpha,DPsi,epsilon);
 
   // Equation 3
-  if (debug > 1) {
-    double e2 = epsilon / 2.0;
-    cout << "\te/2 rad = " << e2  << endl;
-    double te2 = tan(e2);
-    cout << "\ttan e/2 = " << te2 << endl;
-    cout << "\ty = " << te2*te2 << endl;
-  }
-  double y = pow(tan(epsilon / 2.0),2);
-  cout << "\ty = " << y << endl;
   double e = eccentricity(t);
   double E=equationOfTime3(y,L,e,M);
 
