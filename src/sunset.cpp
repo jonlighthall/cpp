@@ -374,6 +374,29 @@ string hour2time (double fhr) {
   return string(time);
 }
 
+
+double getSolarNoon(double longitude, double timezone) {
+  // apparent angular speed of the sun
+  double const w=360./24.; // 15 degrees per hour
+  
+  // divide the geographic longitude by the angular speed to get the solar time zone
+  double sol_tz=longitude/w;
+
+  double tz_diff = timezone - sol_tz;
+
+  // solar noon is... noon, plus the timezone difference
+  double sol_noon = 12 + tz_diff;
+  
+  if (debug>0) {
+    cout << "The specified timezone is " << timezone << " hours" << endl;
+    cout << "    The solar timezone is " << sol_tz << " hours" << endl;
+    cout << "          a difference of " << tz_diff << " hours" << endl;
+    cout << "Solar noon is " << sol_noon << " or " << hour2time(sol_noon) << endl;
+  }
+
+  return sol_noon;
+}
+
 double getSunset(int year, int month, int day, double latitude, double longitude, int timezone) {
   // date
   double jd = getJulianDate(year, month, day);
@@ -446,8 +469,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double E=equationOfTime3(y,L,e,M);
 
   // Convert to local solar time
-  double solarNoon = 12.0 - longitude / 15.0 - timezone;
-  cout << "solar noon = " << solarNoon << " or " << hour2time(solarNoon) << endl;
+  double solarNoon = getSolarNoon(longitude,timezone);
   double sunsetTime = solarNoon - H / 15.0;
   cout << "Sunset time: " << hour2time(sunsetTime) << endl;
 
