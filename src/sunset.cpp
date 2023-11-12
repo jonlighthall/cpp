@@ -287,7 +287,7 @@ double obliquityOfEcliptic(double T) {
 
 double equationOfTime2(double M, double alpha, double DPsi, double epsilon) {
   //  double EqT = q/15.0 - RA; //USNO
-  double EqT = M - RA; //degrees
+  double EqT = M - alpha; //degrees
   if (debug>0) {
     cout << "EqT = " << EqT << " degrees" <<endl;
     cout << "EqT = " << EqT*4 << " minutes" <<endl;
