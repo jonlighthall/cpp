@@ -470,7 +470,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   // Convert to local solar time
   double solarNoon = getSolarNoon(longitude,timezone);
-  double sunsetTime = solarNoon - H / 15.0;
+  double sunsetTime = solarNoon + H / 15.0;
   cout << "Sunset time: " << hour2time(sunsetTime) << endl;
 
   return sunsetTime;
