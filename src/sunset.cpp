@@ -351,7 +351,7 @@ double equationOfTime3(double y,double L,double e,double M) {
     cout << "\t E = " << E*rad2deg << " degrees" << endl;
     cout << "\t E = " << E*rad2deg*4 << " minutes" << endl;
   }
-  return E;
+  return E*rad2deg/15; // hours
 }
 
 string hour2time (double fhr) {
@@ -453,9 +453,18 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   }
 
   double e = eccentricity(t);
+  double solarNoon = getSolarNoon(longitude,timezone);
+
+  // calculate equation of time and sunrise/sunset
   double H=equationOfTime1(e,nu,latitude,delta);
+  // Convert to local solar time
+  double sunsetTime = solarNoon + H / 15.0;
+  cout << "Sunset time: " << hour2time(sunsetTime) << endl;
+
+  // Equation 2  
   double EqT=equationOfTime2(L,alpha);
 
+  // Equation 3
   if (debug > 1) {
     double e2 = eCorrected / 2.0 * deg2rad;
     cout << "e/2 rad = " << e2  << endl;
@@ -463,15 +472,12 @@ double getSunset(int year, int month, int day, double latitude, double longitude
     cout << "tan e/2 = " << te2 << endl;
     cout << "y = " << te2*te2 << endl;
   }
-
   double y = pow(tan(eCorrected / 2.0 * deg2rad),2);
   cout << "y = " << y << endl;
   double E=equationOfTime3(y,L,e,M);
-
-  // Convert to local solar time
-  double solarNoon = getSolarNoon(longitude,timezone);
-  double sunsetTime = solarNoon + H / 15.0;
-  cout << "Sunset time: " << hour2time(sunsetTime) << endl;
+  // adjust solar noon
+  solarNoon -= E;
+  cout << "solar noon = " << solarNoon << " or " << hour2time(solarNoon) << endl;
 
   return sunsetTime;
 }
