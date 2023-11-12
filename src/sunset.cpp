@@ -333,21 +333,27 @@ double equationOfTime3(double y,double L,double e,double M) {
 double getZenith(double e, double nu) {
   
   // get the apparent size of the sun
+  cout << "sun size:" << endl;
   double R = radiusVector(e,nu);
-  cout << "calculated:" << endl;
-  getSunSize(R);
-  cout << "default:" << endl;
-  const double sun_radi_deg = getSunSize();
 
+  cout << "default: ";
+  getSunSize();
+  
+  cout << "calculated: ";
+  const double sun_radi_deg = getSunSize(R);
+
+  cout << "sun elevation h0" << endl;
+  cout << "default: " << endl;
+  cout << "\t " << -0.833 << " degrees" << endl;
+  
   const double atmo_refrac = 0.5667;
-
   const double h0 = -(sun_radi_deg + atmo_refrac);
-  cout << "sun elevation" << endl;
-  cout << "\th0 = " << h0 << " degrees" << endl;
+  cout << "calculated: " << endl;
+  cout << "\t " << h0 << " degrees" << endl;
   
   double zenith = 90.0 - h0;
 
-  cout << "\tzenith = " << zenith << " degrees" << endl;
+  cout << "zenith = " << zenith << " degrees" << endl;
   
   return zenith;
 }
@@ -358,7 +364,18 @@ double hourAngle(double h0, double phi, double delta) {
   // convert inputs to radians
   h0*=deg2rad;
   phi*=deg2rad;
-  delta*=deg2rad;  
+  delta*=deg2rad;
+
+  if (debug>1) {
+    cout << "h0" << endl;
+    cout << cos(h0)    << endl;
+    cout << "phi" << endl;
+    cout << sin(phi)   << endl;
+    cout << cos(phi)   << endl;
+    cout << "delta" << endl;
+    cout << sin(delta) << endl;
+    cout << cos(delta) << endl;
+  }
 
   double cosH =   ( cos(h0) - sin(phi) * sin(delta) ) / ( cos(phi) * cos(delta) );
   double H = acos(cosH) * rad2deg;
@@ -370,7 +387,7 @@ double hourAngle(double h0, double phi, double delta) {
 }
 
 string hour2time (double fhr) {
-
+  // convert fractional hour into hr:min:sec string
   int hr = floor(fhr);
   double fmin = (fhr - hr) * 60;
   int min = floor(fmin);
@@ -382,10 +399,8 @@ string hour2time (double fhr) {
     cout << "min = " << fmin << endl;
     cout << "sec = " << fsec << endl;
   }
-
   char time[64];
   sprintf(time,"%02d:%02d:%06.3f",hr,min,fsec);
-  
   return string(time);
 }
 
@@ -405,9 +420,9 @@ double getSolarNoon(double longitude, double timezone) {
     cout << "The specified timezone is " << timezone << " hours" << endl;
     cout << "    The solar timezone is " << sol_tz << " hours" << endl;
     cout << "          a difference of " << tz_diff << " hours" << endl;
+    cout << "                       or " << tz_diff*60 << " minutes" << endl;
     cout << "Solar noon is " << sol_noon << " or " << hour2time(sol_noon) << endl;
   }
-
   return sol_noon;
 }
 
@@ -498,11 +513,12 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   // calculate hour angle
   double H=hourAngle(zenith,latitude,delta);
+
   // Convert to local solar time
   double sunsetTime = solarNoon + H / 15.0;
+
+  // Print the result
   cout << "Sunset time: " << hour2time(sunsetTime) << endl;
-
-
   return sunsetTime;
 }
 
@@ -521,9 +537,6 @@ int main() {
 
   // Calculate the sunset time
   double sunset = getSunset(year, month, day, latitude, longitude, timezone);
-
-  // Print the result
-  cout << "Sunset time: " << hour2time(sunset) << endl;
 
   return 0;
 }
