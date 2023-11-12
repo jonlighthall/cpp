@@ -456,7 +456,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   // apparent longitude L (lambda) of the Sun
   // true equinox of the date
-  double lambda = l + dPsi;
+  double lambda = l + DPsi;
   cout << " apparent longitude  = " << lambda << endl;
   lambda*=deg2rad;
 
@@ -465,7 +465,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   // correction for parallax (Meeus Eq. 25.8)
   // The true or instantaneous obliquity includes the nutation.
   double Depsilon = 0.00256 * cos(Omega);
-  double epsilon = epsilon0 Depsilon;
+  double epsilon = epsilon0 + Depsilon;
   cout << "              or " << epsilon << " including nutation" << endl;
   // convert to radians
   epsilon*=deg2rad;
