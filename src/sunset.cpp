@@ -451,54 +451,55 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   // longitude of the ascending node
   double Omega=longitudeAscendingNode(t);
   
+  // nutation in longitude
+  double DPsi = - 0.00569 - (0.00478 * sin(Omega));
+
   // apparent longitude L (lambda) of the Sun
   // true equinox of the date
-  double lambda = l - 0.00569 - (0.00478 * sin(Omega));
+  double lambda = l + dPsi;
   cout << " apparent longitude  = " << lambda << endl;
   lambda*=deg2rad;
 
-  double epsilon=obliquityOfEcliptic(t);
+  double epsilon0=obliquityOfEcliptic(t);
  
   // correction for parallax (Meeus Eq. 25.8)
   // The true or instantaneous obliquity includes the nutation.
-  double eCorrected = epsilon + 0.00256 * cos(Omega);
-  cout << "              or " << eCorrected << " including nutation" << endl;
+  double Depsilon = 0.00256 * cos(Omega);
+  double epsilon = epsilon0 Depsilon;
+  cout << "              or " << epsilon << " including nutation" << endl;
   // convert to radians
-  eCorrected*=deg2rad;
+  epsilon*=deg2rad;
  
   // Sun's right ascension a
-  double alpha = atan2(cos(eCorrected) * sin(lambda),
+  double alpha = atan2(cos(epsilon) * sin(lambda),
 		       cos(lambda));
   // convert to degrees
   alpha*=rad2deg;
 
   // Calculate the solar declination angle
   // declination d or delta
-  double delta = asin(sin(eCorrected) * sin(lambda)) * rad2deg;
-  double delta2 = asin(sin(epsilon * deg2rad) * sin(l * deg2rad)) * rad2deg;
+  double delta = asin(sin(epsilon) * sin(lambda)) * rad2deg;
 
   if (debug>0) {
     cout << "Solar coordinates:" << endl;
     cout << "\tright ascension = " << alpha << " degrees" << endl;
     cout << "\t    declination = " << delta << " degrees (NOAA)" << endl;
-    cout << "\t             or = " << delta2 << " degrees" << endl;
   }
 
   // calculate equation of time
-  // Equation 1 (no equation of time)
 
   // Equation 2  
-  double EqT=equationOfTime2(M,alpha,0,epsilon);
+  double EqT=equationOfTime2(M,alpha,DPsi,epsilon);
 
   // Equation 3
   if (debug > 1) {
-    double e2 = eCorrected / 2.0;
+    double e2 = epsilon / 2.0;
     cout << "e/2 rad = " << e2  << endl;
     double te2 = tan(e2);
     cout << "tan e/2 = " << te2 << endl;
     cout << "y = " << te2*te2 << endl;
   }
-  double y = pow(tan(eCorrected / 2.0),2);
+  double y = pow(tan(epsilon / 2.0),2);
   cout << "y = " << y << endl;
   double e = eccentricity(t);
   double E=equationOfTime3(y,L,e,M);
@@ -512,13 +513,18 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double zenith=getZenith(e,nu);
 
   // calculate hour angle
-  double H=hourAngle(zenith,latitude,delta);
+  double HA_deg=hourAngle(zenith,latitude,delta);
+
+  double HA=HA_deg/15.;
 
   // Convert to local solar time
-  double sunsetTime = solarNoon + H / 15.0;
+  double sunsetTime = solarNoon + HA;
+  double sunriseTime = solarNoon - HA;
 
   // Print the result
   cout << "Sunset time: " << hour2time(sunsetTime) << endl;
+  cout << "Sunrise time: " << hour2time(sunriseTime) << endl;
+  
   return sunsetTime;
 }
 
