@@ -1,7 +1,9 @@
 /** 
     Most of this code is developed from James Still's post on calculating solar coordinates:
     https://squarewidget.com/solar-coordinates/
+    with references to 
     https://aa.usno.navy.mil/faq/sun_approx
+    Meeus, Jean (1991). Astronomical Algorithms.
 */
 
 #include <iostream>
@@ -55,7 +57,7 @@ double meanLongitude(double t) {
   // Geometric Mean Longitude of the Sun
   // referred to the mean equinox of the time
   // calculated in degrees
-  // Meeus pg. 163, eq. 25.2
+  // Meeus pg. 163, Eq. 25.2
   // based on J2000 longitude
   double L_1 = 280.460     + 36000.771      * t; // USNO
   double L_3 = 280.46646   + 36000.76983    * t + 0.0003032  * pow(t,2); // NOAA
@@ -71,7 +73,7 @@ double meanLongitude(double t) {
 
 double meanAnomaly(double t) {
   // Mean Anomaly of the Sun
-  //Meeus pg. 163, eq. 25.3
+  //Meeus pg. 163, Eq. 25.3
   double M_1 = 357.528   + 35999.050   * t;
   double M_2 = 357.52911 + 35999.05029 * t - 0.0001537 * pow(t,2); // NOAA
   if (debug>0) {
@@ -105,9 +107,9 @@ double equationOfCenter(double t, double M) {
 }
 
 double nuation(double t) {
-  // correction "omega" for nutation and aberration
-  //Longitude of the ascending node of the Moon's mean orbit on the ecliptic, measured form the mean equinox of the date
-  double omega_1 = 125.04 - (1934.136 * t);
+  // Longitude of the ascending node of the Moon's mean orbit on the ecliptic, measured form the
+  // mean equinox of the date. Used to correction for nutation and aberration.
+  double omega_1 = 125.04    - 1934.136 * t;
   double omega_3 = 125.04452 - 1934.136261 * t + 0.0020708 * pow(t,2) + pow(t,3) / 450000;
 
   if (debug>0) {
@@ -115,13 +117,13 @@ double nuation(double t) {
     cout << "\t linear: omega = " << omega_1 << " degrees (NOAA)" << endl;
     cout << "\t  cubic: omega = " << omega_3 << " degrees" << endl;
   }
-  return omega_1*deg2rad;;
+  return omega_1*deg2rad;
 }
 
 double eccentricity(double t) {
   // eccentricity of Earth's orbit
   // input is Julian century
-  // Meeus pg. 163, eq. 25.4
+  // Meeus pg. 163, Eq. 25.4
   double e = 0.016708634 - (0.000042037 * t) - (0.0000001267 * pow(t, 2));
   
   if (debug>0) {
@@ -133,7 +135,7 @@ double eccentricity(double t) {
 double radiusVector(double e, double nu) {
   // the distance between the centres of the Sun and the Earth, in au
   // U.S. Naval Observatory function for radius vector.
-  // Compare to Meeus (25.5)
+  // c.f. Meeus Eq. 25.5
 
   // convert inputs to radians
   nu*=deg2rad;
@@ -196,36 +198,31 @@ double getSunSize(double rad_vec_au = 1) {
   //const double sunRadius = 0.26667; 
 }
 
-double dgm2deg(double deg, double min, double sec) {
+double dms2deg(double deg, double min, double sec) {
   double ang = deg
     + min/60.
     + sec/3600.;
   if (debug>0) {
-    cout << deg << "\u00b0" << min << "'" << sec << "'' = " << ang << " degrees" << endl;
+    if (deg != 0)
+      cout << deg << "\u00b0";
+    if ((deg != 0) && (min != 0))
+      cout << min << "'";
+    cout << sec << "'' = " << ang << " degrees" << endl;
   }
   return ang;
 }
 
 // A function to calculate the obliquity of the ecliptic in degrees
 double obliquityOfEcliptic(double T) {
-  // obliquity of the ecliptic (22.2)
+  // obliquity of the ecliptic (Meesus Eq. 22.2)
+  // All of these expressions are for the mean obliquity, that is, without the nutation of the
+  // equator included.
   // input is Julian Ephemeris Century
   // output in degrees
     
   // define reference angles
   // the initial values adopted by the JAU (Grenoble, 1976):
-  double const epsilon0 = dgm2deg(23,26,21.448);
-  double const t0 = epsilon0 * 3600.;
-  
-  double const theta2 = dgm2deg(0,0,4680.93);
-  double const otheta2 = 0.013 * 100.0;
-
-  if (debug > 1) {
-    cout << "epsilon0 = " << epsilon0 << " degrees" << endl;
-    cout << "        or " << t0 << " arcseconds" << endl;
-    cout << "theta2 = " << theta2 << endl;
-    cout << "      or " << otheta2 << endl;
-  }
+  double const epsilon0 = dms2deg(23,26,21.448);
     
   // This uses Laskar’s tenth-degree polynomial fit:
   // Laskar, J., Astronomy and Astrophysics, 157: 68 (1986).
@@ -236,23 +233,30 @@ double obliquityOfEcliptic(double T) {
   // convert Julian centuries to 10,000 Julian years
   double const U = T / 100.0;
 
-  double const epsilon_1 = epsilon0 - otheta2 * U; // USNO
-
-  double const t_L=-4681.50;
-  
   // Calculate the obliquity of the ecliptic in arcseconds
-  double epsilon_NOAA = 84381.448 - 46.815 * T - 0.00059 * T * T + 0.001813 * T * T * T;
+  double const t0 = epsilon0 * 3600.;
+  double const t = 4680.93; // the O(1) term is included here for reference to earlier versions
 
+  if (debug > 1) {
+    cout << "epsilon0 = " << epsilon0 << " degrees" << endl;
+    cout << "        or " << t0 << " arcseconds" << endl;
+    double const theta2 = dms2deg(0,0,t);
+    cout << "  theta2 = " << theta2 << endl;
+    cout << "        or " << t << endl;
+  }
+  
+  double epsilon_1 = t0 - t * U; // USNO
   
   // Lieske et al. (1977).
-  // Used by NOAA
+  // Used by NOAA  
+  // From 1984, the Jet Propulsion Laboratory's DE series of computer-generated ephemerides took
+  // over as the fundamental ephemeris of the Astronomical Almanac.
   double epsilon_L = t0
-    - t_L * U
+    - 4681.5 * U
     - 5.9 * pow(U,2)
-    + 1813. * pow(T,3);   
+    + 1813 * pow(U,3);
   
-  double epsilon_10 = t0
-    - 4680.93 * U
+  double epsilon_NGT = epsilon_1
     - 1.55 * pow(U, 2)
     + 1999.25 * pow(U, 3)
     - 51.38 * pow(U, 4)
@@ -264,19 +268,18 @@ double obliquityOfEcliptic(double T) {
     + 2.45 * pow(U, 10);
   
   // Convert arcseconds to degrees
-  epsilon_NOAA = epsilon_NOAA / 3600.;
-  epsilon_L*= 1/3600.;
-  epsilon_10*= 1/3600.;  
+  epsilon_1 *= 1/3600.;
+  epsilon_L *= 1/3600.;
+  epsilon_NGT *= 1/3600.;  
 
   if (debug>0) {
     cout << "The obliquity of the ecliptic is " << endl;
     cout << "\t linear: "; printDeg(epsilon_1); cout << " (USNO)" << endl;
-    cout << "\t  cubic: "; printDeg(epsilon_NOAA); cout << " (NOAA)" << endl;
     cout << "\t  cubic: "; printDeg(epsilon_L); cout << " Lieske et al. 1977 (NOAA)" << endl;
-    cout << "\t series: " << epsilon_10 << " Laskar 1985" << endl;
+    cout << "\t 10poly: " << epsilon_NGT << " Laskar 1985" << endl;
   }
    
-  return epsilon_NOAA;
+  return epsilon_L;
 }
 
 double equationOfTime1(double e, double nu, double latitude, double delta) {
@@ -384,9 +387,10 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   double epsilon=obliquityOfEcliptic(t);
  
-  // correction for parallax (25.8)
+  // correction for parallax (Meeus Eq. 25.8)
+  // The true or instantaneous obliquity includes the nutation.
   double eCorrected = epsilon + 0.00256 * cos(omega);
-  cout << "              or " << eCorrected << " corrected for parallax" << endl;
+  cout << "              or " << eCorrected << " including nutation" << endl;
  
   // Sun's right ascension a
   double alpha = atan2(
