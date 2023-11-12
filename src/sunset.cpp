@@ -214,23 +214,18 @@ double obliquityOfEcliptic(double T) {
     
   // define reference angles
   // the initial values adopted by the JAU (Grenoble, 1976):
-  double epsilon0 = dgm2deg(23,26,21.448);
-  double eps0arcsec = epsilon0 * 3600.;
+  double const epsilon0 = dgm2deg(23,26,21.448);
+  double const t0 = epsilon0 * 3600.;
   
-  double theta2 = 4680.93/pow(60.0,2);
-  double otheta2 = 0.013 * 100.0;
+  double const theta2 = dgm2deg(0,0,4680.93);
+  double const otheta2 = 0.013 * 100.0;
 
   if (debug > 1) {
     cout << "epsilon0 = " << epsilon0 << " degrees" << endl;
-    cout << "        or " << eps0arcsec << " arcseconds" << endl;
+    cout << "        or " << t0 << " arcseconds" << endl;
     cout << "theta2 = " << theta2 << endl;
     cout << "      or " << otheta2 << endl;
   }
-  
-  double epsilon_1 = epsilon0 - otheta2 * T/100;
-
-  // Calculate the obliquity of the ecliptic in arcseconds
-  double epsilon_NOAA = eps0arcsec - 46.815 * T - 0.00059 * pow(T,2) + 0.001813 * pow(T,3);
     
   // This uses Laskar’s tenth-degree polynomial fit:
   // Laskar, J., Astronomy and Astrophysics, 157: 68 (1986).
@@ -239,16 +234,24 @@ double obliquityOfEcliptic(double T) {
   // (Numerical General Theory). L denotes the solution of Lieske et al. (1977).
 
   // convert Julian centuries to 10,000 Julian years
-  double U = T / 100.0;
+  double const U = T / 100.0;
 
+  double const epsilon_1 = epsilon0 - otheta2 * U; // USNO
+
+  double const t_L=-4681.50;
+  
+  // Calculate the obliquity of the ecliptic in arcseconds
+  double epsilon_NOAA = 84381.448 - 46.815 * T - 0.00059 * T * T + 0.001813 * T * T * T;
+
+  
   // Lieske et al. (1977).
   // Used by NOAA
-  double epsilon_L = eps0arcsec
-    - 4681.50 * U
+  double epsilon_L = t0
+    - t_L * U
     - 5.9 * pow(U,2)
     + 1813. * pow(T,3);   
   
-  double epsilon_10 = eps0arcsec
+  double epsilon_10 = t0
     - 4680.93 * U
     - 1.55 * pow(U, 2)
     + 1999.25 * pow(U, 3)
