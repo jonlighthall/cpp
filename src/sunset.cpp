@@ -68,7 +68,7 @@ double meanLongitude(double t) {
     cout << "\tquadratic: L = "; printDeg(L_3); cout << " (NOAA)" << endl;
     cout << "\t  quintic: L = "; printDeg(L_5); cout << endl;
   }
-  return fmod(L_3,360);
+  return fmod(L_5,360);
 }
 
 double meanAnomaly(double t) {
@@ -83,7 +83,7 @@ double meanAnomaly(double t) {
     cout << "\tquadratic: M = "; printDeg(M_2); cout << " (NOAA)" << endl;
     cout << "\t    cubic: M = "; printDeg(M_3); cout << " " << endl;
   }
-  return fmod(M_2,360.0);
+  return fmod(M_3,360.0);
 }
 
 double equationOfCenter(double t, double M) {
@@ -119,7 +119,7 @@ double longitudeAscendingNode(double t) {
     cout << "\t  lin: Omega = " << Omega_1 << " degrees (NOAA)" << endl;
     cout << "\tcubic: Omega = " << Omega_3 << " degrees" << endl;
   }
-  return Omega_1*deg2rad;
+  return Omega_3*deg2rad;
 }
 
 double eccentricity(double t) {
@@ -282,7 +282,7 @@ double obliquityOfEcliptic(double T) {
     cout << "\t 10poly: " << epsilon_NGT << " Laskar 1985" << endl;
   }
    
-  return epsilon_L;
+  return epsilon_NGT;
 }
 
 double equationOfTime2(double M, double alpha, double DPsi, double epsilon) {
@@ -344,7 +344,7 @@ double getZenith(double e, double nu) {
 
   cout << "sun elevation h0" << endl;
   cout << "default: " << endl;
-  cout << "\t " << -0.833 << " degrees" << endl;
+  cout << "\t " << -0.833 << " degrees (NOAA)" << endl;
   
   const double atmo_refrac = 0.5667;
   const double h0 = -(sun_radi_deg + atmo_refrac);
