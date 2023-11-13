@@ -14,7 +14,7 @@
 using namespace std;
 
 // settings
-const int debug=1;
+const int debug=0;
 
 // define constants
 const double PI = atan(1)*4;
@@ -27,21 +27,24 @@ double getJulianDate(int year, int month, int day) {
   int y = year + 4800 - a;
   int m = month + 12 * a - 3;
   int jd = day + (153 * m + 2) / 5 + 365 * y + y / 4 - y / 100 + y / 400 - 32045;
-  cout << "\tthe Julian date is " << jd << endl;
+  if (debug>0)
+    cout << "\tthe Julian date is " << jd << endl;  
   return jd; // are we supposed to return noon?  
 }
 
 double getJ2000 (double jd) {
   // convert Julian Date to J2000 epoch, that is, the Julian Date since Jan 1, 2000
   double J2000 = jd - 2451545.0;
-  cout << "\tthe J2000 date is " << J2000 << endl;
+  if (debug>0) 
+    cout << "\tthe J2000 date is " << J2000 << endl;
   return J2000;
 }
 
 double getJulianCentury (double J2000) {
   // convert J2000 date to Julian Ephemeris Century, that is, fraction of a Julian century 
   double T = J2000  / 36525.;
-  cout << "\tthe Julian century is " << T << endl;
+  if (debug>0) 
+    cout << "\tthe Julian century is " << T << endl;
   return T;
 }
 
@@ -130,8 +133,10 @@ double nutationInLongitude(double Omega, double JCE, double X1) {
   // Longitude of the periapsis or longitude of the pericenter
   // omega is in radians
   double DPsi = - 0.00569 - (0.00478 * sin(Omega));
-  cout << "Nutation in logitude" << endl;
-  cout << "\t        DPsi = " << DPsi << " degrees" << endl;
+  if (debug>0) {
+    cout << "Nutation in logitude" << endl;
+    cout << "\t        DPsi = " << DPsi << " degrees" << endl;
+  }
 
   if (debug>1) {
     cout << "\t        DPSi = " << DPsi * deg2rad << " radians" << endl;
@@ -446,13 +451,12 @@ double hourAngle(double h0, double phi, double delta) {
   return H;
 }
 
-string hour2time (double fhr) {
+string hour2time (double fhr, bool do_fractional_second=true) {
   // convert fractional hour into hr:min:sec string
   int hr = floor(fhr);
   double fmin = (fhr - hr) * 60;
   int min = floor(fmin);
   double fsec = (fmin - min) * 60;
-  int sec = floor(fsec);
 
   if (debug>1) {
     cout << "\n\thour = " << fhr << endl;
@@ -461,7 +465,12 @@ string hour2time (double fhr) {
     cout << "\t";
   }
   char time[64];
-  sprintf(time,"%02d:%02d:%06.3f",hr,min,fsec);
+  if (do_fractional_second)
+    sprintf(time,"%02d:%02d:%06.3f",hr,min,fsec);
+  else {
+    int sec = floor(fsec);
+    sprintf(time,"%02d:%02d:%02d",hr,min,sec);
+  }
   return string(time);
 }
 
@@ -493,42 +502,52 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double j2000 = getJ2000(jd);
   double t = getJulianCentury(j2000);
 
-  // solar coordinates
+  /** quantities based on time only */
   double L = meanLongitude(t);
-  double M = meanAnomaly(t);
-  
-  double C=equationOfCenter(t,M);
+  double M = meanAnomaly(t); 
+  double epsilon0=obliquityOfEcliptic(t);
 
+  /** first correction */
+  // Equation of center
+  double C=equationOfCenter(t,M);
+  
   // Sun's true geometric longitude
   double l = (L + C);
-  cout << "True longitude of the Sun" << endl;
-  cout << "\t           l = " << setprecision(7); printDeg(l); cout << endl;
+  if (debug>0) {
+    cout << "True longitude of the Sun" << endl;
+    cout << "\t           l = " << setprecision(7); printDeg(l); cout << endl;
+  }
  
   // Sun's true anomaly
   double nu = (M + C);
   cout << "True anomaly of the Sun" << endl;
   cout << "\t          nu = "<< setprecision(5); printDeg(nu); cout << endl;
- 
-  // longitude of the ascending node
+
+  /** Second correction */
+  // Longitude of the ascending node
   double Omega=longitudeAscendingNode(t);
   
   // nutation in longitude
   double DPsi = nutationInLongitude(Omega,t,L);
-  
-  // apparent longitude of the Sun
-  // true equinox of the date
-  double lambda = l + DPsi;
-  cout << "Apparent longitude\n\t     lambda  = " << lambda << endl;
-  lambda*=deg2rad;
-  
-  double epsilon0=obliquityOfEcliptic(t);
- 
+
   // nutation in obliquity
   // correction for parallax (Meeus Eq. 25.8)
   // The true or instantaneous obliquity includes the nutation.
   double Depsilon = 0.00256 * cos(Omega);
-  cout << "Nutation in obliquity\n\      Depsilon =  " << Depsilon << endl;
   double epsilon = epsilon0 + Depsilon;
+  if (debug > 1) 
+    cout << "Nutation in obliquity\n\      Depsilon =  " << Depsilon << endl;
+  
+
+  
+  // apparent longitude of the Sun
+  // true equinox of the date
+  double lambda = l + DPsi;
+  cout << "Apparent longitude of the Sun\n\t     lambda  = "; printDeg(lambda); cout << endl;
+  lambda*=deg2rad;
+  
+
+ 
   cout << "       epsilon = " << epsilon << " including nutation" << endl;
   // convert to radians
   epsilon*=deg2rad;
@@ -541,7 +560,8 @@ double getSunset(int year, int month, int day, double latitude, double longitude
     cout << "\ty = " << te2*te2 << endl;
   }
   double y = pow(tan(epsilon / 2.0),2);
-  cout << "\t     y =  " << y << endl;
+  if (debug > 1) 
+    cout << "\t     y =  " << y << endl;
   
   // Sun's right ascension a
   double alpha = atan2(cos(epsilon) * sin(lambda),
