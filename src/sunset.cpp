@@ -595,9 +595,9 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   }
 
   // calculate equation of time
-
-  // Equation 2  
-  double EqT=equationOfTime2(M,alpha,DPsi,epsilon);
+  if (debug>0)
+    // Equation 2  
+    equationOfTime2(M,alpha,DPsi,epsilon);
 
   // Equation 3
   double e = eccentricity(t);
