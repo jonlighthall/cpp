@@ -364,9 +364,20 @@ double equationOfTime2(double M, double alpha, double DPsi, double epsilon) {
   return EqT;
 }
 
-double equationOfTime3(double y,double L,double e,double M) {
+double equationOfTime3(double epsilon, double L,double e,double M) {
   // We use the approximation of the equation of time given by W.M. Smart, Text-Book on Spherical
   // Astronomy, Cambridge University Press, 1956, p. 149:
+
+  if (debug > 1) {
+    double e2 = epsilon / 2.0;
+    cout << "\te/2 rad = " << e2  << endl;
+    double te2 = tan(e2);
+    cout << "\ttan e/2 = " << te2 << endl;
+    cout << "\ty = " << te2*te2 << endl;
+  }
+  double y = pow(tan(epsilon / 2.0),2);
+  if (debug > 1) 
+    cout << "\t     y =  " << y << endl;
 
   // convert inputs to radians
   L*=deg2rad;
@@ -502,12 +513,17 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double j2000 = getJ2000(jd);
   double t = getJulianCentury(j2000);
 
-  /** quantities based on time only */
+  /* Calculate quantities based on time only */
   double L = meanLongitude(t);
   double M = meanAnomaly(t); 
   double epsilon0=obliquityOfEcliptic(t);
 
-  /** first correction */
+  /* First correction 
+   *  
+   *  Correct the longitude and anomaly of the Sun using the Equation of Center
+   *
+   */
+  
   // Equation of center
   double C=equationOfCenter(t,M);
   
@@ -523,7 +539,12 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   cout << "True anomaly of the Sun" << endl;
   cout << "\t          nu = "<< setprecision(5); printDeg(nu); cout << endl;
 
-  /** Second correction */
+  /* Second correction 
+   *
+   *  Correct the longitude and obliquity for nutation
+   *
+   */
+  
   // Longitude of the ascending node
   double Omega=longitudeAscendingNode(t);
   
@@ -536,32 +557,25 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double Depsilon = 0.00256 * cos(Omega);
   double epsilon = epsilon0 + Depsilon;
   if (debug > 1) 
-    cout << "Nutation in obliquity\n\      Depsilon =  " << Depsilon << endl;
-  
-
+    cout << "Nutation in obliquity\n\t      Depsilon =  " << Depsilon << endl; 
   
   // apparent longitude of the Sun
   // true equinox of the date
   double lambda = l + DPsi;
   cout << "Apparent longitude of the Sun\n\t     lambda  = "; printDeg(lambda); cout << endl;
-  lambda*=deg2rad;
-  
-
+  lambda*=deg2rad;  
  
   cout << "       epsilon = " << epsilon << " including nutation" << endl;
   // convert to radians
   epsilon*=deg2rad;
 
-  if (debug > 1) {
-    double e2 = epsilon / 2.0;
-    cout << "\te/2 rad = " << e2  << endl;
-    double te2 = tan(e2);
-    cout << "\ttan e/2 = " << te2 << endl;
-    cout << "\ty = " << te2*te2 << endl;
-  }
-  double y = pow(tan(epsilon / 2.0),2);
-  if (debug > 1) 
-    cout << "\t     y =  " << y << endl;
+  /*
+   * Using the corrected quantities
+   *  lambda
+   *  nu
+   *  epsilon
+   */
+  
   
   // Sun's right ascension a
   double alpha = atan2(cos(epsilon) * sin(lambda),
@@ -601,7 +615,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   // Equation 3
   double e = eccentricity(t);
-  double E=equationOfTime3(y,L,e,M);
+  double E=equationOfTime3(epsilon,L,e,M);
 
   // adjust solar noon
   double solarNoon = getSolarNoon(longitude,timezone);
