@@ -641,7 +641,7 @@ int main() {
   int timezone = -6;
 
   // Calculate the sunset time
-  double sunset = getSunset(year, month, day, latitude, longitude, timezone);
+  getSunset(year, month, day, latitude, longitude, timezone);
 
   return 0;
 }
