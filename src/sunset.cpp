@@ -15,6 +15,7 @@ using namespace std;
 
 // settings
 const int debug=0;
+bool do_NOAA=true;
 
 // define constants
 const double PI = atan(1)*4;
@@ -71,7 +72,10 @@ double meanLongitude(double t) {
     cout << "\tquadratic: L = "; printDeg(L_2); cout << " (NOAA)" << endl;
     cout << "\t  quintic: L = "; printDeg(L_5); cout << endl;
   }
-  return fmod(L_5,360);
+  if (do_NOAA)
+    return fmod(L_2,360);
+  else
+    return fmod(L_5,360);
 }
 
 double meanAnomaly(double t) {
@@ -86,7 +90,10 @@ double meanAnomaly(double t) {
     cout << "\tquadratic: M = "; printDeg(M_2); cout << " (NOAA)" << endl;
     cout << "\t    cubic: M = "; printDeg(M_3); cout << " " << endl;
   }
-  return fmod(M_3,360.0);
+  if (do_NOAA)
+    return fmod(M_2,360.0);
+  else
+    return fmod(M_3,360.0);
 }
 
 double equationOfCenter(double t, double M) {
@@ -291,12 +298,6 @@ double obliquityOfEcliptic(double T) {
   }
   double const epsilon0 = dms2deg(23,26,21.448);
     
-  // This uses Laskar’s tenth-degree polynomial fit:
-  // Laskar, J., Astronomy and Astrophysics, 157: 68 (1986).
-  // Table 8. Formulas for the precession. The obliquity is given in arcseconds and the time t is
-  // measured in units of 10,000 Julian years from J2000 (JD 2451545.0). NGT denotes our solution
-  // (Numerical General Theory). L denotes the solution of Lieske et al. (1977).
-
   // convert Julian centuries to 10,000 Julian years
   double const U = T / 100.0;
 
@@ -312,18 +313,27 @@ double obliquityOfEcliptic(double T) {
     cout << "\t        theta2 = " << theta2 << endl;
     cout << "\t              or " << t << endl;
   }
+
+  // Linear fit:
+  // Used by USNO
+  double epsilon_1 = t0 - t * U;
   
-  double epsilon_1 = t0 - t * U; // USNO
-  
-  // Lieske et al. (1977).
+  // Cubic fit:
   // Used by NOAA  
+  // L denotes the solution of Lieske et al. (1977).
   // From 1984, the Jet Propulsion Laboratory's DE series of computer-generated ephemerides took
   // over as the fundamental ephemeris of the Astronomical Almanac.
   double epsilon_L = t0
     - 4681.5 * U
     - 5.9 * pow(U,2)
     + 1813 * pow(U,3);
-  
+
+  // Tenth-degree polynomial fit:
+  // Laskar, J., Astronomy and Astrophysics, 157: 68 (1986).
+  // Table 8. Formulas for the precession. The obliquity is given in arcseconds and the time t is
+  // measured in units of 10,000 Julian years from J2000 (JD 2451545.0). NGT denotes our solution
+  // (Numerical General Theory).
+
   double epsilon_NGT = epsilon_1
     - 1.55 * pow(U, 2)
     + 1999.25 * pow(U, 3)
@@ -346,8 +356,10 @@ double obliquityOfEcliptic(double T) {
     cout << "\t  cubic: "; printDeg(epsilon_L); cout << " Lieske et al. 1977 (NOAA)" << endl;
     cout << "\t 10poly: " << epsilon_NGT << " Laskar 1985" << endl;
   }
-   
-  return epsilon_NGT;
+  if (do_NOAA)
+    return epsilon_L;
+  else
+    return epsilon_NGT;
 }
 
 double equationOfTime2(double M, double alpha, double DPsi, double epsilon) {
@@ -413,20 +425,33 @@ double getZenith(double e, double nu) {
   // get the apparent size of the sun
   cout << "Apparent size of the Sun" << endl;  
   cout << "   default: ";
-  getSunSize();
-  
+  double r_def=getSunSize();
   cout << "   calculated: ";
-  const double sun_radi_deg = getSunSize(R);
+  double r_cal=getSunSize(R);
+  
+  if (do_NOAA) {
+    const double sun_radi_deg = r_def;
+  }
+  else {
+    const double sun_radi_deg = r_cal;
+  }
 
   cout << "Elevation of the Sun" << endl;
   cout << "   default: " << endl;
-  cout << "\th0 = " << -0.833 << " degrees (NOAA)" << endl;
+  double h0_def = -0.833;
+  cout << "\th0 = " << h0_def << " degrees (NOAA)" << endl;
   
   const double atmo_refrac = 0.5667;
-  const double h0 = -(sun_radi_deg + atmo_refrac);
+  const double h0_cal = -(sun_radi_deg + atmo_refrac);
   cout << "   calculated: " << endl;
-  cout << "\th0 = " << h0 << " degrees" << endl;
-  
+  cout << "\th0 = " << h0_cal << " degrees" << endl;
+
+  if (do_NOAA) {
+    const double h0 = h0_def;
+  }
+  else 
+    const double h0 = h0_cal;
+
   double zenith = 90.0 - h0;
 
   cout << "Zenith\n\tz = " << zenith << " degrees" << endl;
