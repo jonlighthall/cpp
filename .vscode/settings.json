@@ -1,0 +1,9 @@
+{
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/home/jlighthall/examp/cpp/bin",
+            "binaryPath": "/home/jlighthall/examp/cpp/bin/app",
+            "binaryArgs": []
+        }
+    ]
+}
