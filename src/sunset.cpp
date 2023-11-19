@@ -453,6 +453,7 @@ double getZenith(double e, double nu) {
     cout << "Elevation of the Sun" << endl;
     cout << "   default: " << endl;
     cout << "\th0 = " << h0_def << " degrees (NOAA)" << endl;
+    cout << "\th0 = " << -(r_def + atmo_refrac) << " degrees" << endl;
     cout << "   calculated: " << endl;
     cout << "\th0 = " << h0_cal << " degrees" << endl;
   }
