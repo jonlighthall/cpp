@@ -423,23 +423,28 @@ double getZenith(double e, double nu) {
 
   // get the apparent size of the sun
   cout << "Apparent size of the Sun" << endl;  
+  // the default size is based on a solar distance of 1 au
   cout << "   default: ";
   double r_def=getSunSize();
   cout << "   calculated: ";
   double r_cal=getSunSize(R);
   
-double sun_radi_deg ;
+  // select value to use
+  double sun_radi_deg ;
+  if (do_NOAA) 
+    sun_radi_deg = r_def;  
+  else 
+    sun_radi_deg = r_cal;
+  
 
-  if (do_NOAA) {
-    sun_radi_deg = r_def;
-  }
-  else {
-     sun_radi_deg = r_cal;
-  }
-
+  // The elevation of the sun is the sum of the angular radius of the sun and the angular
+  // refraction of the atmosphere.
   cout << "Elevation of the Sun" << endl;
+  // The default value is based on an appearent angular radius of the sun of 0.26667 degrees
+  // (based on a solar distance of 1 au), and an atmospheric refraction of 0.5667 degrees. The
+  // result is rounded to three decimal places.
   cout << "   default: " << endl;
-  double h0_def = -0.833;
+  const double h0_def = -0.833;
   cout << "\th0 = " << h0_def << " degrees (NOAA)" << endl;
   
   const double atmo_refrac = 0.5667;
@@ -447,14 +452,14 @@ double sun_radi_deg ;
   cout << "   calculated: " << endl;
   cout << "\th0 = " << h0_cal << " degrees" << endl;
 
+  // select value to use
   double h0;
-
-  if (do_NOAA) {
-   h0 = h0_def;
-  }
+  if (do_NOAA) 
+    h0 = h0_def;  
   else 
-   h0 = h0_cal;
+    h0 = h0_cal;
 
+  // the zenith is adjusted by the elevation of the sun
   double zenith = 90.0 - h0;
 
   cout << "Zenith\n\tz = " << zenith << " degrees" << endl;
