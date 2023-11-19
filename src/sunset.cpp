@@ -421,13 +421,15 @@ double equationOfTime3(double epsilon, double L,double e,double M) {
 
 double getZenith(double e, double nu) {  
   double R = radiusVector(e,nu);
-
-  // get the apparent size of the sun
-  cout << "Apparent size of the Sun" << endl;  
-  // the default size is based on a solar distance of 1 au
-  cout << "   default: ";
+  if (debug>0) {
+    // get the apparent size of the sun
+    cout << "Apparent size of the Sun" << endl;  
+    // the default size is based on a solar distance of 1 au
+    cout << "   default: ";
+  }
   double r_def=getSunSize();
-  cout << "   calculated: ";
+  if (debug>0)
+    cout << "   calculated: ";
   double r_cal=getSunSize(R);
   
   // select value to use
@@ -435,23 +437,23 @@ double getZenith(double e, double nu) {
   if (do_NOAA) 
     sun_radi_deg = r_def;  
   else 
-    sun_radi_deg = r_cal;
-  
+    sun_radi_deg = r_cal;  
 
   // The elevation of the sun is the sum of the angular radius of the sun and the angular
   // refraction of the atmosphere.
-  cout << "Elevation of the Sun" << endl;
+  const double atmo_refrac = 0.5667;
+  const double h0_cal = -(sun_radi_deg + atmo_refrac); 
   // The default value is based on an appearent angular radius of the sun of 0.26667 degrees
   // (based on a solar distance of 1 au), and an atmospheric refraction of 0.5667 degrees. The
   // result is rounded to three decimal places.
-  cout << "   default: " << endl;
   const double h0_def = -0.833;
-  cout << "\th0 = " << h0_def << " degrees (NOAA)" << endl;
-  
-  const double atmo_refrac = 0.5667;
-  const double h0_cal = -(sun_radi_deg + atmo_refrac);
-  cout << "   calculated: " << endl;
-  cout << "\th0 = " << h0_cal << " degrees" << endl;
+  if (debug>0) {
+    cout << "Elevation of the Sun" << endl;
+    cout << "   default: " << endl;
+    cout << "\th0 = " << h0_def << " degrees (NOAA)" << endl;
+    cout << "   calculated: " << endl;
+    cout << "\th0 = " << h0_cal << " degrees" << endl;
+  }
 
   // select value to use
   double h0;
@@ -460,10 +462,20 @@ double getZenith(double e, double nu) {
   else 
     h0 = h0_cal;
 
+  if (debug>0) {
+    cout << "\th0 = " << h0/15 << " hours" << endl;
+    cout << "\th0 = " << h0*4 << " minutes" << endl;
+  }
+  
   // the zenith is adjusted by the elevation of the sun
   double zenith = 90.0 - h0;
 
-  cout << "Zenith\n\tz = " << zenith << " degrees" << endl;
+  cout << "Zenith" << endl;
+  cout << "\tz = " << zenith << " degrees" << endl;
+  if (debug>0) {
+    cout << "\tz = " << zenith/15 << " hours" << endl;
+    cout << "\tz = " << zenith*4 << " minutes" << endl;
+  }
   
   return zenith;
 }
@@ -605,9 +617,10 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
   /*
    * Using the corrected quantities
-   *  lambda
-   *  nu
-   *  epsilon
+   *    lambda
+   *    nu
+   *    epsilon
+   * calculate the solar coordinates, R.A. and Dec.
    */
   
   // Sun's right ascension a
@@ -641,7 +654,10 @@ double getSunset(int year, int month, int day, double latitude, double longitude
     cout << "\t    declination = " << delta << " degrees (NOAA)" << endl;
   }
 
-  // calculate equation of time
+  /*
+   * It all leads to this: calculate the Equation of Time
+   */
+  
   if (debug>0)
     // Equation 2  
     equationOfTime2(M,alpha,DPsi,epsilon);
