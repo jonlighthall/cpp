@@ -14,7 +14,7 @@
 using namespace std;
 
 // settings
-const int debug=0;
+const int debug=1;
 const bool do_NOAA=true;
 
 // define constants
@@ -365,13 +365,15 @@ double equationOfTime2(double M, double alpha, double DPsi, double epsilon) {
   
   double EqT = M - alpha; //degrees
   if (debug>0) {
-    cout << "Equation of Time" << endl;
-    cout << "\tEqT = " << EqT << " degrees" <<endl;
-    cout << "\tEqT = " << EqT*4 << " minutes" <<endl;
+    cout << "   calculated with M and R.A." << endl;
+    cout << "\tE = "; printDeg(EqT); cout  << " (USNO)" << endl;
   }
+  if (debug>1)
+    cout << "\tE = " << fmod(EqT,360)*4 << " minutes" << endl;
 
   double E = M - 0.0057183 - alpha + DPsi * cos(epsilon);
-  cout << "\t  E = " << E << " degrees" <<endl;
+  cout << "   corrected with DPsi and epsilon" << endl;
+  cout << "\tE = "; printDeg(E); cout << " (corrected)" <<endl;
   return EqT;
 }
 
@@ -394,7 +396,6 @@ double equationOfTime3(double epsilon, double L,double e,double M) {
   L*=deg2rad;
   M*=deg2rad;
 
-  cout << "Equation of time" << endl;
   if (debug > 1) {
     // print individual terms
     cout << "\t" << y*sin(2*L)<< endl;
@@ -411,6 +412,7 @@ double equationOfTime3(double epsilon, double L,double e,double M) {
     -(5/4.)*pow(e,2)*sin(2*M);
 
   if (debug>0) {
+    cout << "   calculated using Smart (1956)" << endl;
     cout << "\tE = " << E << " radians" << endl;
     cout << "\tE = " << E*rad2deg << " degrees" << endl;
     cout << "\tE = " << E*rad2deg*4 << " minutes" << endl;
@@ -658,12 +660,14 @@ double getSunset(int year, int month, int day, double latitude, double longitude
    * It all leads to this: calculate the Equation of Time
    */
   
+  double e = eccentricity(t);
+  cout << "Equation of Time" << endl;
+  
   if (debug>0)
     // Equation 2  
     equationOfTime2(M,alpha,DPsi,epsilon);
 
   // Equation 3
-  double e = eccentricity(t);
   double E=equationOfTime3(epsilon,L,e,M);
 
   // adjust solar noon
