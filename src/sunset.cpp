@@ -528,7 +528,7 @@ string hour2time (double fhr, bool do_fractional_second=true) {
   if (do_fractional_second)
     sprintf(time,"%02d:%02d:%06.3f",hr,min,fsec);
   else {
-    int sec = floor(fsec);
+    auto sec = int(floor(fsec));
     sprintf(time,"%02d:%02d:%02d",hr,min,sec);
   }
   return string(time);
