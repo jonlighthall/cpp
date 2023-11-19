@@ -415,6 +415,7 @@ double equationOfTime3(double epsilon, double L,double e,double M) {
     cout << "\tE = " << E*rad2deg << " degrees" << endl;
     cout << "\tE = " << E*rad2deg*4 << " minutes" << endl;
   }
+  cout << "\tE = " << E*rad2deg/15 << " hours" << endl;
   return E*rad2deg/15; // hours
 }
 
