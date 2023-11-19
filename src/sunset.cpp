@@ -11,6 +11,8 @@
 #include <iomanip>   
 #include <iostream>
 
+using namespace std;
+
 // settings
 const int debug=0;
 const bool do_NOAA=true;
@@ -501,7 +503,7 @@ string hour2time (double fhr, bool do_fractional_second=true) {
     cout << "\tsec = " << fsec << endl;
     cout << "\t";
   }
-  std::array<char,64> time;
+  char time[64];
   if (do_fractional_second)
     sprintf(time,"%02d:%02d:%06.3f",hr,min,fsec);
   else {
