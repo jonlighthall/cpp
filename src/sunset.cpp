@@ -11,11 +11,9 @@
 #include <iomanip>   
 #include <iostream>
 
-using namespace std;
-
 // settings
 const int debug=0;
-bool do_NOAA=true;
+const bool do_NOAA=true;
 
 // define constants
 const double PI = atan(1)*4;
@@ -265,7 +263,6 @@ double getSunSize(double rad_vec_au = 1) {
   }
   
   return sun_radi_deg;
-  //const double sunRadius = 0.26667; 
 }
 
 double dms2deg(double deg, double min, double sec) {
@@ -363,7 +360,7 @@ double obliquityOfEcliptic(double T) {
 }
 
 double equationOfTime2(double M, double alpha, double DPsi, double epsilon) {
-  //  double EqT = q/15.0 - RA; //USNO
+  
   double EqT = M - alpha; //degrees
   if (debug>0) {
     cout << "Equation of Time" << endl;
@@ -429,11 +426,13 @@ double getZenith(double e, double nu) {
   cout << "   calculated: ";
   double r_cal=getSunSize(R);
   
+double sun_radi_deg ;
+
   if (do_NOAA) {
-    const double sun_radi_deg = r_def;
+    sun_radi_deg = r_def;
   }
   else {
-    const double sun_radi_deg = r_cal;
+     sun_radi_deg = r_cal;
   }
 
   cout << "Elevation of the Sun" << endl;
@@ -446,11 +445,13 @@ double getZenith(double e, double nu) {
   cout << "   calculated: " << endl;
   cout << "\th0 = " << h0_cal << " degrees" << endl;
 
+  double h0;
+
   if (do_NOAA) {
-    const double h0 = h0_def;
+   h0 = h0_def;
   }
   else 
-    const double h0 = h0_cal;
+   h0 = h0_cal;
 
   double zenith = 90.0 - h0;
 
@@ -489,9 +490,9 @@ double hourAngle(double h0, double phi, double delta) {
 
 string hour2time (double fhr, bool do_fractional_second=true) {
   // convert fractional hour into hr:min:sec string
-  int hr = floor(fhr);
+  auto hr = int(floor(fhr));
   double fmin = (fhr - hr) * 60;
-  int min = floor(fmin);
+  auto min = int(floor(fmin));
   double fsec = (fmin - min) * 60;
 
   if (debug>1) {
@@ -500,7 +501,7 @@ string hour2time (double fhr, bool do_fractional_second=true) {
     cout << "\tsec = " << fsec << endl;
     cout << "\t";
   }
-  char time[64];
+  std::array<char,64> time;
   if (do_fractional_second)
     sprintf(time,"%02d:%02d:%06.3f",hr,min,fsec);
   else {
@@ -510,20 +511,20 @@ string hour2time (double fhr, bool do_fractional_second=true) {
   return string(time);
 }
 
-double getSolarNoon(double longitude, double timezone) {
+double getSolarNoon(double longitude, double set_timezone) {
   // apparent angular speed of the sun
   double const w=360./24.; // 15 degrees per hour
   
   // divide the geographic longitude by the angular speed to get the solar time zone
   double sol_tz=longitude/w;
 
-  double tz_diff = timezone - sol_tz;
+  double tz_diff = set_timezone - sol_tz;
 
   // solar noon is... noon, plus the timezone difference
   double sol_noon = 12 + tz_diff;
   
   if (debug>0) {
-    cout << "The specified timezone is " << timezone << " hours" << endl;
+    cout << "The specified timezone is " << set_timezone << " hours" << endl;
     cout << "    The solar timezone is " << sol_tz << " hours" << endl;
     cout << "          a difference of " << tz_diff << " hours" << endl;
     cout << "                       or " << tz_diff*60 << " minutes" << endl;
@@ -532,7 +533,7 @@ double getSolarNoon(double longitude, double timezone) {
   return sol_noon;
 }
 
-double getSunset(int year, int month, int day, double latitude, double longitude, int timezone) {
+double getSunset(int year, int month, int day, double latitude, double longitude, int set_timezone) {
   // date
   double jd = getJulianDate(year, month, day);
   double j2000 = getJ2000(jd);
@@ -643,7 +644,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double E=equationOfTime3(epsilon,L,e,M);
 
   // adjust solar noon
-  double solarNoon = getSolarNoon(longitude,timezone);
+  double solarNoon = getSolarNoon(longitude,set_timezone);
   solarNoon -= E;
   cout << "Corrected solar noon\n\t" << solarNoon << " or " << hour2time(solarNoon) << endl;
 
@@ -668,7 +669,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
 int main() {
   // Get the current date and time
-  time_t now = time(0);
+  time_t now = time(nullptr);
   tm *ltm = localtime(&now);
   int year = ltm->tm_year + 1900;
   int month = ltm->tm_mon + 1;
@@ -677,10 +678,10 @@ int main() {
   // Set the location and timezone
   double latitude = 30.4275784357249; // New Orleans
   double longitude = -90.0914955109431;
-  int timezone = -6;
+  int set_timezone = -6;
 
   // Calculate the sunset time
-  getSunset(year, month, day, latitude, longitude, timezone);
+  getSunset(year, month, day, latitude, longitude, set_timezone);
 
   return 0;
 }
