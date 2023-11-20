@@ -14,8 +14,8 @@
 using namespace std;
 
 // settings
-const int debug=0;
-bool do_NOAA=true;
+const int debug=1;
+const bool do_NOAA=true;
 
 // define constants
 const double PI = atan(1)*4;
@@ -265,7 +265,6 @@ double getSunSize(double rad_vec_au = 1) {
   }
   
   return sun_radi_deg;
-  //const double sunRadius = 0.26667; 
 }
 
 double dms2deg(double deg, double min, double sec) {
@@ -363,16 +362,18 @@ double obliquityOfEcliptic(double T) {
 }
 
 double equationOfTime2(double M, double alpha, double DPsi, double epsilon) {
-  //  double EqT = q/15.0 - RA; //USNO
+  
   double EqT = M - alpha; //degrees
   if (debug>0) {
-    cout << "Equation of Time" << endl;
-    cout << "\tEqT = " << EqT << " degrees" <<endl;
-    cout << "\tEqT = " << EqT*4 << " minutes" <<endl;
+    cout << "   calculated with M and R.A." << endl;
+    cout << "\tE = "; printDeg(EqT); cout  << " (USNO)" << endl;
   }
+  if (debug>1)
+    cout << "\tE = " << fmod(EqT,360)*4 << " minutes" << endl;
 
   double E = M - 0.0057183 - alpha + DPsi * cos(epsilon);
-  cout << "\t  E = " << E << " degrees" <<endl;
+  cout << "   corrected with DPsi and epsilon" << endl;
+  cout << "\tE = "; printDeg(E); cout << " (corrected)" <<endl;
   return EqT;
 }
 
@@ -395,7 +396,6 @@ double equationOfTime3(double epsilon, double L,double e,double M) {
   L*=deg2rad;
   M*=deg2rad;
 
-  cout << "Equation of time" << endl;
   if (debug > 1) {
     // print individual terms
     cout << "\t" << y*sin(2*L)<< endl;
@@ -412,49 +412,73 @@ double equationOfTime3(double epsilon, double L,double e,double M) {
     -(5/4.)*pow(e,2)*sin(2*M);
 
   if (debug>0) {
+    cout << "   calculated using Smart (1956)" << endl;
     cout << "\tE = " << E << " radians" << endl;
     cout << "\tE = " << E*rad2deg << " degrees" << endl;
     cout << "\tE = " << E*rad2deg*4 << " minutes" << endl;
   }
+  cout << "\tE = " << E*rad2deg/15 << " hours" << endl;
   return E*rad2deg/15; // hours
 }
 
 double getZenith(double e, double nu) {  
   double R = radiusVector(e,nu);
-
-  // get the apparent size of the sun
-  cout << "Apparent size of the Sun" << endl;  
-  cout << "   default: ";
+  if (debug>0) {
+    // get the apparent size of the sun
+    cout << "Apparent size of the Sun" << endl;  
+    // the default size is based on a solar distance of 1 au
+    cout << "   default: ";
+  }
   double r_def=getSunSize();
-  cout << "   calculated: ";
+  if (debug>0)
+    cout << "   calculated: ";
   double r_cal=getSunSize(R);
   
-  if (do_NOAA) {
-    const double sun_radi_deg = r_def;
-  }
-  else {
-    const double sun_radi_deg = r_cal;
-  }
-
-  cout << "Elevation of the Sun" << endl;
-  cout << "   default: " << endl;
-  double h0_def = -0.833;
-  cout << "\th0 = " << h0_def << " degrees (NOAA)" << endl;
-  
-  const double atmo_refrac = 0.5667;
-  const double h0_cal = -(sun_radi_deg + atmo_refrac);
-  cout << "   calculated: " << endl;
-  cout << "\th0 = " << h0_cal << " degrees" << endl;
-
-  if (do_NOAA) {
-    const double h0 = h0_def;
-  }
+  // select value to use
+  double sun_radi_deg ;
+  if (do_NOAA) 
+    sun_radi_deg = r_def;  
   else 
-    const double h0 = h0_cal;
+    sun_radi_deg = r_cal;  
 
+  // The elevation of the sun is the sum of the angular radius of the sun and the angular
+  // refraction of the atmosphere.
+  const double atmo_refrac = 0.5667;
+  const double h0_cal = -(sun_radi_deg + atmo_refrac); 
+  // The default value is based on an appearent angular radius of the sun of 0.26667 degrees
+  // (based on a solar distance of 1 au), and an atmospheric refraction of 0.5667 degrees. The
+  // result is rounded to three decimal places.
+  const double h0_def = -0.833;
+  if (debug>0) {
+    cout << "Elevation of the Sun" << endl;
+    cout << "   default: " << endl;
+    cout << "\th0 = " << h0_def << " degrees (NOAA)" << endl;
+    cout << "\th0 = " << -(r_def + atmo_refrac) << " degrees" << endl;
+    cout << "   calculated: " << endl;
+    cout << "\th0 = " << h0_cal << " degrees" << endl;
+  }
+
+  // select value to use
+  double h0;
+  if (do_NOAA) 
+    h0 = h0_def;  
+  else 
+    h0 = h0_cal;
+
+  if (debug>0) {
+    cout << "\th0 = " << h0/15 << " hours" << endl;
+    cout << "\th0 = " << h0*4 << " minutes" << endl;
+  }
+  
+  // the zenith is adjusted by the elevation of the sun
   double zenith = 90.0 - h0;
 
-  cout << "Zenith\n\tz = " << zenith << " degrees" << endl;
+  cout << "Zenith" << endl;
+  cout << "\tz = " << zenith << " degrees" << endl;
+  if (debug>0) {
+    cout << "\tz = " << zenith/15 << " hours" << endl;
+    cout << "\tz = " << zenith*4 << " minutes" << endl;
+  }
   
   return zenith;
 }
@@ -489,9 +513,9 @@ double hourAngle(double h0, double phi, double delta) {
 
 string hour2time (double fhr, bool do_fractional_second=true) {
   // convert fractional hour into hr:min:sec string
-  int hr = floor(fhr);
+  auto hr = int(floor(fhr));
   double fmin = (fhr - hr) * 60;
-  int min = floor(fmin);
+  auto min = int(floor(fmin));
   double fsec = (fmin - min) * 60;
 
   if (debug>1) {
@@ -504,26 +528,26 @@ string hour2time (double fhr, bool do_fractional_second=true) {
   if (do_fractional_second)
     sprintf(time,"%02d:%02d:%06.3f",hr,min,fsec);
   else {
-    int sec = floor(fsec);
+    auto sec = int(floor(fsec));
     sprintf(time,"%02d:%02d:%02d",hr,min,sec);
   }
   return string(time);
 }
 
-double getSolarNoon(double longitude, double timezone) {
+double getSolarNoon(double longitude, double set_timezone) {
   // apparent angular speed of the sun
   double const w=360./24.; // 15 degrees per hour
   
   // divide the geographic longitude by the angular speed to get the solar time zone
   double sol_tz=longitude/w;
 
-  double tz_diff = timezone - sol_tz;
+  double tz_diff = set_timezone - sol_tz;
 
   // solar noon is... noon, plus the timezone difference
   double sol_noon = 12 + tz_diff;
   
   if (debug>0) {
-    cout << "The specified timezone is " << timezone << " hours" << endl;
+    cout << "The specified timezone is " << set_timezone << " hours" << endl;
     cout << "    The solar timezone is " << sol_tz << " hours" << endl;
     cout << "          a difference of " << tz_diff << " hours" << endl;
     cout << "                       or " << tz_diff*60 << " minutes" << endl;
@@ -532,7 +556,7 @@ double getSolarNoon(double longitude, double timezone) {
   return sol_noon;
 }
 
-double getSunset(int year, int month, int day, double latitude, double longitude, int timezone) {
+double getSunset(int year, int month, int day, double latitude, double longitude, int set_timezone) {
   // date
   double jd = getJulianDate(year, month, day);
   double j2000 = getJ2000(jd);
@@ -575,6 +599,11 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   
   // nutation in longitude
   double DPsi = nutationInLongitude(Omega,t,L);
+ 
+  // apparent longitude of the Sun
+  // true equinox of the date
+  double lambda = l + DPsi;
+  cout << "Apparent longitude of the Sun\n\t     lambda  = "; printDeg(lambda); cout << endl;
 
   // nutation in obliquity
   // correction for parallax (Meeus Eq. 25.8)
@@ -583,24 +612,19 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double epsilon = epsilon0 + Depsilon;
   if (debug > 1) 
     cout << "Nutation in obliquity\n\t      Depsilon =  " << Depsilon << endl; 
-  
-  // apparent longitude of the Sun
-  // true equinox of the date
-  double lambda = l + DPsi;
-  cout << "Apparent longitude of the Sun\n\t     lambda  = "; printDeg(lambda); cout << endl;
-  lambda*=deg2rad;  
- 
-  cout << "       epsilon = " << epsilon << " including nutation" << endl;
+  cout << "Instantaneous obliquity of the Sun\n\t     epsilon = " << epsilon << " including nutation" << endl;
+
   // convert to radians
+  lambda*=deg2rad;  
   epsilon*=deg2rad;
 
   /*
    * Using the corrected quantities
-   *  lambda
-   *  nu
-   *  epsilon
+   *    lambda
+   *    nu
+   *    epsilon
+   * calculate the solar coordinates, R.A. and Dec.
    */
-  
   
   // Sun's right ascension a
   double alpha = atan2(cos(epsilon) * sin(lambda),
@@ -633,17 +657,22 @@ double getSunset(int year, int month, int day, double latitude, double longitude
     cout << "\t    declination = " << delta << " degrees (NOAA)" << endl;
   }
 
-  // calculate equation of time
+  /*
+   * It all leads to this: calculate the Equation of Time
+   */
+  
+  double e = eccentricity(t);
+  cout << "Equation of Time" << endl;
+  
   if (debug>0)
     // Equation 2  
     equationOfTime2(M,alpha,DPsi,epsilon);
 
   // Equation 3
-  double e = eccentricity(t);
   double E=equationOfTime3(epsilon,L,e,M);
 
   // adjust solar noon
-  double solarNoon = getSolarNoon(longitude,timezone);
+  double solarNoon = getSolarNoon(longitude,set_timezone);
   solarNoon -= E;
   cout << "Corrected solar noon\n\t" << solarNoon << " or " << hour2time(solarNoon) << endl;
 
@@ -668,7 +697,7 @@ double getSunset(int year, int month, int day, double latitude, double longitude
 
 int main() {
   // Get the current date and time
-  time_t now = time(0);
+  time_t now = time(nullptr);
   tm *ltm = localtime(&now);
   int year = ltm->tm_year + 1900;
   int month = ltm->tm_mon + 1;
@@ -677,10 +706,10 @@ int main() {
   // Set the location and timezone
   double latitude = 30.4275784357249; // New Orleans
   double longitude = -90.0914955109431;
-  int timezone = -6;
+  int set_timezone = -6;
 
   // Calculate the sunset time
-  getSunset(year, month, day, latitude, longitude, timezone);
+  getSunset(year, month, day, latitude, longitude, set_timezone);
 
   return 0;
 }
