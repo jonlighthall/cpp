@@ -524,12 +524,13 @@ string hour2time (double fhr, bool do_fractional_second=true) {
     cout << "\tsec = " << fsec << endl;
     cout << "\t";
   }
-  char time[64];
-  if (do_fractional_second)
-    sprintf(time,"%02d:%02d:%06.3f",hr,min,fsec);
+  char time[16];
+  if (do_fractional_second){
+    snprintf(time,sizeof(time),"%02d:%02d:%06.3f",hr,min,fsec);    
+}
   else {
     auto sec = int(floor(fsec));
-    sprintf(time,"%02d:%02d:%02d",hr,min,sec);
+    snprintf(time,sizeof(time),"%02d:%02d:%02d",hr,min,sec);
   }
   return string(time);
 }
@@ -688,9 +689,9 @@ double getSunset(int year, int month, int day, double latitude, double longitude
   double sunsetTime = solarNoon + HA;
   double sunriseTime = solarNoon - HA;
 
-  // Print the result
-  cout << "Sunset time: " << hour2time(sunsetTime) << endl;
+  // Print the result  
   cout << "Sunrise time: " << hour2time(sunriseTime) << endl;
+  cout << " Sunset time: " << hour2time(sunsetTime) << endl;
   
   return sunsetTime;
 }
