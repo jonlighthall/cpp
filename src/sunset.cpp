@@ -299,6 +299,7 @@ double dms2deg(double deg, double min, double sec) {
 }
 
 // A function to calculate the obliquity of the ecliptic in degrees
+// Earth's axial tilt
 double obliquityOfEcliptic(double T) {
   // obliquity of the ecliptic (Meesus Eq. 22.2)
   // All of these expressions are for the mean obliquity, that is, without the
@@ -374,8 +375,12 @@ double obliquityOfEcliptic(double T) {
     return epsilon_NGT;
 }
 
-double equationOfTime2(double M, double alpha, double DPsi, double epsilon) {
-  double EqT = M - alpha;  // degrees
+// The equation of time represents the difference between solar time and clock
+// time due to the Earth's elliptical orbit and axial tilt.
+
+double equationOfTime2(double M, double RA, double DPsi, double epsilon,
+                       double L, double eccentricity) {
+  double EqT = RA - (M + L);  // degrees
   if (debug > 0) {
     cout << "   calculated with M and R.A." << endl;
     cout << "\tE = ";
@@ -384,11 +389,26 @@ double equationOfTime2(double M, double alpha, double DPsi, double epsilon) {
   }
   if (debug > 1) cout << "\tE = " << fmod(EqT, 360) * 4 << " minutes" << endl;
 
-  double E = M - 0.0057183 - alpha + DPsi * cos(epsilon);
+  double E = EqT - 0.0057183 + DPsi * cos(epsilon);
   cout << "   corrected with DPsi and epsilon" << endl;
   cout << "\tE = ";
   printDeg(E);
   cout << " (corrected)" << endl;
+
+  const double minutesPerDegree =
+      4.0;  // Conversion factor from degrees to minutes
+
+  double E2 = minutesPerDegree * 4 *
+              (eccentricity * sin(M) -
+               2 * eccentricity * sin(2 * M) +
+               4 * eccentricity * sin(3 * M) -
+               0.5 * eccentricity * sin(4 * M) -
+               1.25 * pow(sin(RA - epsilon), 2)) *
+              rad2deg;  // Result in minutes
+cout << "\tE = ";
+printDeg(E2);
+cout << endl;
+
   return EqT;
 }
 
@@ -686,7 +706,7 @@ double getSunset(int year, int month, int day, double latitude,
 
   if (debug > 0)
     // Equation 2
-    equationOfTime2(M, alpha, DPsi, epsilon);
+    equationOfTime2(M, alpha, DPsi, epsilon, L, e);
 
   // Equation 3
   double E = equationOfTime3(epsilon, L, e, M);
