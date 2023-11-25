@@ -11,5 +11,8 @@
     "sonarlint.connectedMode.project": {
         "connectionId": "jonlighthall",
         "projectKey": "jonlighthall_cpp"
+    },
+    "files.associations": {
+        "ostream": "cpp"
     }
 }
