@@ -1,0 +1,7 @@
+[
+    {
+        "command": "g++ -MMD -MP  -Wall -c src/sunset.cpp -o obj/sunset.o",
+        "directory": "/home/jlighthall/repos/cpp",
+        "file": "/home/jlighthall/repos/cpp/src/sunset.cpp"
+    }
+]

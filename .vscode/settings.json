@@ -1,0 +1,10 @@
+{
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/home/jlighthall/examp/cpp/bin",
+            "binaryPath": "/home/jlighthall/examp/cpp/bin/app",
+            "binaryArgs": []
+        }
+    ],
+    "makefile.compileCommandsPath": ".vscode/compile_commands.json"    
+}
