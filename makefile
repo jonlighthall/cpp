@@ -93,6 +93,74 @@ EXE = app
 .PHONY: all
 all: $(BINDIR)/$(EXE)
 
+printvars:
+	@echo
+	@echo "printing variables..."
+	@echo "----------------------------------------------------"
+	@echo
+	@echo "includes = '$(includes)'"
+	@echo "VPATH = '$(VPATH)'"
+
+	@echo
+	@echo "----------------------------------------------------"
+	@echo
+
+
+	@echo "SUBDIRS = $(SUBDIRS)"
+
+	@echo
+	@echo "----------------------------------------------------"
+	@echo
+
+	@echo "SRC.C = $(SRC.C)"
+	@echo
+	@echo "SRC.CPP = $(SRC.CPP)"
+	@echo
+	@echo "SRC = $(SRC)"
+	@echo
+	@echo "SOURCES = $(SOURCES)"
+
+	@echo
+	@echo "----------------------------------------------------"
+	@echo
+
+	
+	@echo "OBJS.C = $(OBJS.C)"
+	@echo "OBJS.CPP = $(OBJS.CPP)"
+	@echo "OBJS.all = $(OBJS.all)"
+	@echo "OBJS.o = $(OBJS.o)"
+	@echo "OBJS = $(OBJS)"
+	@echo "OBJECTS = $(OBJECTS)"
+	@echo
+	@echo "----------------------------------------------------"
+	@echo
+
+
+	@echo
+	@echo "----------------------------------------------------"
+	@echo
+	@echo "DEPS. = $(DEPS.)"
+	@echo "DEPS.o = $(DEPS.o)"
+	@echo "DEPS = $(DEPS)"
+	@echo "DEPENDS = $DEPENDS"
+
+	@echo
+	@echo "----------------------------------------------------"
+	@echo
+
+	@echo "EXE = $(EXE)"
+	@echo "TARGET = $(TARGET)"
+	@echo "EXES = $(EXES)"
+	@echo
+	
+	@echo
+	
+	@echo
+	@echo "----------------------------------------------------"
+	@echo "$@ done"
+	@echo
+
+
 $(BINDIR)/$(EXE): $(OBJECTS) | $(BINDIR) 
 	$(LINK.o)
 
