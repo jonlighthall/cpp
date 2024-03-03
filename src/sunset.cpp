@@ -399,15 +399,13 @@ double equationOfTime2(double M, double RA, double DPsi, double epsilon,
       4.0;  // Conversion factor from degrees to minutes
 
   double E2 = minutesPerDegree * 4 *
-              (eccentricity * sin(M) -
-               2 * eccentricity * sin(2 * M) +
-               4 * eccentricity * sin(3 * M) -
-               0.5 * eccentricity * sin(4 * M) -
+              (eccentricity * sin(M) - 2 * eccentricity * sin(2 * M) +
+               4 * eccentricity * sin(3 * M) - 0.5 * eccentricity * sin(4 * M) -
                1.25 * pow(sin(RA - epsilon), 2)) *
               rad2deg;  // Result in minutes
-cout << "\tE = ";
-printDeg(E2);
-cout << endl;
+  cout << "\tE = ";
+  printDeg(E2);
+  cout << endl;
 
   return EqT;
 }
@@ -739,10 +737,11 @@ double getSunset(int year, int month, int day, double latitude,
 int main() {
   // Get the current date and time
   time_t now = time(nullptr);
-  tm *ltm = localtime(&now);
-  int year = ltm->tm_year + 1900;
-  int month = ltm->tm_mon + 1;
-  int day = ltm->tm_mday;
+  tm ltm;
+  localtime_r(&now, &ltm);
+  int year = ltm.tm_year + 1900;
+  int month = ltm.tm_mon + 1;
+  int day = ltm.tm_mday;
 
   // Set the location and timezone
   double latitude = 30.4275784357249;  // New Orleans
