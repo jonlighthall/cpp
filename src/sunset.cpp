@@ -548,29 +548,29 @@ string hour2time(double fhr, bool do_fractional_second = true) {
   auto min = int(floor(fmin));
   double fsec = (fmin - min) * 60;
 
-struct Time {
+  struct Time {
     int hr;
     int min;
     double fsec;
-};
+  };
 
-Time time;
-if (do_fractional_second) {
+  Time time;
+  if (do_fractional_second) {
     time.hr = hr;
     time.min = min;
     time.fsec = fsec;
-} else {
+  } else {
     time.hr = hr;
     time.min = min;
     time.fsec = int(floor(fsec));
-}
+  }
 
-std::ostringstream time_string;
-    time_string << std::setfill('0') << std::setw(2) << time.hr << ":"
-        << std::setfill('0') << std::setw(2) << time.min << ":"
-        << std::fixed << std::setprecision(2) << time.fsec;
+  std::ostringstream time_string;
+  time_string << std::setfill('0') << std::setw(2) << time.hr << ":"
+              << std::setfill('0') << std::setw(2) << time.min << ":"
+              << std::fixed << std::setprecision(2) << time.fsec;
 
-    return time_string.str();
+  return time_string.str();
 }
 
 double getSolarNoon(double longitude, double set_timezone) {
