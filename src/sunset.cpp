@@ -1,9 +1,9 @@
 /**
-    Most of this code is developed from James Still's post on calculating solar
+   Most of this code is developed from James Still's post on calculating solar
    coordinates: https://squarewidget.com/solar-coordinates/
    with references to
-    https://aa.usno.navy.mil/faq/sun_approx
-    Meeus, Jean (1991). Astronomical Algorithms.
+   https://aa.usno.navy.mil/faq/sun_approx
+   Meeus, Jean (1991). Astronomical Algorithms.
 */
 
 #include <cmath>
@@ -15,7 +15,14 @@
 using namespace std;
 
 // settings
-const int debug = 1;
+const int debug = 0;
+/* debug value
+  -1 print sunset and commute only
+   0 print major calculations
+   1 print each calculation step, including alternate values
+   2 print every variable value
+*/
+
 const bool do_NOAA = true;
 
 // define constants
@@ -29,7 +36,7 @@ double getJulianDate(int year, int month, int day) {
   int y = year + 4800 - a;
   int m = month + 12 * a - 3;
   int jd =
-      day + (153 * m + 2) / 5 + 365 * y + y / 4 - y / 100 + y / 400 - 32045;
+    day + (153 * m + 2) / 5 + 365 * y + y / 4 - y / 100 + y / 400 - 32045;
   if (debug > 0) cout << "\tthe Julian date is " << jd << endl;
   return jd;  // are we supposed to return noon?
 }
@@ -68,7 +75,7 @@ double meanLongitude(double t) {
   double L_1 = 280.460 + 36000.771 * t;                              // USNO
   double L_2 = 280.46646 + 36000.76983 * t + 0.0003032 * pow(t, 2);  // NOAA
   double L_5 = 280.4664567 + 36000.76982779 * t + 0.03032028 * pow(t, 2) +
-               pow(t, 3) / 49931 - pow(t, 4) / 15300 - pow(t, 5) / 2e6;
+    pow(t, 3) / 49931 - pow(t, 4) / 15300 - pow(t, 5) / 2e6;
   if (debug > 0) {
     cout << "Geometric Mean Longitude of the Sun" << endl;
     cout << "\t   linear: L = " << setprecision(6) << left;
@@ -93,7 +100,7 @@ double meanAnomaly(double t) {
   double M_1 = 357.528 + 35999.050 * t;
   double M_2 = 357.52911 + 35999.05029 * t - 0.0001537 * pow(t, 2);  // NOAA
   double M_3 = 357.52772 + 35999.050340 * t - 0.0001603 * pow(t, 2) +
-               pow(t, 3) / 300000;  // X1 in Eq. 16, Reda & Andreas (2008)
+    pow(t, 3) / 300000;  // X1 in Eq. 16, Reda & Andreas (2008)
   if (debug > 0) {
     cout << "Mean Anomaly of the Sun" << endl;
     cout << "\t   linear: M = " << setprecision(6);
@@ -123,8 +130,8 @@ double equationOfCenter(double t, double M) {
   double C_0 = 1.915 * sin(M) + 0.020 * sin(2 * M);
 
   double C_2 = (1.914602 - (0.004817 * t) - (0.000014 * pow(t, 2))) * sin(M) +
-               (0.019993 - (0.000101 * t)) * sin(2 * M) +
-               (0.000289 * sin(3 * M));
+    (0.019993 - (0.000101 * t)) * sin(2 * M) +
+    (0.000289 * sin(3 * M));
 
   if (debug > 0) {
     cout << "Equation of center" << endl;
@@ -143,7 +150,7 @@ double longitudeAscendingNode(double t) {
   // Used to correction for nutation and aberration.
   double Omega_1 = 125.04 - 1934.136 * t;
   double Omega_3 = 125.04452 - 1934.136261 * t + 0.0020708 * pow(t, 2) +
-                   pow(t, 3) / 450000;  // X4 in Eq. 19, Reda & Andreas (2008)
+    pow(t, 3) / 450000;  // X4 in Eq. 19, Reda & Andreas (2008)
 
   if (debug > 0) {
     cout << "Longitude of the ascending node" << endl;
@@ -167,9 +174,9 @@ double nutationInLongitude(double Omega, double JCE, double X1) {
     cout << "\t        DPSi = " << DPsi * deg2rad << " radians" << endl;
 
     double X0 = 297.85036 + 44526.7111480 * JCE - 0.0019142 * pow(JCE, 2) +
-                pow(JCE, 3) / 189474.;  // Eq. 15
+      pow(JCE, 3) / 189474.;  // Eq. 15
     double X3 = 93.27191 + 483202.017538 * JCE - 0.0036825 * pow(JCE, 2) +
-                pow(JCE, 3) / 327270.;  // Eq. 18
+      pow(JCE, 3) / 327270.;  // Eq. 18
     double X4 = Omega;                  // Eq. 19
 
     // print values
@@ -271,9 +278,9 @@ double getSunSize(double rad_vec_au = 1) {
 
   // apparent size of the sun
   const double sun_diam_rad =
-      2 * atan(sun_diam_m / (2 * rad_vec_m));  // angular size in radians
+    2 * atan(sun_diam_m / (2 * rad_vec_m));  // angular size in radians
   const double sun_diam_deg =
-      sun_diam_rad * rad2deg;  // angular size in degrees
+    sun_diam_rad * rad2deg;  // angular size in degrees
 
   // return semidiameter
   const double sun_radi_deg = sun_diam_deg / 2;
@@ -351,9 +358,9 @@ double obliquityOfEcliptic(double T) {
   // 2451545.0). NGT denotes our solution (Numerical General Theory).
 
   double epsilon_NGT = epsilon_1 - 1.55 * pow(U, 2) + 1999.25 * pow(U, 3) -
-                       51.38 * pow(U, 4) - 249.67 * pow(U, 5) -
-                       39.05 * pow(U, 6) + 7.12 * pow(U, 7) +
-                       27.87 * pow(U, 8) + 5.79 * pow(U, 9) + 2.45 * pow(U, 10);
+    51.38 * pow(U, 4) - 249.67 * pow(U, 5) -
+    39.05 * pow(U, 6) + 7.12 * pow(U, 7) +
+    27.87 * pow(U, 8) + 5.79 * pow(U, 9) + 2.45 * pow(U, 10);
 
   // Convert arcseconds to degrees
   epsilon_1 *= 1 / 3600.;
@@ -397,16 +404,18 @@ double equationOfTime2(double M, double RA, double DPsi, double epsilon,
   cout << " (corrected)" << endl;
 
   const double minutesPerDegree =
-      4.0;  // Conversion factor from degrees to minutes
+    4.0;  // Conversion factor from degrees to minutes
 
   double E2 = minutesPerDegree * 4 *
-              (eccentricity * sin(M) - 2 * eccentricity * sin(2 * M) +
-               4 * eccentricity * sin(3 * M) - 0.5 * eccentricity * sin(4 * M) -
-               1.25 * pow(sin(RA - epsilon), 2)) *
-              rad2deg;  // Result in minutes
-  cout << "\tE = ";
-  printDeg(E2);
-  cout << endl;
+    (eccentricity * sin(M) - 2 * eccentricity * sin(2 * M) +
+     4 * eccentricity * sin(3 * M) - 0.5 * eccentricity * sin(4 * M) -
+     1.25 * pow(sin(RA - epsilon), 2)) *
+    rad2deg;  // Result in minutes
+  if (debug > -1) {
+    cout << "\tE = ";
+    printDeg(E2);
+    cout << endl;
+  }
 
   return EqT;
 }
@@ -439,8 +448,8 @@ double equationOfTime3(double epsilon, double L, double e, double M) {
   }
 
   double E = y * sin(2 * L) - 2 * e * sin(M) + 4 * e * y * sin(M) * cos(2 * L) -
-             (1 / 2.) * pow(y, 2) * sin(4 * L) -
-             (5 / 4.) * pow(e, 2) * sin(2 * M);
+    (1 / 2.) * pow(y, 2) * sin(4 * L) -
+    (5 / 4.) * pow(e, 2) * sin(2 * M);
 
   if (debug > 0) {
     cout << "   calculated using Smart (1956)" << endl;
@@ -448,7 +457,8 @@ double equationOfTime3(double epsilon, double L, double e, double M) {
     cout << "\tE = " << E * rad2deg << " degrees" << endl;
     cout << "\tE = " << E * rad2deg * 4 << " minutes" << endl;
   }
-  cout << "\tE = " << E * rad2deg / 15 << " hours" << endl;
+  if (debug > -1)
+    cout << "\tE = " << E * rad2deg / 15 << " hours" << endl;
   return E * rad2deg / 15;  // hours
 }
 
@@ -504,8 +514,10 @@ double getZenith(double e, double nu) {
   // the zenith is adjusted by the elevation of the sun
   double zenith = 90.0 - h0;
 
-  cout << "Zenith" << endl;
-  cout << "\tz = " << zenith << " degrees" << endl;
+  if (debug > -1) {
+    cout << "Zenith" << endl;
+    cout << "\tz = " << zenith << " degrees" << endl;
+  }
   if (debug > 0) {
     cout << "\tz = " << zenith / 15 << " hours" << endl;
     cout << "\tz = " << zenith * 4 << " minutes" << endl;
@@ -631,10 +643,12 @@ double getSunset(int year, int month, int day, double latitude,
 
   // Sun's true anomaly
   double nu = (M + C);
-  cout << "True anomaly of the Sun" << endl;
-  cout << "\t          nu = " << setprecision(5);
-  printDeg(nu);
-  cout << endl;
+  if (debug > -1) {
+    cout << "True anomaly of the Sun" << endl;
+    cout << "\t          nu = " << setprecision(5);
+    printDeg(nu);
+    cout << endl;
+  }
 
   /* Second correction
    *
@@ -651,9 +665,11 @@ double getSunset(int year, int month, int day, double latitude,
   // apparent longitude of the Sun
   // true equinox of the date
   double lambda = l + DPsi;
-  cout << "Apparent longitude of the Sun\n\t     lambda  = ";
-  printDeg(lambda);
-  cout << endl;
+  if (debug > -1) {
+    cout << "Apparent longitude of the Sun\n\t     lambda  = ";
+    printDeg(lambda);
+    cout << endl;
+  }
 
   // nutation in obliquity
   // correction for parallax (Meeus Eq. 25.8)
@@ -662,8 +678,10 @@ double getSunset(int year, int month, int day, double latitude,
   double epsilon = epsilon0 + Depsilon;
   if (debug > 1)
     cout << "Nutation in obliquity\n\t      Depsilon =  " << Depsilon << endl;
-  cout << "Instantaneous obliquity of the Sun\n\t     epsilon = " << epsilon
-       << " including nutation" << endl;
+  if (debug > -1) {
+    cout << "Instantaneous obliquity of the Sun\n\t     epsilon = " << epsilon
+         << " including nutation" << endl;
+  }
 
   // convert to radians
   lambda *= deg2rad;
@@ -687,7 +705,7 @@ double getSunset(int year, int month, int day, double latitude,
   if (debug > 1) {
     // Longitude of the periapsis or longitude of the pericenter
     double tanbar = atan2(
-        cos(alpha), sin(alpha) * cos(epsilon) + tan(delta) * sin(epsilon));
+                          cos(alpha), sin(alpha) * cos(epsilon) + tan(delta) * sin(epsilon));
     if (cos(alpha) < 0) tanbar += PI;
 
     cout << "Longitude of the periapsis" << endl;
@@ -711,7 +729,8 @@ double getSunset(int year, int month, int day, double latitude,
    */
 
   double e = eccentricity(t);
-  cout << "Equation of Time" << endl;
+  if (debug > -1)
+    cout << "Equation of Time" << endl;
 
   if (debug > 0)
     // Equation 2
@@ -723,8 +742,9 @@ double getSunset(int year, int month, int day, double latitude,
   // adjust solar noon
   double solarNoon = getSolarNoon(longitude, set_timezone);
   solarNoon -= E;
-  cout << "Corrected solar noon\n\t" << solarNoon << " or "
-       << hour2time(solarNoon) << endl;
+  if (debug > -1)
+    cout << "Corrected solar noon\n\t" << solarNoon << " or "
+         << hour2time(solarNoon) << endl;
 
   // calculate zenith
   double zenith = getZenith(e, nu);
@@ -739,7 +759,8 @@ double getSunset(int year, int month, int day, double latitude,
   double sunriseTime = solarNoon - HA;
 
   // Print the result
-  cout << "Sunrise time: " << hour2time(sunriseTime) << endl;
+  if (debug > -1)
+    cout << "Sunrise time: " << hour2time(sunriseTime) << endl;
   cout << " Sunset time: " << hour2time(sunsetTime) << endl;
 
   return sunsetTime;
@@ -761,10 +782,12 @@ int main() {
 
   // Calculate the sunset time
   double sunsetTime =
-      getSunset(year, month, day, latitude, longitude, set_timezone);
+    getSunset(year, month, day, latitude, longitude, set_timezone);
 
   // Print the current date and time
-  cout << "\nCurrent time: " << put_time(&ltm, "%H:%M:%S") << endl;
+  if (debug > -1)
+    cout << "\n"<< endl;
+  cout << "Current time: " << put_time(&ltm, "%H:%M:%S") << endl;
 
   // Calculate the difference between the current time and the sunset time
   double currentTime = ltm.tm_hour + ltm.tm_min / 60.0 + ltm.tm_sec / 3600.0;
@@ -774,7 +797,7 @@ int main() {
   int diffHours = static_cast<int>(timeDifference);
   int diffMinutes = static_cast<int>((timeDifference - diffHours) * 60);
   int diffSeconds =
-      static_cast<int>(((timeDifference - diffHours) * 60 - diffMinutes) * 60);
+    static_cast<int>(((timeDifference - diffHours) * 60 - diffMinutes) * 60);
 
   // Print the time difference
   cout << " difference : " << std::setw(2) << std::right << diffHours << ":"
@@ -788,7 +811,7 @@ int main() {
   diffHours = static_cast<int>(timeDifference);
   diffMinutes = static_cast<int>((timeDifference - diffHours) * 60);
   diffSeconds =
-      static_cast<int>(((timeDifference - diffHours) * 60 - diffMinutes) * 60);
+    static_cast<int>(((timeDifference - diffHours) * 60 - diffMinutes) * 60);
 
   // Print the time difference
   cout << "    commute : " << std::setfill(' ') << std::setw(2) << std::right
