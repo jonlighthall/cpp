@@ -781,5 +781,19 @@ int main() {
        << std::setfill('0') << std::setw(2) << diffMinutes << ":"
        << std::setfill('0') << std::setw(2) << diffSeconds << endl;
 
+  // subtract communte time
+  timeDifference -= 37.0 / 60.0;
+
+  // Convert the time difference to hours, minutes, and seconds
+  diffHours = static_cast<int>(timeDifference);
+  diffMinutes = static_cast<int>((timeDifference - diffHours) * 60);
+  diffSeconds =
+      static_cast<int>(((timeDifference - diffHours) * 60 - diffMinutes) * 60);
+
+  // Print the time difference
+  cout << "    commute : " << std::setfill(' ') << std::setw(2) << std::right
+       << diffHours << ":" << std::setfill('0') << std::setw(2) << diffMinutes
+       << ":" << std::setfill('0') << std::setw(2) << diffSeconds << endl;
+
   return 0;
 }
