@@ -10,6 +10,7 @@
 #include <ctime>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 
@@ -568,7 +569,8 @@ string hour2time(double fhr, bool do_fractional_second = true) {
   std::ostringstream time_string;
   time_string << std::setfill('0') << std::setw(2) << time.hr << ":"
               << std::setfill('0') << std::setw(2) << time.min << ":"
-              << std::fixed << std::setprecision(2) << time.fsec;
+              << std::fixed << std::setprecision(2) << std::setfill('0')
+              << std::setw(5) << time.fsec;
 
   return time_string.str();
 }
@@ -758,7 +760,26 @@ int main() {
   int set_timezone = -6;
 
   // Calculate the sunset time
-  getSunset(year, month, day, latitude, longitude, set_timezone);
+  double sunsetTime =
+      getSunset(year, month, day, latitude, longitude, set_timezone);
+
+  // Print the current date and time
+  cout << "\nCurrent time: " << put_time(&ltm, "%H:%M:%S") << endl;
+
+  // Calculate the difference between the current time and the sunset time
+  double currentTime = ltm.tm_hour + ltm.tm_min / 60.0 + ltm.tm_sec / 3600.0;
+  double timeDifference = sunsetTime - currentTime;
+
+  // Convert the time difference to hours, minutes, and seconds
+  int diffHours = static_cast<int>(timeDifference);
+  int diffMinutes = static_cast<int>((timeDifference - diffHours) * 60);
+  int diffSeconds =
+      static_cast<int>(((timeDifference - diffHours) * 60 - diffMinutes) * 60);
+
+  // Print the time difference
+  cout << " difference : " << std::setw(2) << std::right << diffHours << ":"
+       << std::setfill('0') << std::setw(2) << diffMinutes << ":"
+       << std::setfill('0') << std::setw(2) << diffSeconds << endl;
 
   return 0;
 }
