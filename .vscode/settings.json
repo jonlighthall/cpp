@@ -14,5 +14,9 @@
     },
     "files.associations": {
         "ostream": "cpp"
-    }
+    },
+    "cSpell.words": [
+        "NOAA",
+        "USNO"
+    ]
 }
