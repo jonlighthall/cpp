@@ -15,7 +15,7 @@
 using namespace std;
 
 // settings
-const int debug = 0;
+const int debug = -1;
 /* debug value
   -1 print sunset and commute only
    0 print major calculations
@@ -769,8 +769,12 @@ double getSunset(int year, int month, int day, double latitude,
 int main() {
   // Get the current date and time
   time_t now = time(nullptr);
-  tm ltm;
-  localtime_r(&now, &ltm);
+tm ltm;
+#ifdef _WIN32
+    localtime_s(&ltm, &now);
+#else
+    localtime_r(&now, &ltm);
+#endif
   int year = ltm.tm_year + 1900;
   int month = ltm.tm_mon + 1;
   int day = ltm.tm_mday;
