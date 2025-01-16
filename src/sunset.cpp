@@ -166,7 +166,7 @@ double nutationInLongitude(double Omega, double JCE, double X1) {
   // omega is in radians
   double DPsi = -0.00569 - (0.00478 * sin(Omega));
   if (debug > 0) {
-    cout << "Nutation in logitude" << endl;
+    cout << "Nutation in longitude" << endl;
     cout << "\t        DPsi = " << DPsi << " degrees" << endl;
   }
 
@@ -485,7 +485,7 @@ double getZenith(double e, double nu) {
   // the angular refraction of the atmosphere.
   const double atmo_refrac = 0.5667;
   const double h0_cal = -(sun_radi_deg + atmo_refrac);
-  // The default value is based on an appearent angular radius of the sun of
+  // The default value is based on an apparent angular radius of the sun of
   // 0.26667 degrees (based on a solar distance of 1 au), and an atmospheric
   // refraction of 0.5667 degrees. The result is rounded to three decimal
   // places.
@@ -808,7 +808,7 @@ tm ltm;
        << std::setfill('0') << std::setw(2) << diffMinutes << ":"
        << std::setfill('0') << std::setw(2) << diffSeconds << endl;
 
-  // subtract communte time
+  // subtract commute time
   timeDifference -= 37.0 / 60.0;
 
   // Convert the time difference to hours, minutes, and seconds
