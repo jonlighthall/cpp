@@ -7,15 +7,15 @@ void printAlignedNumbers(const std::vector<double>& numbers,
   // Find the maximum width needed for the integer part
   int maxIntWidth = 0;
   for (double num : numbers) {
-    int intPart = static_cast<int>(num);
-    int width = std::to_string(intPart).length();
+    auto intPart = static_cast<int>(num);
+    auto width = static_cast<int>(std::to_string(intPart).length());
     if (width > maxIntWidth) maxIntWidth = width;
   }
 
   int maxDecimalPlaces = 4;
 
   auto formatNumber = [&](double value, int prec, int maxIntegerWidth,
-                          int maxDecimals) -> std::string {
+                          int maxDecimals) {
     // convert the number to a string with the specified precision
     std::ostringstream oss;
 
@@ -31,7 +31,7 @@ void printAlignedNumbers(const std::vector<double>& numbers,
     size_t dotPos = numStr.find('.');
 
     // Calculate padding for integer part
-    int intWidth = (dotPos != std::string::npos) ? dotPos : numStr.length();
+    int intWidth = (dotPos != std::string::npos) ? static_cast<int>(dotPos) : static_cast<int>(numStr.length());
 
     int padLeft = maxIntegerWidth - intWidth;
 
