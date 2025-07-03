@@ -13,3 +13,19 @@
   proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
   ------------------------------------------------------------------------------
 */
+#include <fstream>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::ifstream file("readme.cc");
+    if (!file) {
+        std::cerr << "Failed to open file.\n";
+        return 1;
+    }
+    std::string line;
+    while (std::getline(file, line)) {
+        std::cout << line << '\n';
+    }
+    return 0;
+}
