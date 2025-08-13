@@ -279,6 +279,24 @@ class FileComparator {
                                 const std::string& label,
                                 size_t count,
                                 const std::string& color = "") const;
+
+  // Rounded summary helper functions (for cognitive complexity reduction)
+  void print_equivalent_files_message(const SummaryParams& params) const;
+  void print_rounded_summary_details(const SummaryParams& params) const;
+  void print_trivial_differences_info(const SummaryParams& params) const;
+  void print_non_trivial_differences_info(const SummaryParams& params) const;
+  void print_files_different_message(const SummaryParams& params) const;
+  std::string get_trivial_diff_color(size_t zero_diff) const;
+  std::string get_non_trivial_diff_color() const;
+  void print_maximum_rounded_difference() const;
+  void print_rounded_difference_counts(const SummaryParams& params) const;
+  void print_printed_differences_info(const SummaryParams& params) const;
+  void print_not_printed_differences_info(const SummaryParams& params) const;
+  void print_rounded_threshold_comparison() const;
+  void print_max_diff_above_threshold() const;
+  void print_max_diff_below_or_equal_threshold() const;
+  void print_max_diff_equal_threshold() const;
+  void print_max_diff_less_than_threshold() const;
 };
 
 #endif  // UBAND_DIFF_H

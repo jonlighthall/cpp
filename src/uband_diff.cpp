@@ -1191,65 +1191,88 @@ void FileComparator::print_diff_like_summary(
 }
 
 void FileComparator::print_rounded_summary(const SummaryParams& params) const {
-  // Trivial differences
-  // =========================================================
+  // Handle trivial differences case
   if (counter.diff_non_trivial == 0) {
-    std::cout << "\033[1;32m   Files " << params.file1 << " and "
-              << params.file2
-              << " are equivalent"
-              //   << " with trivial differences due to formatting"
-              << "\033[0m" << std::endl;
+    print_equivalent_files_message(params);
     return;
   }
+  
+  // Early return for certain conditions
   if (counter.diff_significant > 0 && print.level < 1) {
     return;
   }
+
+  // Print detailed differences if debug level allows
   if (print.level > 0) {
-    // Helper lambda for printing trivial differences
-    auto print_trivial_differences = [this, &params]() {
-      if (counter.diff_non_zero <= counter.diff_non_trivial) return;
-
-      size_t zero_diff = counter.diff_non_zero - counter.diff_non_trivial;
-      if (zero_diff == 0) return;
-
-      std::cout << "   Trivial differences     ( >" << 0.0 << "): ";
-
-      // Select color based on conditions
-      if (zero_diff > 0) {
-        std::cout << "\033[1;32m";
-      } else if (counter.diff_significant > 0) {
-        std::cout << "\033[1;31m";
-      } else {
-        std::cout << "\033[1;33m";
-      }
-
-      std::cout << std::setw(params.fmt_wid) << zero_diff << "\033[0m"
-                << std::endl;
-    };
-
-    // Helper lambda for printing non-trivial differences color
-    auto print_non_trivial_color = [this]() {
-      if (counter.diff_non_trivial > 0) {
-        std::cout << "\033[1;33m";
-      } else if (counter.diff_significant > 0) {
-        std::cout << "\033[1;31m";
-      } else {
-        std::cout << "\033[1;32m";
-      }
-    };
-
-    print_trivial_differences();
-
-    std::cout << "   Non-trivial differences      : ";
-    print_non_trivial_color();
-    std::cout << std::setw(params.fmt_wid) << counter.diff_non_trivial
-              << "\033[0m" << std::endl;
-
-    std::cout << "\033[1;33m   Files " << params.file1 << " and "
-              << params.file2 << " are non-trivially different\033[0m"
-              << std::endl;
+    print_rounded_summary_details(params);
   }
 
+  print_maximum_rounded_difference();
+  print_rounded_difference_counts(params);
+  print_rounded_threshold_comparison();
+  printbar(1);
+}
+
+// Helper functions for print_rounded_summary
+void FileComparator::print_equivalent_files_message(const SummaryParams& params) const {
+  std::cout << "\033[1;32m   Files " << params.file1 << " and "
+            << params.file2 << " are equivalent\033[0m" << std::endl;
+}
+
+void FileComparator::print_rounded_summary_details(const SummaryParams& params) const {
+  print_trivial_differences_info(params);
+  print_non_trivial_differences_info(params);
+  print_files_different_message(params);
+}
+
+void FileComparator::print_trivial_differences_info(const SummaryParams& params) const {
+  if (counter.diff_non_zero <= counter.diff_non_trivial) {
+    return;
+  }
+
+  size_t zero_diff = counter.diff_non_zero - counter.diff_non_trivial;
+  if (zero_diff == 0) {
+    return;
+  }
+
+  std::cout << "   Trivial differences     ( >" << 0.0 << "): ";
+  std::cout << get_trivial_diff_color(zero_diff);
+  std::cout << std::setw(params.fmt_wid) << zero_diff << "\033[0m" << std::endl;
+}
+
+void FileComparator::print_non_trivial_differences_info(const SummaryParams& params) const {
+  std::cout << "   Non-trivial differences      : ";
+  std::cout << get_non_trivial_diff_color();
+  std::cout << std::setw(params.fmt_wid) << counter.diff_non_trivial
+            << "\033[0m" << std::endl;
+}
+
+void FileComparator::print_files_different_message(const SummaryParams& params) const {
+  std::cout << "\033[1;33m   Files " << params.file1 << " and "
+            << params.file2 << " are non-trivially different\033[0m" << std::endl;
+}
+
+std::string FileComparator::get_trivial_diff_color(size_t zero_diff) const {
+  if (zero_diff > 0) {
+    return "\033[1;32m";
+  } else if (counter.diff_significant > 0) {
+    return "\033[1;31m";
+  } else {
+    return "\033[1;33m";
+  }
+}
+
+std::string FileComparator::get_non_trivial_diff_color() const {
+  if (counter.diff_non_trivial > 0) {
+    return "\033[1;33m";
+  } else if (counter.diff_significant > 0) {
+    return "\033[1;31m";
+  } else {
+    return "\033[1;32m";
+  }
+}
+
+void FileComparator::print_maximum_rounded_difference() const {
   std::cout << "   \033[4;35mMaximum rounded difference: "
             << format_number(
                    differ.max_non_trivial, differ.ndp_non_trivial,
@@ -1257,52 +1280,74 @@ void FileComparator::print_rounded_summary(const SummaryParams& params) const {
                        std::round(std::log10(differ.max_non_trivial)) + 2),
                    differ.ndp_non_trivial)
             << "\033[0m" << std::endl;
+}
+
+void FileComparator::print_rounded_difference_counts(const SummaryParams& params) const {
   if (counter.diff_print < counter.diff_non_trivial) {
-    if (print.level > 0) {
-      std::cout << "   Printed differences     ( >" << thresh.print
-                << "): " << std::setw(params.fmt_wid) << counter.diff_print
-                << std::endl;
-    }
-    size_t not_printed = counter.diff_non_trivial - counter.diff_print;
-    if (not_printed > 0) {
-      std::cout << "   Not printed differences (" << thresh.significant
-                << " < TL <= " << thresh.print
-                << "): " << std::setw(params.fmt_wid) << not_printed
-                << std::endl;
-    }
+    print_printed_differences_info(params);
+    print_not_printed_differences_info(params);
   } else {
-    std::cout << "   All non-trivial "
-                 "differences are printed."
+    std::cout << "   All non-trivial differences are printed." << std::endl;
+  }
+}
+
+void FileComparator::print_printed_differences_info(const SummaryParams& params) const {
+  if (print.level > 0) {
+    std::cout << "   Printed differences     ( >" << thresh.print
+              << "): " << std::setw(params.fmt_wid) << counter.diff_print
               << std::endl;
   }
+}
 
-  if (differ.max_non_trivial > thresh.significant) {
-    std::cout
-        << "\033[1;31m   Max diff is greater than the significant threshold: "
-        << thresh.significant << "\033[0m" << std::endl;
-  } else {
-    if (fabs(differ.max_non_trivial - thresh.significant) < thresh.zero) {
-      std::cout << "\033[1;33m   Max diff is equal to the "
-                   "significant threshold: "
-                << format_number(
-                       thresh.significant, differ.ndp_non_trivial,
-                       static_cast<int>(
-                           std::round(std::log10(thresh.significant)) + 2),
-                       differ.ndp_non_trivial)
-                << "\033[0m" << std::endl;
-    } else {
-      std::cout << "\033[1;32m   Max diff is less than the "
-                   "significant threshold: "
-                << format_number(
-                       thresh.significant, differ.ndp_non_trivial,
-                       static_cast<int>(
-                           std::round(std::log10(thresh.significant)) + 2),
-                       differ.ndp_non_trivial)
-                << "\033[0m" << std::endl;
-    }
+void FileComparator::print_not_printed_differences_info(const SummaryParams& params) const {
+  size_t not_printed = counter.diff_non_trivial - counter.diff_print;
+  if (not_printed > 0) {
+    std::cout << "   Not printed differences (" << thresh.significant
+              << " < TL <= " << thresh.print
+              << "): " << std::setw(params.fmt_wid) << not_printed
+              << std::endl;
   }
+}
 
-  printbar(1);
+void FileComparator::print_rounded_threshold_comparison() const {
+  if (differ.max_non_trivial > thresh.significant) {
+    print_max_diff_above_threshold();
+  } else {
+    print_max_diff_below_or_equal_threshold();
+  }
+}
+
+void FileComparator::print_max_diff_above_threshold() const {
+  std::cout << "\033[1;31m   Max diff is greater than the significant threshold: "
+            << thresh.significant << "\033[0m" << std::endl;
+}
+
+void FileComparator::print_max_diff_below_or_equal_threshold() const {
+  if (fabs(differ.max_non_trivial - thresh.significant) < thresh.zero) {
+    print_max_diff_equal_threshold();
+  } else {
+    print_max_diff_less_than_threshold();
+  }
+}
+
+void FileComparator::print_max_diff_equal_threshold() const {
+  std::cout << "\033[1;33m   Max diff is equal to the significant threshold: "
+            << format_number(
+                   thresh.significant, differ.ndp_non_trivial,
+                   static_cast<int>(
+                       std::round(std::log10(thresh.significant)) + 2),
+                   differ.ndp_non_trivial)
+            << "\033[0m" << std::endl;
+}
+
+void FileComparator::print_max_diff_less_than_threshold() const {
+  std::cout << "\033[1;32m   Max diff is less than the significant threshold: "
+            << format_number(
+                   thresh.significant, differ.ndp_non_trivial,
+                   static_cast<int>(
+                       std::round(std::log10(thresh.significant)) + 2),
+                   differ.ndp_non_trivial)
+            << "\033[0m" << std::endl;
 }
 
 void FileComparator::print_significant_summary(
