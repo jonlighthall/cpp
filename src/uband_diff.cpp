@@ -1111,8 +1111,7 @@ void FileComparator::print_difference_counts(
 }
 
 // Helper function to analyze and print maximum difference information
-void FileComparator::print_maximum_difference_analysis(
-    const SummaryParams& params) const {
+void FileComparator::print_maximum_difference_analysis() const {
   if (differ.max_non_zero <= thresh.zero) {
     return;  // No significant maximum difference to analyze
   }
@@ -1186,7 +1185,7 @@ void FileComparator::print_diff_like_summary(
   print_exact_matches_info(params);
   print_non_zero_differences_info(params);
   print_difference_counts(params);
-  print_maximum_difference_analysis(params);
+  print_maximum_difference_analysis();
 
   printbar(1);
 }

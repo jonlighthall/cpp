@@ -262,7 +262,7 @@ class FileComparator {
   void print_exact_matches_info(const SummaryParams& params) const;
   void print_non_zero_differences_info(const SummaryParams& params) const;
   void print_difference_counts(const SummaryParams& params) const;
-  void print_maximum_difference_analysis(const SummaryParams& params) const;
+  void print_maximum_difference_analysis() const;
   std::string get_count_color(size_t count) const;
 
   // Significant summary helper functions
