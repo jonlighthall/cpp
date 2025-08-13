@@ -276,29 +276,29 @@ LineData FileComparator::parse_line(const std::string& line) const {
     // check if the numbers are complex and read them accordingly
     // check if string starts with '('
     if (ch == '(') {
-      // read the complex number
+      // Handle complex number parsing
       auto [real, imag, dp_real, dp_imag] = readComplex(stream, flag);
       result.values.push_back(real);
       result.values.push_back(imag);
       // validate decimal places for real and imaginary parts
+      // Add decimal places if validation passes
       if (validate_decimal_places(dp_real, flag)) {
         result.decimal_places.push_back(dp_real);
       }
       if (validate_decimal_places(dp_imag, flag)) {
         result.decimal_places.push_back(dp_imag);
       }
-    } else {
-      // if the character is not '(', it is a number
-      stream.putback(ch);  // put back the character to the stream
-      int dp = stream_countDecimalPlaces(
-          stream);  // count the number of decimal places
-      result.decimal_places.push_back(
-          dp);  // store the number of decimal places
-
-      double value;
-      stream >> value;
-      result.values.push_back(value);
+      continue;
     }
+    // if the character is not '(', it is a number
+    // Handle regular number parsing
+    stream.putback(ch);  // put back the character to the stream
+    int dp = stream_countDecimalPlaces(stream);  // count decimal places
+    result.decimal_places.push_back(dp);         // store decimal places
+
+    double value;
+    stream >> value;
+    result.values.push_back(value);
   }
   return result;
 }
@@ -484,15 +484,17 @@ bool FileComparator::validate_and_track_column_format(
 
   this_line_ncols = n_col1;
 
-  // Check if the number of columns has changed
+  // Handle first line initialization
   if (counter.line_number == 1) {
     prev_n_col = n_col1;  // initialize prev_n_col on first line
     if (print.debug2) {
       std::cout << "   FORMAT: " << n_col1
                 << " columns (both files) - initialized" << std::endl;
     }
+    return true;
   }
 
+  // Handle column count changes
   if (prev_n_col > 0 && n_col1 != prev_n_col) {
     std::cout << "\033[1;33mNote: Number of columns changed at line "
               << counter.line_number << " (previous: " << prev_n_col
@@ -500,20 +502,26 @@ bool FileComparator::validate_and_track_column_format(
     dp_per_col.clear();
     flag.new_fmt = true;
     this_fmt_line = counter.line_number;
+
     if (print.level > 0) {
       std::cout << this_fmt_line << ": FMT number of columns has changed"
                 << std::endl;
       std::cout << "format has changed" << std::endl;
     }
-  } else {
-    if (counter.line_number > 1) {
-      if (print.debug3) {
-        std::cout << "Line " << counter.line_number << " same column format"
-                  << std::endl;
-      }
-      flag.new_fmt = false;
-    }
+
+    prev_n_col = n_col1;
+    return true;
   }
+
+  // Handle unchanged format for lines > 1
+  if (counter.line_number > 1) {
+    if (print.debug3) {
+      std::cout << "Line " << counter.line_number << " same column format"
+                << std::endl;
+    }
+    flag.new_fmt = false;
+  }
+
   prev_n_col = n_col1;
   return true;
 }
@@ -907,21 +915,27 @@ void FileComparator::print_table(const ColumnValues& column_data,
 
   // Lambda to print color based on diff and thresholds
   auto print_diff_color = [this](double value1, double value2, double rdiff) {
-    if (rdiff > thresh.significant) {
-      std::cout << "\033[1;36m";  // Cyan for significant differences
-    } else {
-      std::cout << "\033[0m";  // Reset color for trivial differences
-    }
-    // Determine color based on thresholds
-    if (double max_value = std::max(value1, value2);
-        max_value > thresh.ignore) {
-      std::cout << "\033[1;34m";  // Blue
-    } else if (max_value > thresh.marginal) {
-      std::cout << "\033[1;33m";  // Yellow
-    }
+    // Handle critical differences first
     if (rdiff > thresh.critical) {
       std::cout << "\033[1;31m";  // Red for critical differences
       flag.error_found = true;
+      return;
+    }
+
+    // Handle significant differences
+    if (rdiff > thresh.significant) {
+      std::cout << "\033[1;36m";  // Cyan for significant differences
+      return;
+    }
+
+    // Handle value-based colors for non-significant differences
+    double max_value = std::max(value1, value2);
+    if (max_value > thresh.ignore) {
+      std::cout << "\033[1;34m";  // Blue
+    } else if (max_value > thresh.marginal) {
+      std::cout << "\033[1;33m";  // Yellow
+    } else {
+      std::cout << "\033[0m";  // Reset color for trivial differences
     }
   };
 
@@ -1190,30 +1204,43 @@ void FileComparator::print_rounded_summary(const SummaryParams& params) const {
     return;
   }
   if (print.level > 0) {
-    if (counter.diff_non_zero > counter.diff_non_trivial) {
-      size_t zero_diff = counter.diff_non_zero - counter.diff_non_trivial;
-      if (zero_diff > 0) {
-        std::cout << "   Trivial differences     ( >" << 0.0 << "): ";
-        if (zero_diff > 0) {
-          std::cout << "\033[1;32m";
-        } else if (counter.diff_significant > 0) {
-          std::cout << "\033[1;31m";
-        } else {
-          std::cout << "\033[1;33m";
-        }
-        std::cout << std::setw(params.fmt_wid) << zero_diff << "\033[0m"
-                  << std::endl;
-      }
-    }
-    std::cout << "   Non-trivial differences      : ";
-    if (counter.diff_non_trivial > 0) {
-      std::cout << "\033[1;33m";
-    } else if (counter.diff_significant > 0) {
-      std::cout << "\033[1;31m";
-    } else {
-      std::cout << "\033[1;32m";
-    }
+    // Helper lambda for printing trivial differences
+    auto print_trivial_differences = [this, &params]() {
+      if (counter.diff_non_zero <= counter.diff_non_trivial) return;
 
+      size_t zero_diff = counter.diff_non_zero - counter.diff_non_trivial;
+      if (zero_diff == 0) return;
+
+      std::cout << "   Trivial differences     ( >" << 0.0 << "): ";
+
+      // Select color based on conditions
+      if (zero_diff > 0) {
+        std::cout << "\033[1;32m";
+      } else if (counter.diff_significant > 0) {
+        std::cout << "\033[1;31m";
+      } else {
+        std::cout << "\033[1;33m";
+      }
+
+      std::cout << std::setw(params.fmt_wid) << zero_diff << "\033[0m"
+                << std::endl;
+    };
+
+    // Helper lambda for printing non-trivial differences color
+    auto print_non_trivial_color = [this]() {
+      if (counter.diff_non_trivial > 0) {
+        std::cout << "\033[1;33m";
+      } else if (counter.diff_significant > 0) {
+        std::cout << "\033[1;31m";
+      } else {
+        std::cout << "\033[1;32m";
+      }
+    };
+
+    print_trivial_differences();
+
+    std::cout << "   Non-trivial differences      : ";
+    print_non_trivial_color();
     std::cout << std::setw(params.fmt_wid) << counter.diff_non_trivial
               << "\033[0m" << std::endl;
 
@@ -1310,9 +1337,10 @@ void FileComparator::print_significant_differences_count(
 
   if (counter.elem_number > 0) {
     print_significant_percentage();
-        print_count_with_percent(
-    params, "\"Close enough\" matches (<=" + std::to_string(thresh.significant) + ")",
-        counter.elem_number - counter.diff_significant);
+    print_count_with_percent(params,
+                             "\"Close enough\" matches (<=" +
+                                 std::to_string(thresh.significant) + ")",
+                             counter.elem_number - counter.diff_significant);
   }
 }
 
@@ -1728,8 +1756,4 @@ ColumnValues FileComparator::extract_column_values(const LineData& data1,
 
   // Get decimal places from the LineData structure
   int dp1 = data1.decimal_places[column_index];
-  int dp2 = data2.decimal_places[column_index];
-  int min_dp = std::min(dp1, dp2);
-
-  return {val1, val2, rangeValue, dp1, dp2, min_dp};
-}
+  int dp2 = data2.decimal_places[column_ind
