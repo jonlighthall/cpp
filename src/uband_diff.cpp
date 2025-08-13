@@ -174,8 +174,12 @@ std::tuple<double, double, int, int> readComplex(std::istringstream& stream,
   try {
     real = std::stod(real_str);
     imag = std::stod(imag_str);
-  } catch (const std::exception&) {
-    std::cerr << "Error converting complex number";
+  } catch (const std::invalid_argument&) {
+    std::cerr << "Error converting complex number: invalid format";
+    flag.error_found = true;
+    return {0.0, 0.0, -1, -1};
+  } catch (const std::out_of_range&) {
+    std::cerr << "Error converting complex number: value out of range";
     flag.error_found = true;
     return {0.0, 0.0, -1, -1};
   }
@@ -183,9 +187,9 @@ std::tuple<double, double, int, int> readComplex(std::istringstream& stream,
   // Count decimal places using direct string analysis
   // This is more reliable than the previous stream-based approach
   // which had issues with stream positioning and state management
-  auto count_decimal_places = [](const std::string& str) -> int {
+  auto count_decimal_places = [](std::string_view str) {
     size_t dot_pos = str.find('.');
-    if (dot_pos == std::string::npos) {
+    if (dot_pos == std::string_view::npos) {
       return 0;  // Integer has 0 decimal places
     }
     return static_cast<int>(str.length() - dot_pos - 1);
@@ -1320,7 +1324,7 @@ void FileComparator::print_significant_summary(
 
   print_significant_differences_count(params);
   print_insignificant_differences_count(params);
-  print_maximum_significant_difference_analysis(params);
+  print_maximum_significant_difference_analysis();
   print_file_comparison_result(params);
   print_significant_differences_printing_status(params);
 
@@ -1376,8 +1380,7 @@ void FileComparator::print_insignificant_differences_count(
   }
 }
 
-void FileComparator::print_maximum_significant_difference_analysis(
-    const SummaryParams& params) const {
+void FileComparator::print_maximum_significant_difference_analysis() const {
   if (differ.max_significant > thresh.significant) {
     print_maximum_significant_difference_details();
     print_max_diff_threshold_comparison_above();
@@ -1756,4 +1759,8 @@ ColumnValues FileComparator::extract_column_values(const LineData& data1,
 
   // Get decimal places from the LineData structure
   int dp1 = data1.decimal_places[column_index];
-  int dp2 = data2.decimal_places[column_ind
+  int dp2 = data2.decimal_places[column_index];
+  int min_dp = std::min(dp1, dp2);
+
+  return {val1, val2, rangeValue, dp1, dp2, min_dp};
+}

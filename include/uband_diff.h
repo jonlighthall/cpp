@@ -270,7 +270,7 @@ class FileComparator {
   void print_significant_differences_count(const SummaryParams& params) const;
   void print_significant_percentage() const;
   void print_insignificant_differences_count(const SummaryParams& params) const;
-  void print_maximum_significant_difference_analysis(const SummaryParams& params) const;
+  void print_maximum_significant_difference_analysis() const;
   void print_maximum_significant_difference_details() const;
   void print_max_diff_threshold_comparison_above() const;
   void print_max_diff_threshold_comparison_below() const;
