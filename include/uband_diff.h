@@ -3,10 +3,17 @@
 
 #include <cmath>
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <tuple>
 #include <vector>
+
+// Forward declarations for new component classes
+class FileReader;
+class FormatManager;
+class DifferenceProcessor;
+class SummaryPrinter;
 
 // Data structures
 
@@ -132,10 +139,10 @@ class FileComparator {
  public:
   // Constructor
   FileComparator(double user_thresh, double hard_thresh, double print_thresh,
-                 int debug_level = 0)
-      : thresh{user_thresh, hard_thresh, print_thresh},
-        print{debug_level, debug_level < 0, debug_level >= 1, debug_level >= 2,
-              debug_level >= 3} {};
+                 int debug_level = 0);
+
+  // Destructor
+  ~FileComparator();
 
   // ========================================================================
   // Friend declarations for testing
@@ -151,8 +158,6 @@ class FileComparator {
   // ========================================================================
   bool compare_files(const std::string& file1, const std::string& file2);
   LineData parse_line(const std::string& line) const;
-  /** @note the function parse_line() reads a line from the file and returns a
-   LineData object */
   void print_summary(const std::string& file1, const std::string& file2,
                      int argc, char* argv[]) const;
   void print_settings(const std::string& file1, const std::string& file2) const;
@@ -168,135 +173,27 @@ class FileComparator {
   // Data Members
   // ========================================================================
   mutable Flags flag;
-  size_t this_fmt_line;
-  size_t this_fmt_column;
-  size_t last_fmt_line;
-  size_t this_line_ncols;
-
   DiffStats differ;
   CountStats counter;
   Thresholds thresh;
   PrintLevel print;
 
-  // ========================================================================
-  // File Operations
-  // ========================================================================
-  bool open_files(const std::string& file1, const std::string& file2,
-                  std::ifstream& infile1, std::ifstream& infile2) const;
-  size_t get_file_length(const std::string& file) const;
-  bool compare_file_lengths(const std::string& file1,
-                            const std::string& file2) const;
+  // Component classes for managing different responsibilities
+  std::unique_ptr<FileReader> file_reader;
+  std::unique_ptr<FormatManager> format_manager;
+  std::unique_ptr<DifferenceProcessor> difference_processor;
+  std::unique_ptr<SummaryPrinter> summary_printer;
 
   // ========================================================================
-  // Line/Column Processing
+  // Core Processing Methods (remaining in main class)
   // ========================================================================
   bool process_line(const LineData& data1, const LineData& data2,
                     std::vector<int>& dp_per_col, size_t& prev_n_col);
   bool process_column(const LineData& data1, const LineData& data2,
                       size_t column_index, std::vector<int>& dp_per_col);
-
-  // ========================================================================
-  // Validation & Format Management
-  // ========================================================================
-  bool validate_and_track_column_format(size_t n_col1, size_t n_col2,
-                                        std::vector<int>& dp_per_col,
-                                        size_t& prev_n_col);
-  bool validate_decimal_column_size(const std::vector<int>& dp_per_col,
-                                    size_t column_index) const;
-
-  // ========================================================================
-  // Decimal Places Management
-  // ========================================================================
-  // New methods for refactoring
-  bool initialize_decimal_place_format(const int min_dp,
-                                       const size_t column_index,
-                                       std::vector<int>& dp_per_col);
-  bool update_decimal_place_format(const int min_dp, const size_t column_index,
-                                   std::vector<int>& dp_per_col);
-  double calculate_threshold(int decimal_places);
-
-  // ========================================================================
-  // Difference Processing
-  // ========================================================================
-  bool process_difference(const ColumnValues& column_data, size_t column_index);
-  void process_raw_values(const ColumnValues& column_data);
-  void process_rounded_values(const ColumnValues& column_data,
-                              double rounded_diff, int minimum_deci);
-
-  // ========================================================================
-  // Output & Formatting
-  // ========================================================================
   ColumnValues extract_column_values(const LineData& data1,
                                      const LineData& data2,
                                      size_t column_index) const;
-  void print_table(const ColumnValues& column_data, size_t column_index,
-                   double line_threshold, double diff_rounded);
-  std::string format_number(double value, int prec, int max_integer_width,
-                            int max_decimals) const;
-  void print_hard_threshold_error(double rounded1, double rounded2,
-                                  double diff_rounded,
-                                  size_t column_index) const;
-  void print_format_info(const ColumnValues& column_data,
-                         size_t column_index) const;
-  void print_diff_like_summary(const SummaryParams& params) const;
-  void print_rounded_summary(const SummaryParams& params) const;
-  void print_significant_summary(const SummaryParams& params) const;
-
-  // ========================================================================
-  // Summary Helper Functions (for cognitive complexity reduction)
-  // ========================================================================
-  std::string format_boolean_status(bool value, bool showStatus, bool reversed,
-                                    bool soft) const;
-  void print_arguments_and_files(const std::string& file1,
-                                 const std::string& file2, int argc,
-                                 char* argv[]) const;
-  void print_statistics(const std::string& file1) const;
-  void print_flag_status() const;
-  void print_counter_info() const;
-  void print_detailed_summary(const SummaryParams& params) const;
-  void print_additional_diff_info(const SummaryParams& params) const;
-  void print_critical_threshold_info() const;
-
-  // Diff-like summary helper functions
-  void print_identical_files_message(const SummaryParams& params) const;
-  void print_exact_matches_info(const SummaryParams& params) const;
-  void print_non_zero_differences_info(const SummaryParams& params) const;
-  void print_difference_counts(const SummaryParams& params) const;
-  void print_maximum_difference_analysis() const;
-  std::string get_count_color(size_t count) const;
-
-  // Significant summary helper functions
-  void print_significant_differences_count(const SummaryParams& params) const;
-  void print_significant_percentage() const;
-  void print_insignificant_differences_count(const SummaryParams& params) const;
-  void print_maximum_significant_difference_analysis() const;
-  void print_maximum_significant_difference_details() const;
-  void print_max_diff_threshold_comparison_above() const;
-  void print_max_diff_threshold_comparison_below() const;
-  void print_file_comparison_result(const SummaryParams& params) const;
-  void print_significant_differences_printing_status(const SummaryParams& params) const;
-  void print_count_with_percent(const SummaryParams& params,
-                                const std::string& label,
-                                size_t count,
-                                const std::string& color = "") const;
-
-  // Rounded summary helper functions (for cognitive complexity reduction)
-  void print_equivalent_files_message(const SummaryParams& params) const;
-  void print_rounded_summary_details(const SummaryParams& params) const;
-  void print_trivial_differences_info(const SummaryParams& params) const;
-  void print_non_trivial_differences_info(const SummaryParams& params) const;
-  void print_files_different_message(const SummaryParams& params) const;
-  std::string get_trivial_diff_color(size_t zero_diff) const;
-  std::string get_non_trivial_diff_color() const;
-  void print_maximum_rounded_difference() const;
-  void print_rounded_difference_counts(const SummaryParams& params) const;
-  void print_printed_differences_info(const SummaryParams& params) const;
-  void print_not_printed_differences_info(const SummaryParams& params) const;
-  void print_rounded_threshold_comparison() const;
-  void print_max_diff_above_threshold() const;
-  void print_max_diff_below_or_equal_threshold() const;
-  void print_max_diff_equal_threshold() const;
-  void print_max_diff_less_than_threshold() const;
 };
 
 #endif  // UBAND_DIFF_H
