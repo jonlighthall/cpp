@@ -697,8 +697,7 @@ bool FileComparator::process_difference(const ColumnValues& column_data,
   // compare values (with rounding)
   double diff_rounded = std::abs(rounded1 - rounded2);
 
-  process_rounded_values(column_data, column_index, diff_rounded,
-                         column_data.min_dp);
+  process_rounded_values(column_data, diff_rounded, column_data.min_dp);
 
   double ithreshold = calculate_threshold(column_data.min_dp);
 
@@ -751,7 +750,6 @@ void FileComparator::process_raw_values(const ColumnValues& column_data) {
 }
 
 void FileComparator::process_rounded_values(const ColumnValues& column_data,
-                                            size_t column_index,
                                             double rounded_diff,
                                             int minimum_deci) {
   // Define the threshold for non-trivial differences

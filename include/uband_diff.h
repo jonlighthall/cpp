@@ -221,8 +221,7 @@ class FileComparator {
   bool process_difference(const ColumnValues& column_data, size_t column_index);
   void process_raw_values(const ColumnValues& column_data);
   void process_rounded_values(const ColumnValues& column_data,
-                              size_t column_index, double rounded_diff,
-                              int minimum_deci);
+                              double rounded_diff, int minimum_deci);
 
   // ========================================================================
   // Output & Formatting
