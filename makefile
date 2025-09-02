@@ -252,6 +252,11 @@ $(OBJDIR):
 
 diff: $(BINDIR)/uband_diff
 
+PROG = $(BINDIR)/sunset
+sun: $(PROG)
+	@echo "calculating sunset..."
+	$(PROG)
+
 #
 # recipes without outputs
 .PHONY: mostlyclean clean force out realclean distclean reset
