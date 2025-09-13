@@ -78,6 +78,7 @@ bool show_help_if_requested(int argc, char* argv[]) {
     std::cout << "  - Complex number support" << std::endl;
     std::cout << "  - Configurable difference thresholds" << std::endl;
     std::cout << "  - Detailed difference reporting" << std::endl;
+    std::cout << "  - Automatic column structure analysis" << std::endl;
     return true;
   }
   return false;
@@ -114,47 +115,47 @@ bool parse_file_arguments(int argc, char* argv[], ProgramArgs& args) {
   if (argc >= 3) {
     args.file1 = argv[1];
     args.file2 = argv[2];
+  }
 
-    // Validate file arguments
-    if (args.file1.empty()) {
-      std::cerr << "\033[1;31mERROR:\033[0m First file name cannot be empty."
-                << std::endl;
-      return false;
-    }
-    if (args.file2.empty()) {
-      std::cerr << "\033[1;31mERROR:\033[0m Second file name cannot be empty."
-                << std::endl;
-      return false;
-    }
-    if (args.file1 == args.file2) {
-      std::cerr << "\033[1;33mWARNING:\033[0m Both files have the same name: '"
-                << args.file1 << "'" << std::endl;
-      std::cerr << "         This will compare the file with itself."
-                << std::endl;
-    }
+  // Validate file arguments
+  if (args.file1.empty()) {
+    std::cerr << "\033[1;31mERROR:\033[0m First file name cannot be empty."
+              << std::endl;
+    return false;
+  }
+  if (args.file2.empty()) {
+    std::cerr << "\033[1;31mERROR:\033[0m Second file name cannot be empty."
+              << std::endl;
+    return false;
+  }
+  if (args.file1 == args.file2) {
+    std::cerr << "\033[1;33mWARNING:\033[0m Both files have the same name: '"
+              << args.file1 << "'" << std::endl;
+    std::cerr << "         This will compare the file with itself."
+              << std::endl;
+  }
 
-    // Check if files exist and are readable
-    std::ifstream test_file1(args.file1);
-    std::ifstream test_file2(args.file2);
+  // Check if files exist and are readable
+  std::ifstream test_file1(args.file1);
+  std::ifstream test_file2(args.file2);
 
-    if (!test_file1.good()) {
-      std::cerr << "\033[1;33mWARNING:\033[0m Cannot access first file: '"
-                << args.file1 << "'" << std::endl;
-      std::cerr << "         The file may not exist or is not readable."
-                << std::endl;
-      std::cerr << "         Will attempt to proceed (error will be reported "
-                   "by comparator)."
-                << std::endl;
-    }
-    if (!test_file2.good()) {
-      std::cerr << "\033[1;33mWARNING:\033[0m Cannot access second file: '"
-                << args.file2 << "'" << std::endl;
-      std::cerr << "         The file may not exist or is not readable."
-                << std::endl;
-      std::cerr << "         Will attempt to proceed (error will be reported "
-                   "by comparator)."
-                << std::endl;
-    }
+  if (!test_file1.good()) {
+    std::cerr << "\033[1;33mWARNING:\033[0m Cannot access first file: '"
+              << args.file1 << "'" << std::endl;
+    std::cerr << "         The file may not exist or is not readable."
+              << std::endl;
+    std::cerr << "         Will attempt to proceed (error will be reported "
+                 "by comparator)."
+              << std::endl;
+  }
+  if (!test_file2.good()) {
+    std::cerr << "\033[1;33mWARNING:\033[0m Cannot access second file: '"
+              << args.file2 << "'" << std::endl;
+    std::cerr << "         The file may not exist or is not readable."
+              << std::endl;
+    std::cerr << "         Will attempt to proceed (error will be reported "
+                 "by comparator)."
+              << std::endl;
   }
   return true;
 }
