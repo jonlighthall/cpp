@@ -10,9 +10,12 @@
  *
  * Usage: uband_diff <file1> <file2> [sig_thresh] [crit_thresh] [print_thresh]
  *   file1, file2 - Input files to compare
- *   sig_thresh   - difference threshold for counting significant errors (default: 0.05)
- *   crit_thresh  - difference threshold for interruption (default: 10.0)
- *   print_thresh - difference threshold for printing table (default: 1.0)
+ *   sig_thresh   - difference threshold for counting significant errors
+ *                  (default: 0.05)
+ *   crit_thresh  - difference threshold for interruption
+ *                  (default: 10.0)
+ *   print_thresh - difference threshold for printing table
+ *                  (default: 1.0)
  */
 
 #include "uband_diff.h"
