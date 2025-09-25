@@ -804,23 +804,40 @@ tm ltm;
     static_cast<int>(((timeDifference - diffHours) * 60 - diffMinutes) * 60);
 
   // Print the time difference
-  cout << " difference : " << std::setw(2) << std::right << diffHours << ":"
+  cout << "Time to sunset: " << std::setw(2) << std::right << diffHours << ":"
        << std::setfill('0') << std::setw(2) << diffMinutes << ":"
        << std::setfill('0') << std::setw(2) << diffSeconds << endl;
 
-  // subtract commute time
-  timeDifference -= 37.0 / 60.0;
+  // Calculate leave time (subtract commute time of 37 minutes)
+  const double commuteMinutes = 37.0;
+  double leaveTime = sunsetTime - (commuteMinutes / 60.0);
+  double timeToLeave = leaveTime - currentTime;
 
-  // Convert the time difference to hours, minutes, and seconds
-  diffHours = static_cast<int>(timeDifference);
-  diffMinutes = static_cast<int>((timeDifference - diffHours) * 60);
-  diffSeconds =
-    static_cast<int>(((timeDifference - diffHours) * 60 - diffMinutes) * 60);
+  // Convert leave time to readable format
+  string leaveTimeStr = hour2time(leaveTime, false);
 
-  // Print the time difference
-  cout << "    commute : " << std::setfill(' ') << std::setw(2) << std::right
-       << diffHours << ":" << std::setfill('0') << std::setw(2) << diffMinutes
-       << ":" << std::setfill('0') << std::setw(2) << diffSeconds << endl;
+  // Convert time to leave to hours, minutes, and seconds
+  int leaveHours = static_cast<int>(timeToLeave);
+  int leaveMins = static_cast<int>((timeToLeave - leaveHours) * 60);
+  int leaveSecs = static_cast<int>(((timeToLeave - leaveHours) * 60 - leaveMins) * 60);
+
+  // Get sunset time as string for summary
+  string sunsetTimeStr = hour2time(sunsetTime, false);
+
+  // Print the clear summary
+  cout << endl;
+  if (timeToLeave > 0) {
+    cout << "*** LEAVE BY " << leaveTimeStr << " (in "
+         << std::setfill(' ') << std::setw(2) << std::right << leaveHours << ":"
+         << std::setfill('0') << std::setw(2) << leaveMins << ":"
+         << std::setfill('0') << std::setw(2) << leaveSecs
+         << ") TO GET HOME BY " << sunsetTimeStr << " (SUNSET) ***" << endl;
+  } else {
+    cout << "*** YOU SHOULD HAVE LEFT " << std::abs(leaveHours) << ":"
+         << std::setfill('0') << std::setw(2) << std::abs(leaveMins) << ":"
+         << std::setfill('0') << std::setw(2) << std::abs(leaveSecs)
+         << " AGO TO GET HOME BY " << sunsetTimeStr << " (SUNSET) ***" << endl;
+  }
 
   return 0;
 }
