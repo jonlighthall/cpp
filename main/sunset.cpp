@@ -554,7 +554,7 @@ double hourAngle(double h0, double phi, double delta) {
   return H;
 }
 
-string hour2time(double fhr, bool do_fractional_second = true) {
+string hour2time(double fhr, bool do_fractional_second = true, bool show_seconds = true) {
   // convert fractional hour into hr:min:sec string
   auto hr = int(floor(fhr));
   double fmin = (fhr - hr) * 60;
@@ -580,11 +580,38 @@ string hour2time(double fhr, bool do_fractional_second = true) {
 
   std::ostringstream time_string;
   time_string << std::setfill('0') << std::setw(2) << time.hr << ":"
-              << std::setfill('0') << std::setw(2) << time.min << ":"
-              << std::fixed << std::setprecision(2) << std::setfill('0')
-              << std::setw(5) << time.fsec;
+              << std::setfill('0') << std::setw(2) << time.min;
+
+  if (show_seconds) {
+    time_string << ":" << std::fixed << std::setprecision(2) << std::setfill('0')
+                << std::setw(5) << time.fsec;
+  }
 
   return time_string.str();
+}
+
+string timeToEnglish(int hours, int minutes) {
+  // Convert hours and minutes to plain English
+  std::ostringstream english_time;
+
+  if (hours == 0 && minutes == 0) {
+    return "0 minutes";
+  }
+
+  if (hours > 0) {
+    english_time << hours << " hour";
+    if (hours > 1) english_time << "s";
+
+    if (minutes > 0) {
+      english_time << " " << minutes << " minute";
+      if (minutes > 1) english_time << "s";
+    }
+  } else if (minutes > 0) {
+    english_time << minutes << " minute";
+    if (minutes > 1) english_time << "s";
+  }
+
+  return english_time.str();
 }
 
 double getSolarNoon(double longitude, double set_timezone) {
@@ -791,52 +818,57 @@ tm ltm;
   // Print the current date and time
   if (debug > -1)
     cout << "\n"<< endl;
-  cout << "Current time: " << put_time(&ltm, "%H:%M:%S") << endl;
+  cout << "Current time: " << put_time(&ltm, "%H:%M:%S");
 
   // Calculate the difference between the current time and the sunset time
   double currentTime = ltm.tm_hour + ltm.tm_min / 60.0 + ltm.tm_sec / 3600.0;
   double timeDifference = sunsetTime - currentTime;
 
-  // Convert the time difference to hours, minutes, and seconds
+  // Convert the time difference to hours and minutes
   int diffHours = static_cast<int>(timeDifference);
   int diffMinutes = static_cast<int>((timeDifference - diffHours) * 60);
-  int diffSeconds =
-    static_cast<int>(((timeDifference - diffHours) * 60 - diffMinutes) * 60);
 
-  // Print the time difference
-  cout << "Time to sunset: " << std::setw(2) << std::right << diffHours << ":"
-       << std::setfill('0') << std::setw(2) << diffMinutes << ":"
-       << std::setfill('0') << std::setw(2) << diffSeconds << endl;
+  // Print the time difference in plain English
+  cout << " (" << timeToEnglish(diffHours, diffMinutes) << " until sunset)" << endl;
 
   // Calculate leave time (subtract commute time of 37 minutes)
   const double commuteMinutes = 37.0;
   double leaveTime = sunsetTime - (commuteMinutes / 60.0);
   double timeToLeave = leaveTime - currentTime;
 
-  // Convert leave time to readable format
-  string leaveTimeStr = hour2time(leaveTime, false);
+  // Convert leave time to readable format (no seconds)
+  string leaveTimeStr = hour2time(leaveTime, false, false);
 
-  // Convert time to leave to hours, minutes, and seconds
+  // Convert time to leave to hours and minutes
   int leaveHours = static_cast<int>(timeToLeave);
   int leaveMins = static_cast<int>((timeToLeave - leaveHours) * 60);
-  int leaveSecs = static_cast<int>(((timeToLeave - leaveHours) * 60 - leaveMins) * 60);
 
-  // Get sunset time as string for summary
-  string sunsetTimeStr = hour2time(sunsetTime, false);
+  // Get sunset time as string for summary (no seconds)
+  string sunsetTimeStr = hour2time(sunsetTime, false, false);
 
   // Print the clear summary
   cout << endl;
   if (timeToLeave > 0) {
-    cout << "*** LEAVE BY " << leaveTimeStr << " (in "
-         << std::setfill(' ') << std::setw(2) << std::right << leaveHours << ":"
-         << std::setfill('0') << std::setw(2) << leaveMins << ":"
-         << std::setfill('0') << std::setw(2) << leaveSecs
-         << ") TO GET HOME BY " << sunsetTimeStr << " (SUNSET) ***" << endl;
+    cout << "Leave by " << leaveTimeStr << " (in "
+         << timeToEnglish(leaveHours, leaveMins)
+         << ") to get home by " << sunsetTimeStr << " (sunset)" << endl;
   } else {
-    cout << "*** YOU SHOULD HAVE LEFT " << std::abs(leaveHours) << ":"
-         << std::setfill('0') << std::setw(2) << std::abs(leaveMins) << ":"
-         << std::setfill('0') << std::setw(2) << std::abs(leaveSecs)
+    cout << "*** YOU SHOULD HAVE LEFT "
+         << timeToEnglish(std::abs(leaveHours), std::abs(leaveMins))
          << " AGO TO GET HOME BY " << sunsetTimeStr << " (SUNSET) ***" << endl;
+
+    // Calculate how late you'll be if you leave now
+    double arrivalTime = currentTime + (commuteMinutes / 60.0);
+    double lateBy = arrivalTime - sunsetTime;
+
+    if (lateBy > 0) {
+      int lateHours = static_cast<int>(lateBy);
+      int lateMins = static_cast<int>((lateBy - lateHours) * 60);
+      string arrivalTimeStr = hour2time(arrivalTime, false, false);
+
+      cout << "If you leave NOW, you'll arrive home at " << arrivalTimeStr
+           << " (" << timeToEnglish(lateHours, lateMins) << " after sunset)" << endl;
+    }
   }
 
   return 0;
