@@ -15,7 +15,7 @@
 using namespace std;
 
 // settings
-const int debug = 0;
+const int debug = -1;
 /* debug value
   -1 print sunset and commute only
    0 print major calculations
@@ -95,8 +95,30 @@ double meanLongitude(double t) {
 }
 
 double meanAnomaly(double t) {
-  // Mean Anomaly of the Sun
-  // Meeus pg. 163, Eq. 25.3
+  // Mean Anomaly of the Sun, i.e., Mean Solar Anomaly
+  //
+  // WHAT IS MEAN SOLAR ANOMALY?
+  // The Mean Solar Anomaly is the angle between the Sun's position in its
+  // elliptical orbit and its position at perihelion (closest point to Earth),
+  // measured from Earth's center, assuming the Sun moves at a constant angular
+  // velocity.
+  //
+  // In simpler terms: It's a measure of "where the Sun is" in its yearly
+  // journey around the sky, expressed as an angle in degrees (0° to 360°).
+  //
+  // - At 0°: Sun is at perihelion (early January, closest to Earth)
+  // - At 180°: Sun is at aphelion (early July, farthest from Earth)
+  // - The Sun's actual orbital speed varies due to Earth's elliptical orbit
+  // - Mean anomaly assumes constant speed, making calculations simpler
+  //
+  // INPUT: the variable 't' is the number of Julian centuries since J2000.0
+  // epoch (January 1, 2000, 12:00 TT)
+  //
+  // OUTPUT: angle in degrees between perihelion and current position
+  //
+  // References:
+  //   Meeus pg. 163, Eq. 25.3
+
   double M_1 = 357.528 + 35999.050 * t;
   double M_2 = 357.52911 + 35999.05029 * t - 0.0001537 * pow(t, 2);  // NOAA
   double M_3 = 357.52772 + 35999.050340 * t - 0.0001603 * pow(t, 2) +
