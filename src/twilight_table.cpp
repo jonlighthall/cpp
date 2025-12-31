@@ -118,33 +118,36 @@ void printTwilightTable(double solarNoon, double latitude, double delta,
   // Print table header
   cout << endl;
   cout << Colors::BOLD
-       << "┌────────────────────────────────┬───────────┬──────────────────┬───"
-          "────────┬────────┐"
+       << "┌───────┬────────────────────────────────┬───────────┬───────────┬─"
+          "─────────────────┐"
        << Colors::RESET << endl;
   cout << Colors::BOLD
-       << "│ Event                          │ Departure │ Time to Leave    │ "
-          "Arrival   │ Angle  │"
+       << "│ Angle │ Event                          │ Time      │ Departure │ "
+          "Time to Leave    │"
        << Colors::RESET << endl;
   cout << Colors::BOLD
-       << "├────────────────────────────────┼───────────┼──────────────────┼───"
-          "────────┼────────┤"
+       << "├───────┼────────────────────────────────┼───────────┼───────────┼─"
+          "─────────────────┤"
        << Colors::RESET << endl;
 
   // Calculate and print each event
   for (const auto& event : events) {
     double HA_deg = calcHourAngle(event.zenith, latitude, delta);
 
+    // Format angle with sign
+    ostringstream angleStr;
+    if (event.sunAngle >= 0) {
+      angleStr << "+" << fixed << setprecision(0) << event.sunAngle;
+    } else {
+      angleStr << fixed << setprecision(0) << event.sunAngle;
+    }
+
     if (HA_deg < 0) {
       // Event doesn't occur at this latitude/date
-      cout << event.colorCode << "│ " << left << setw(30) << event.label
-           << " │    --:--  │       N/A        │    --:--  │ ";
-      if (event.sunAngle >= 0) {
-        cout << "+" << setw(4) << right << fixed << setprecision(0)
-             << event.sunAngle;
-      } else {
-        cout << setw(5) << right << fixed << setprecision(0) << event.sunAngle;
-      }
-      cout << "° │" << Colors::RESET << endl;
+      cout << event.colorCode << "│ " << right << setw(4) << angleStr.str()
+           << "° │ " << left << setw(30) << event.label
+           << " │    --:--  │    --:--  │       N/A        │" << Colors::RESET
+           << endl;
       continue;
     }
 
@@ -163,24 +166,16 @@ void printTwilightTable(double solarNoon, double latitude, double delta,
       timeStr = timeToEnglish(deptHours, deptMins);
     }
 
-    // Format angle with sign
-    ostringstream angleStr;
-    if (event.sunAngle >= 0) {
-      angleStr << "+" << fixed << setprecision(0) << event.sunAngle;
-    } else {
-      angleStr << fixed << setprecision(0) << event.sunAngle;
-    }
-
-    cout << event.colorCode << "│ " << left << setw(30) << event.label
-         << " │   " << formatTime(departureTime) << "   │ " << setw(16)
-         << timeStr << " │   " << formatTime(eventTime) << "   │ " << right
-         << setw(5) << angleStr.str() << "° │" << Colors::RESET << endl;
+    cout << event.colorCode << "│ " << right << setw(4) << angleStr.str()
+         << "° │ " << left << setw(30) << event.label << " │   "
+         << formatTime(eventTime) << "   │   " << formatTime(departureTime)
+         << "   │ " << setw(16) << timeStr << " │" << Colors::RESET << endl;
   }
 
   // Print table footer
   cout << Colors::BOLD
-       << "└────────────────────────────────┴───────────┴──────────────────┴───"
-          "────────┴────────┘"
+       << "└───────┴────────────────────────────────┴───────────┴───────────┴─"
+          "─────────────────┘"
        << Colors::RESET << endl;
   cout << endl;
 }
