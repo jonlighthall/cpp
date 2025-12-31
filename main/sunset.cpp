@@ -12,6 +12,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "twilight_table.h"
+
 using namespace std;
 
 // settings
@@ -661,7 +663,8 @@ double getSolarNoon(double longitude, double set_timezone) {
 }
 
 double getSunset(int year, int month, int day, double latitude,
-                 double longitude, int set_timezone) {
+                 double longitude, int set_timezone,
+                 double* out_solarNoon = nullptr, double* out_delta = nullptr) {
   // date
   double jd = getJulianDate(year, month, day);
   double j2000 = getJ2000(jd);
@@ -810,6 +813,10 @@ double getSunset(int year, int month, int day, double latitude,
   if (debug > -1) cout << "Sunrise time: " << hour2time(sunriseTime) << endl;
   cout << " Sunset time: " << hour2time(sunsetTime) << endl;
 
+  // Store output parameters for twilight table calculations
+  if (out_solarNoon) *out_solarNoon = solarNoon;
+  if (out_delta) *out_delta = delta;
+
   return sunsetTime;
 }
 
@@ -831,9 +838,10 @@ int main() {
   double longitude = -90.0914955109431;
   int set_timezone = -6;
 
-  // Calculate the sunset time
-  double sunsetTime =
-      getSunset(year, month, day, latitude, longitude, set_timezone);
+  // Calculate the sunset time (also get solarNoon and delta for twilight table)
+  double solarNoon, delta;
+  double sunsetTime = getSunset(year, month, day, latitude, longitude,
+                                set_timezone, &solarNoon, &delta);
 
   // Print the current date and time
 
@@ -893,6 +901,9 @@ int main() {
            << endl;
     }
   }
+
+  // Print the twilight table with all events
+  printTwilightTable(solarNoon, latitude, delta, currentTime, commuteMinutes);
 
   return 0;
 }
