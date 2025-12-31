@@ -78,24 +78,16 @@ static string formatTime(double fhr) {
   return oss.str();
 }
 
-// Convert time difference to plain English
-static string timeToEnglish(int hours, int minutes) {
-  if (hours < 0 || minutes < 0) return "N/A";
+// Convert time difference to compact format (-hh:mm or +hh:mm)
+static string formatCountdown(double timeDiff) {
+  bool isLate = timeDiff < 0;
+  double absTime = std::abs(timeDiff);
+  int hours = static_cast<int>(absTime);
+  int mins = static_cast<int>((absTime - hours) * 60);
 
   ostringstream oss;
-  if (hours == 0 && minutes == 0) {
-    return "now";
-  }
-
-  if (hours > 0) {
-    oss << hours << " hour";
-    if (hours > 1) oss << "s";
-    if (minutes > 0) oss << " ";
-  }
-  if (minutes > 0) {
-    oss << minutes << " min";
-  }
-
+  oss << (isLate ? "+" : "-") << setfill('0') << setw(2) << hours << ":"
+      << setw(2) << mins;
   return oss.str();
 }
 
@@ -118,16 +110,13 @@ void printTwilightTable(double solarNoon, double latitude, double delta,
   // Print table header
   cout << endl;
   cout << Colors::BOLD
-       << "┌───────┬────────────────────────────────┬───────────┬───────────┬─"
-          "─────────────────┐"
+       << "┌───────┬────────────────────────────────┬─────────┬─────────┬───────────┐"
        << Colors::RESET << endl;
   cout << Colors::BOLD
-       << "│ Angle │ Event                          │ Time      │ Departure │ "
-          "Time to Leave    │"
+       << "│ Angle │ Event                          │ Time    │ Leaving │ Departure │"
        << Colors::RESET << endl;
   cout << Colors::BOLD
-       << "├───────┼────────────────────────────────┼───────────┼───────────┼─"
-          "─────────────────┤"
+       << "├───────┼────────────────────────────────┼─────────┼─────────┼───────────┤"
        << Colors::RESET << endl;
 
   // Calculate and print each event
@@ -147,9 +136,9 @@ void printTwilightTable(double solarNoon, double latitude, double delta,
       cout << "│ " << event.colorCode << right << setw(4) << angleStr.str()
            << "°" << Colors::RESET << " │ " << event.colorCode << left
            << setw(30) << event.label << Colors::RESET << " │ "
-           << event.colorCode << "  --:--  " << Colors::RESET << " │ "
-           << event.colorCode << "  --:--  " << Colors::RESET << " │ "
-           << event.colorCode << "     N/A        " << Colors::RESET << "│"
+           << event.colorCode << " --:-- " << Colors::RESET << " │ "
+           << event.colorCode << "  N/A  " << Colors::RESET << " │ "
+           << event.colorCode << "   --:--  " << Colors::RESET << " │"
            << endl;
       continue;
     }
@@ -159,29 +148,20 @@ void printTwilightTable(double solarNoon, double latitude, double delta,
     double departureTime = eventTime - commuteHours;
     double timeToDepart = departureTime - currentTime;
 
-    int deptHours = static_cast<int>(timeToDepart);
-    int deptMins = static_cast<int>((timeToDepart - deptHours) * 60);
-
-    string timeStr;
-    if (timeToDepart < 0) {
-      timeStr = "PASSED";
-    } else {
-      timeStr = timeToEnglish(deptHours, deptMins);
-    }
+    string countdownStr = formatCountdown(timeToDepart);
 
     cout << "│ " << event.colorCode << right << setw(4) << angleStr.str() << "°"
          << Colors::RESET << " │ " << event.colorCode << left << setw(30)
-         << event.label << Colors::RESET << " │ " << event.colorCode << "  "
-         << formatTime(eventTime) << "  " << Colors::RESET << " │ "
-         << event.colorCode << "  " << formatTime(departureTime) << "  "
-         << Colors::RESET << " │ " << event.colorCode << setw(16) << timeStr
-         << Colors::RESET << " │" << endl;
+         << event.label << Colors::RESET << " │ " << event.colorCode << " "
+         << formatTime(eventTime) << " " << Colors::RESET << " │ "
+         << event.colorCode << " " << countdownStr << " " << Colors::RESET
+         << " │ " << event.colorCode << "   " << formatTime(departureTime)
+         << "   " << Colors::RESET << "│" << endl;
   }
 
   // Print table footer
   cout << Colors::BOLD
-       << "└───────┴────────────────────────────────┴───────────┴───────────┴─"
-          "─────────────────┘"
+       << "└───────┴────────────────────────────────┴─────────┴─────────┴───────────┘"
        << Colors::RESET << endl;
   cout << endl;
 }
