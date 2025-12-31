@@ -91,6 +91,38 @@ static string formatCountdown(double timeDiff) {
   return oss.str();
 }
 
+// Column width constants (display width)
+namespace ColWidth {
+const int ANGLE = 4;      // e.g., "+18" (without °)
+const int EVENT = 30;     // Event name
+const int TIME = 5;       // "hh:mm"
+const int LEAVING = 6;    // "-hh:mm" or "+hh:mm"
+const int DEPARTURE = 5;  // "hh:mm" or "PAST"
+}  // namespace ColWidth
+
+// Helper to generate repeated string (works with multi-byte UTF-8)
+static string repeatStr(const string& s, int n) {
+  string result;
+  for (int i = 0; i < n; ++i) {
+    result += s;
+  }
+  return result;
+}
+
+// Pad a string containing UTF-8 to a display width (right-aligned)
+static string padRight(const string& s, int displayWidth, int extraBytes = 0) {
+  int padding = displayWidth - (s.length() - extraBytes);
+  if (padding <= 0) return s;
+  return string(padding, ' ') + s;
+}
+
+// Pad a string containing UTF-8 to a display width (left-aligned)
+static string padLeft(const string& s, int displayWidth, int extraBytes = 0) {
+  int padding = displayWidth - (s.length() - extraBytes);
+  if (padding <= 0) return s;
+  return s + string(padding, ' ');
+}
+
 void printTwilightTable(double solarNoon, double latitude, double delta,
                         double currentTime, double commuteMinutes) {
   // Define twilight events
@@ -107,39 +139,58 @@ void printTwilightTable(double solarNoon, double latitude, double delta,
 
   double commuteHours = commuteMinutes / 60.0;
 
+  // Build border strings based on column widths
+  // Add 1 to ANGLE for the ° symbol (2-byte UTF-8)
+  string topBorder = "┌─" + repeatStr("─", ColWidth::ANGLE + 1) + "─┬─" +
+                     repeatStr("─", ColWidth::EVENT) + "─┬─" +
+                     repeatStr("─", ColWidth::TIME) + "─┬─" +
+                     repeatStr("─", ColWidth::LEAVING) + "─┬─" +
+                     repeatStr("─", ColWidth::DEPARTURE) + "─┐";
+  string midBorder = "├─" + repeatStr("─", ColWidth::ANGLE + 1) + "─┼─" +
+                     repeatStr("─", ColWidth::EVENT) + "─┼─" +
+                     repeatStr("─", ColWidth::TIME) + "─┼─" +
+                     repeatStr("─", ColWidth::LEAVING) + "─┼─" +
+                     repeatStr("─", ColWidth::DEPARTURE) + "─┤";
+  string botBorder = "└─" + repeatStr("─", ColWidth::ANGLE + 1) + "─┴─" +
+                     repeatStr("─", ColWidth::EVENT) + "─┴─" +
+                     repeatStr("─", ColWidth::TIME) + "─┴─" +
+                     repeatStr("─", ColWidth::LEAVING) + "─┴─" +
+                     repeatStr("─", ColWidth::DEPARTURE) + "─┘";
+
   // Print table header
   cout << endl;
-  cout << Colors::BOLD
-       << "┌───────┬────────────────────────────────┬─────────┬─────────┬───────────┐"
-       << Colors::RESET << endl;
-  cout << Colors::BOLD
-       << "│ Angle │ Event                          │ Time    │ Leaving │ Departure │"
-       << Colors::RESET << endl;
-  cout << Colors::BOLD
-       << "├───────┼────────────────────────────────┼─────────┼─────────┼───────────┤"
-       << Colors::RESET << endl;
+  cout << Colors::BOLD << topBorder << Colors::RESET << endl;
+  cout << Colors::BOLD << "│ " << left << setw(ColWidth::ANGLE + 1) << "Angle"
+       << " │ " << setw(ColWidth::EVENT) << "Event"
+       << " │ " << setw(ColWidth::TIME) << "Time"
+       << " │ " << setw(ColWidth::LEAVING) << "Leave"
+       << " │ " << setw(ColWidth::DEPARTURE) << "Dept"
+       << " │" << Colors::RESET << endl;
+  cout << Colors::BOLD << midBorder << Colors::RESET << endl;
 
   // Calculate and print each event
   for (const auto& event : events) {
     double HA_deg = calcHourAngle(event.zenith, latitude, delta);
 
-    // Format angle with sign
-    ostringstream angleStr;
+    // Format angle with sign (° is 2 bytes UTF-8, so add 1 to display width)
+    ostringstream angleOss;
     if (event.sunAngle >= 0) {
-      angleStr << "+" << fixed << setprecision(0) << event.sunAngle;
+      angleOss << "+" << fixed << setprecision(0) << event.sunAngle << "°";
     } else {
-      angleStr << fixed << setprecision(0) << event.sunAngle;
+      angleOss << fixed << setprecision(0) << event.sunAngle << "°";
     }
+    // Pad manually for UTF-8: display width is ANGLE+1, extra byte is 1
+    string angleStr = padRight(angleOss.str(), ColWidth::ANGLE + 1, 1);
 
     if (HA_deg < 0) {
       // Event doesn't occur at this latitude/date
-      cout << "│ " << event.colorCode << right << setw(4) << angleStr.str()
-           << "°" << Colors::RESET << " │ " << event.colorCode << left
-           << setw(30) << event.label << Colors::RESET << " │ "
-           << event.colorCode << " --:-- " << Colors::RESET << " │ "
-           << event.colorCode << "  N/A  " << Colors::RESET << " │ "
-           << event.colorCode << "   --:--  " << Colors::RESET << " │"
-           << endl;
+      cout << "│ " << event.colorCode << angleStr << Colors::RESET << " │ "
+           << event.colorCode << left << setw(ColWidth::EVENT) << event.label
+           << Colors::RESET << " │ " << event.colorCode << setw(ColWidth::TIME)
+           << "--:--" << Colors::RESET << " │ " << event.colorCode << right
+           << setw(ColWidth::LEAVING) << "N/A" << Colors::RESET << " │ "
+           << event.colorCode << setw(ColWidth::DEPARTURE) << "--:--"
+           << Colors::RESET << " │" << endl;
       continue;
     }
 
@@ -149,19 +200,19 @@ void printTwilightTable(double solarNoon, double latitude, double delta,
     double timeToDepart = departureTime - currentTime;
 
     string countdownStr = formatCountdown(timeToDepart);
+    string departureStr =
+        (timeToDepart < 0) ? " PAST" : formatTime(departureTime);
 
-    cout << "│ " << event.colorCode << right << setw(4) << angleStr.str() << "°"
-         << Colors::RESET << " │ " << event.colorCode << left << setw(30)
-         << event.label << Colors::RESET << " │ " << event.colorCode << " "
-         << formatTime(eventTime) << " " << Colors::RESET << " │ "
-         << event.colorCode << " " << countdownStr << " " << Colors::RESET
-         << " │ " << event.colorCode << "   " << formatTime(departureTime)
-         << "   " << Colors::RESET << "│" << endl;
+    cout << "│ " << event.colorCode << angleStr << Colors::RESET << " │ "
+         << event.colorCode << left << setw(ColWidth::EVENT) << event.label
+         << Colors::RESET << " │ " << event.colorCode << setw(ColWidth::TIME)
+         << formatTime(eventTime) << Colors::RESET << " │ " << event.colorCode
+         << right << setw(ColWidth::LEAVING) << countdownStr << Colors::RESET
+         << " │ " << event.colorCode << setw(ColWidth::DEPARTURE)
+         << departureStr << Colors::RESET << " │" << endl;
   }
 
   // Print table footer
-  cout << Colors::BOLD
-       << "└───────┴────────────────────────────────┴─────────┴─────────┴───────────┘"
-       << Colors::RESET << endl;
+  cout << Colors::BOLD << botBorder << Colors::RESET << endl;
   cout << endl;
 }
