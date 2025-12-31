@@ -144,9 +144,12 @@ void printTwilightTable(double solarNoon, double latitude, double delta,
 
     if (HA_deg < 0) {
       // Event doesn't occur at this latitude/date
-      cout << event.colorCode << "│ " << right << setw(4) << angleStr.str()
-           << "° │ " << left << setw(30) << event.label
-           << " │    --:--  │    --:--  │       N/A        │" << Colors::RESET
+      cout << "│ " << event.colorCode << right << setw(4) << angleStr.str()
+           << "°" << Colors::RESET << " │ " << event.colorCode << left
+           << setw(30) << event.label << Colors::RESET << " │ "
+           << event.colorCode << "  --:--  " << Colors::RESET << " │ "
+           << event.colorCode << "  --:--  " << Colors::RESET << " │ "
+           << event.colorCode << "     N/A        " << Colors::RESET << "│"
            << endl;
       continue;
     }
@@ -166,10 +169,13 @@ void printTwilightTable(double solarNoon, double latitude, double delta,
       timeStr = timeToEnglish(deptHours, deptMins);
     }
 
-    cout << event.colorCode << "│ " << right << setw(4) << angleStr.str()
-         << "° │ " << left << setw(30) << event.label << " │   "
-         << formatTime(eventTime) << "   │   " << formatTime(departureTime)
-         << "   │ " << setw(16) << timeStr << " │" << Colors::RESET << endl;
+    cout << "│ " << event.colorCode << right << setw(4) << angleStr.str() << "°"
+         << Colors::RESET << " │ " << event.colorCode << left << setw(30)
+         << event.label << Colors::RESET << " │ " << event.colorCode << "  "
+         << formatTime(eventTime) << "  " << Colors::RESET << " │ "
+         << event.colorCode << "  " << formatTime(departureTime) << "  "
+         << Colors::RESET << " │ " << event.colorCode << setw(16) << timeStr
+         << Colors::RESET << " │" << endl;
   }
 
   // Print table footer
