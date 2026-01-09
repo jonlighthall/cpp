@@ -15,12 +15,10 @@
 #include <string>
 #include <vector>
 
-using namespace std;
+#include "constants.h"
 
-// Constants
-static const double PI = atan(1) * 4;
-static const double deg2rad = PI / 180.;
-static const double rad2deg = 180. / PI;
+using namespace std;
+using namespace astro;
 
 // ANSI color codes for terminal output
 namespace Colors {
@@ -50,11 +48,11 @@ struct TwilightEvent {
 };
 
 // Calculate hour angle for a given zenith angle
-static double calcHourAngle(double zenith, double latitude, double delta) {
+static double calcHourAngle(double zenithAngle, double latitude, double delta) {
   // Convert to radians
-  double h0 = zenith * deg2rad;
-  double phi = latitude * deg2rad;
-  double d = delta * deg2rad;
+  double h0 = zenithAngle * kDeg2Rad;
+  double phi = latitude * kDeg2Rad;
+  double d = delta * kDeg2Rad;
 
   double cosH = (cos(h0) - sin(phi) * sin(d)) / (cos(phi) * cos(d));
 
@@ -63,7 +61,7 @@ static double calcHourAngle(double zenith, double latitude, double delta) {
     return -1.0;  // Event doesn't occur
   }
 
-  return acos(cosH) * rad2deg;
+  return acos(cosH) * kRad2Deg;
 }
 
 // Convert fractional hour to HH:MM string
@@ -125,19 +123,23 @@ static string padLeft(const string& s, int displayWidth, int extraBytes = 0) {
 
 void printTwilightTable(double solarNoon, double latitude, double delta,
                         double currentTime, double commuteMinutes) {
-  // Define twilight events
+  // Define twilight events using constants from constants.h
   // Sun angle: negative = above horizon, positive = below horizon
-  // Zenith = 90 + sunAngle (for below horizon events)
-  vector<TwilightEvent> events = {
-      {"Golden hour starts", -6.0, 90.0 - 6.0, Colors::GOLDEN_START},
-      {"Sunset", 0.0, 90.833,
-       Colors::SUNSET},  // Standard sunset with refraction
-      {"Golden hour ends", 4.0, 90.0 + 4.0, Colors::GOLDEN_END},
-      {"Civil twilight ends", 6.0, 90.0 + 6.0, Colors::CIVIL},
-      {"Nautical twilight ends", 12.0, 90.0 + 12.0, Colors::NAUTICAL},
-      {"Astronomical twilight ends", 18.0, 90.0 + 18.0, Colors::ASTRONOMICAL}};
 
-  double commuteHours = commuteMinutes / 60.0;
+  //TODO: the definition of these "events" leaves room for errors. if the first
+  //argument is, e.g., -6, then the second argument doesn't need to be
+  //90-6. that's redundant. that should be a calculated value or come from a
+  //variable.
+  
+  vector<TwilightEvent> events = {
+      {"Golden hour starts", -6.0, zenith::kGoldenHourStart, Colors::GOLDEN_START},
+      {"Sunset", 0.0, zenith::kSunset, Colors::SUNSET},
+      {"Golden hour ends", 4.0, zenith::kGoldenHourEnd, Colors::GOLDEN_END},
+      {"Civil twilight ends", 6.0, zenith::kCivilTwilight, Colors::CIVIL},
+      {"Nautical twilight ends", 12.0, zenith::kNauticalTwilight, Colors::NAUTICAL},
+      {"Astronomical twilight ends", 18.0, zenith::kAstronomicalTwilight, Colors::ASTRONOMICAL}};
+
+  double commuteHours = commuteMinutes / kMinutesPerHour;
 
   // Build border strings based on column widths
   // Add 1 to ANGLE for the ° symbol (2-byte UTF-8)

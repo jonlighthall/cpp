@@ -12,12 +12,16 @@
 #include <iostream>
 #include <sstream>
 
+#include "config.h"
+#include "constants.h"
 #include "twilight_table.h"
 
 using namespace std;
+using namespace astro;
+using namespace config;
 
 // settings
-const int debug = -1;
+const int debug = Debug::DEFAULT_DEBUG_LEVEL;
 /* debug value
   -1 print sunset and commute only
    0 print major calculations
@@ -25,12 +29,7 @@ const int debug = -1;
    2 print every variable value
 */
 
-const bool do_NOAA = true;
-
-// define constants
-const double PI = atan(1) * 4;
-const double deg2rad = PI / 180.;
-const double rad2deg = 180. / PI;
+const bool do_NOAA = Algorithm::USE_NOAA;
 
 double getJulianDate(int year, int month, int day) {
   cout << "The input date is " << year << "-" << month << "-" << day << endl;
@@ -149,7 +148,8 @@ double equationOfCenter(double t, double M) {
   // aberration):
 
   // convert inputs to radians
-  M *= deg2rad;
+  // TODO: where does this constant come from? does it need to be renamed?
+  M *= DEG2RAD;
 
   double C_0 = 1.915 * sin(M) + 0.020 * sin(2 * M);
 
@@ -181,7 +181,7 @@ double longitudeAscendingNode(double t) {
     cout << "\t  lin: Omega = " << Omega_1 << " degrees (NOAA)" << endl;
     cout << "\tcubic: Omega = " << Omega_3 << " degrees" << endl;
   }
-  return Omega_3 * deg2rad;
+  return Omega_3 * DEG2RAD;
 }
 
 double nutationInLongitude(double Omega, double JCE, double X1) {
@@ -195,7 +195,7 @@ double nutationInLongitude(double Omega, double JCE, double X1) {
   }
 
   if (debug > 1) {
-    cout << "\t        DPSi = " << DPsi * deg2rad << " radians" << endl;
+    cout << "\t        DPSi = " << DPsi * DEG2RAD << " radians" << endl;
 
     double X0 = 297.85036 + 44526.7111480 * JCE - 0.0019142 * pow(JCE, 2) +
                 pow(JCE, 3) / 189474.;  // Eq. 15
@@ -207,12 +207,12 @@ double nutationInLongitude(double Omega, double JCE, double X1) {
     cout << "\tX0 = " << X0 << " degrees" << endl;
     cout << "\tX1 = " << X1 << " degrees" << endl;
     cout << "\tX3 = " << X3 << " degrees" << endl;
-    cout << "\tX4 = " << X4 * rad2deg << " degrees" << endl;
+    cout << "\tX4 = " << X4 * RAD2DEG << " degrees" << endl;
 
     // convert to radians
-    X0 *= deg2rad;
-    X1 *= deg2rad;
-    X3 *= deg2rad;
+    X0 *= DEG2RAD;
+    X1 *= DEG2RAD;
+    X3 *= DEG2RAD;
 
     // Eq. 20, Reda & Andreas (2008)
     double DPsi0 = (-171996 - 174.2 * JCE) * sin(X4);
@@ -233,7 +233,7 @@ double nutationInLongitude(double Omega, double JCE, double X1) {
     cout << "\t      SDPsi = " << SDPsi << " arcseconds" << endl;
     SDPsi /= 3600;
     cout << "\t      SDPsi = " << SDPsi << " degrees" << endl;
-    SDPsi *= deg2rad;
+    SDPsi *= DEG2RAD;
     cout << "\t      SDPsi = " << SDPsi << " radians" << endl;
   }
 
@@ -258,7 +258,7 @@ double radiusVector(double e, double nu) {
   // c.f. Meeus Eq. 25.5
 
   // convert inputs to radians
-  nu *= deg2rad;
+  nu *= DEG2RAD;
 
   double R = 1.00014 - e * cos(nu) - 0.00014 * cos(2 * nu);
 
@@ -304,7 +304,7 @@ double getSunSize(double rad_vec_au = 1) {
   const double sun_diam_rad =
       2 * atan(sun_diam_m / (2 * rad_vec_m));  // angular size in radians
   const double sun_diam_deg =
-      sun_diam_rad * rad2deg;  // angular size in degrees
+      sun_diam_rad * RAD2DEG;  // angular size in degrees
 
   // return semidiameter
   const double sun_radi_deg = sun_diam_deg / 2;
@@ -434,7 +434,7 @@ double equationOfTime2(double M, double RA, double DPsi, double epsilon,
               (eccentricity * sin(M) - 2 * eccentricity * sin(2 * M) +
                4 * eccentricity * sin(3 * M) - 0.5 * eccentricity * sin(4 * M) -
                1.25 * pow(sin(RA - epsilon), 2)) *
-              rad2deg;  // Result in minutes
+              RAD2DEG;  // Result in minutes
   if (debug > -1) {
     cout << "\tE = ";
     printDeg(E2);
@@ -459,8 +459,8 @@ double equationOfTime3(double epsilon, double L, double e, double M) {
   if (debug > 1) cout << "\t     y =  " << y << endl;
 
   // convert inputs to radians
-  L *= deg2rad;
-  M *= deg2rad;
+  L *= DEG2RAD;
+  M *= DEG2RAD;
 
   if (debug > 1) {
     // print individual terms
@@ -478,11 +478,11 @@ double equationOfTime3(double epsilon, double L, double e, double M) {
   if (debug > 0) {
     cout << "   calculated using Smart (1956)" << endl;
     cout << "\tE = " << E << " radians" << endl;
-    cout << "\tE = " << E * rad2deg << " degrees" << endl;
-    cout << "\tE = " << E * rad2deg * 4 << " minutes" << endl;
+    cout << "\tE = " << E * RAD2DEG << " degrees" << endl;
+    cout << "\tE = " << E * RAD2DEG * 4 << " minutes" << endl;
   }
-  if (debug > -1) cout << "\tE = " << E * rad2deg / 15 << " hours" << endl;
-  return E * rad2deg / 15;  // hours
+  if (debug > -1) cout << "\tE = " << E * RAD2DEG / 15 << " hours" << endl;
+  return E * RAD2DEG / 15;  // hours
 }
 
 double getZenith(double e, double nu) {
@@ -553,9 +553,9 @@ double hourAngle(double h0, double phi, double delta) {
   // Calculate the local hour angle
 
   // convert inputs to radians
-  h0 *= deg2rad;
-  phi *= deg2rad;
-  delta *= deg2rad;
+  h0 *= DEG2RAD;
+  phi *= DEG2RAD;
+  delta *= DEG2RAD;
 
   if (debug > 1) {
     cout << "   h0" << endl;
@@ -569,7 +569,7 @@ double hourAngle(double h0, double phi, double delta) {
   }
 
   double cosH = (cos(h0) - sin(phi) * sin(delta)) / (cos(phi) * cos(delta));
-  double H = acos(cosH) * rad2deg;
+  double H = acos(cosH) * RAD2DEG;
   if (debug > 0) {
     cout << "Hour angle\n\tHA = " << H << " degrees" << endl;
     cout << "          or " << H / 15.0 << " hours" << endl;
@@ -736,8 +736,8 @@ double getSunset(int year, int month, int day, double latitude,
   }
 
   // convert to radians
-  lambda *= deg2rad;
-  epsilon *= deg2rad;
+  lambda *= DEG2RAD;
+  epsilon *= DEG2RAD;
 
   /*
    * Using the corrected quantities
@@ -762,13 +762,13 @@ double getSunset(int year, int month, int day, double latitude,
 
     cout << "Longitude of the periapsis" << endl;
     cout << "\ttanbar = " << tanbar << " radians" << endl;
-    cout << "\ttanbar = " << tanbar * rad2deg << " degrees" << endl;
+    cout << "\ttanbar = " << tanbar * RAD2DEG << " degrees" << endl;
 
     cout << "\t      cos(R.A.) = " << cos(alpha) << endl;
   }
   // convert to degrees
-  alpha *= rad2deg;
-  delta *= rad2deg;
+  alpha *= RAD2DEG;
+  delta *= RAD2DEG;
 
   if (debug > 0) {
     cout << "Solar coordinates:" << endl;
@@ -833,10 +833,10 @@ int main() {
   int month = ltm.tm_mon + 1;
   int day = ltm.tm_mday;
 
-  // Set the location and timezone
-  double latitude = 30.4275784357249;  // New Orleans
-  double longitude = -90.0914955109431;
-  int set_timezone = -6;
+  // Set the location and timezone from config
+  double latitude = Location::DEFAULT_LATITUDE;
+  double longitude = Location::DEFAULT_LONGITUDE;
+  int set_timezone = Location::DEFAULT_TIMEZONE;
 
   // Calculate the sunset time (also get solarNoon and delta for twilight table)
   double solarNoon, delta;
@@ -861,9 +861,9 @@ int main() {
   cout << " (" << timeToEnglish(diffHours, diffMinutes) << " until sunset)"
        << endl;
 
-  // Calculate leave time (subtract commute time of 37 minutes)
-  const double commuteMinutes = 37.0;
-  double leaveTime = sunsetTime - (commuteMinutes / 60.0);
+  // Calculate leave time (subtract commute time)
+  const double commuteMinutes = Commute::DEFAULT_COMMUTE_MINUTES;
+  double leaveTime = sunsetTime - (commuteMinutes / MINUTES_PER_HOUR);
   double timeToLeave = leaveTime - currentTime;
 
   // Convert leave time to readable format (no seconds)
@@ -888,12 +888,12 @@ int main() {
          << " AGO TO GET HOME BY " << sunsetTimeStr << " (SUNSET) ***" << endl;
 
     // Calculate how late you'll be if you leave now
-    double arrivalTime = currentTime + (commuteMinutes / 60.0);
+    double arrivalTime = currentTime + (commuteMinutes / MINUTES_PER_HOUR);
     double lateBy = arrivalTime - sunsetTime;
 
     if (lateBy > 0) {
       int lateHours = static_cast<int>(lateBy);
-      int lateMins = static_cast<int>((lateBy - lateHours) * 60);
+      int lateMins = static_cast<int>((lateBy - lateHours) * MINUTES_PER_HOUR);
       string arrivalTimeStr = hour2time(arrivalTime, false, false);
 
       cout << "If you leave NOW, you'll arrive home at " << arrivalTimeStr
