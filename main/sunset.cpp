@@ -21,7 +21,7 @@ using namespace astro;
 using namespace config;
 
 // settings
-const int debug = Debug::DEFAULT_DEBUG_LEVEL;
+const int debug = config::debug::kDefaultDebugLevel;
 /* debug value
   -1 print sunset and commute only
    0 print major calculations
@@ -29,7 +29,7 @@ const int debug = Debug::DEFAULT_DEBUG_LEVEL;
    2 print every variable value
 */
 
-const bool do_NOAA = Algorithm::USE_NOAA;
+const bool do_NOAA = config::algorithm::kUseNoaa;
 
 double getJulianDate(int year, int month, int day) {
   cout << "The input date is " << year << "-" << month << "-" << day << endl;
@@ -45,7 +45,7 @@ double getJulianDate(int year, int month, int day) {
 double getJ2000(double jd) {
   // convert Julian Date to J2000 epoch, that is, the Julian Date since Jan 1,
   // 2000
-  double J2000 = jd - 2451545.0;
+  double J2000 = jd - kJ2000Epoch;
   if (debug > 0) cout << "\tthe J2000 date is " << J2000 << endl;
   return J2000;
 }
@@ -53,7 +53,7 @@ double getJ2000(double jd) {
 double getJulianCentury(double J2000) {
   // convert J2000 date to Julian Ephemeris Century, that is, fraction of a
   // Julian century
-  double T = J2000 / 36525.;
+  double T = J2000 / kJulianCenturyDays;
   if (debug > 0) cout << "\tthe Julian century is " << T << endl;
   return T;
 }
@@ -149,7 +149,7 @@ double equationOfCenter(double t, double M) {
 
   // convert inputs to radians
   // TODO: where does this constant come from? does it need to be renamed?
-  M *= DEG2RAD;
+  M *= kDeg2Rad;
 
   double C_0 = 1.915 * sin(M) + 0.020 * sin(2 * M);
 
@@ -181,7 +181,7 @@ double longitudeAscendingNode(double t) {
     cout << "\t  lin: Omega = " << Omega_1 << " degrees (NOAA)" << endl;
     cout << "\tcubic: Omega = " << Omega_3 << " degrees" << endl;
   }
-  return Omega_3 * DEG2RAD;
+  return Omega_3 * kDeg2Rad;
 }
 
 double nutationInLongitude(double Omega, double JCE, double X1) {
@@ -195,7 +195,7 @@ double nutationInLongitude(double Omega, double JCE, double X1) {
   }
 
   if (debug > 1) {
-    cout << "\t        DPSi = " << DPsi * DEG2RAD << " radians" << endl;
+    cout << "\t        DPSi = " << DPsi * kDeg2Rad << " radians" << endl;
 
     double X0 = 297.85036 + 44526.7111480 * JCE - 0.0019142 * pow(JCE, 2) +
                 pow(JCE, 3) / 189474.;  // Eq. 15
@@ -207,12 +207,12 @@ double nutationInLongitude(double Omega, double JCE, double X1) {
     cout << "\tX0 = " << X0 << " degrees" << endl;
     cout << "\tX1 = " << X1 << " degrees" << endl;
     cout << "\tX3 = " << X3 << " degrees" << endl;
-    cout << "\tX4 = " << X4 * RAD2DEG << " degrees" << endl;
+    cout << "\tX4 = " << X4 * kRad2Deg << " degrees" << endl;
 
     // convert to radians
-    X0 *= DEG2RAD;
-    X1 *= DEG2RAD;
-    X3 *= DEG2RAD;
+    X0 *= kDeg2Rad;
+    X1 *= kDeg2Rad;
+    X3 *= kDeg2Rad;
 
     // Eq. 20, Reda & Andreas (2008)
     double DPsi0 = (-171996 - 174.2 * JCE) * sin(X4);
@@ -233,7 +233,7 @@ double nutationInLongitude(double Omega, double JCE, double X1) {
     cout << "\t      SDPsi = " << SDPsi << " arcseconds" << endl;
     SDPsi /= 3600;
     cout << "\t      SDPsi = " << SDPsi << " degrees" << endl;
-    SDPsi *= DEG2RAD;
+    SDPsi *= kDeg2Rad;
     cout << "\t      SDPsi = " << SDPsi << " radians" << endl;
   }
 
@@ -258,7 +258,7 @@ double radiusVector(double e, double nu) {
   // c.f. Meeus Eq. 25.5
 
   // convert inputs to radians
-  nu *= DEG2RAD;
+  nu *= kDeg2Rad;
 
   double R = 1.00014 - e * cos(nu) - 0.00014 * cos(2 * nu);
 
@@ -282,13 +282,13 @@ double getSunSize(double rad_vec_au = 1) {
   // input is radial vector in au
 
   // constants
-  const double au = 149597870700;  // Astronomical unit in m
+  const double au = kAuMeters;  // Astronomical unit in m
 
   // physical size of the sun
   // measured solar radius from Mercury transits
   // https://arxiv.org/abs/1203.4898
   // 696,342 ± 65km
-  const double sun_radi_m = 696342e3;
+  const double sun_radi_m = kSolarRadiusMeters;
   if (debug > 1) {
     const double sol_radi_m = 6.95700e8;  // solar radius in m
     cout << "Radius of the sun"
@@ -304,7 +304,7 @@ double getSunSize(double rad_vec_au = 1) {
   const double sun_diam_rad =
       2 * atan(sun_diam_m / (2 * rad_vec_m));  // angular size in radians
   const double sun_diam_deg =
-      sun_diam_rad * RAD2DEG;  // angular size in degrees
+      sun_diam_rad * kRad2Deg;  // angular size in degrees
 
   // return semidiameter
   const double sun_radi_deg = sun_diam_deg / 2;
@@ -434,7 +434,7 @@ double equationOfTime2(double M, double RA, double DPsi, double epsilon,
               (eccentricity * sin(M) - 2 * eccentricity * sin(2 * M) +
                4 * eccentricity * sin(3 * M) - 0.5 * eccentricity * sin(4 * M) -
                1.25 * pow(sin(RA - epsilon), 2)) *
-              RAD2DEG;  // Result in minutes
+              kRad2Deg;  // Result in minutes
   if (debug > -1) {
     cout << "\tE = ";
     printDeg(E2);
@@ -459,8 +459,8 @@ double equationOfTime3(double epsilon, double L, double e, double M) {
   if (debug > 1) cout << "\t     y =  " << y << endl;
 
   // convert inputs to radians
-  L *= DEG2RAD;
-  M *= DEG2RAD;
+  L *= kDeg2Rad;
+  M *= kDeg2Rad;
 
   if (debug > 1) {
     // print individual terms
@@ -478,11 +478,11 @@ double equationOfTime3(double epsilon, double L, double e, double M) {
   if (debug > 0) {
     cout << "   calculated using Smart (1956)" << endl;
     cout << "\tE = " << E << " radians" << endl;
-    cout << "\tE = " << E * RAD2DEG << " degrees" << endl;
-    cout << "\tE = " << E * RAD2DEG * 4 << " minutes" << endl;
+    cout << "\tE = " << E * kRad2Deg << " degrees" << endl;
+    cout << "\tE = " << E * kRad2Deg * 4 << " minutes" << endl;
   }
-  if (debug > -1) cout << "\tE = " << E * RAD2DEG / 15 << " hours" << endl;
-  return E * RAD2DEG / 15;  // hours
+  if (debug > -1) cout << "\tE = " << E * kRad2Deg / 15 << " hours" << endl;
+  return E * kRad2Deg / 15;  // hours
 }
 
 double getZenith(double e, double nu) {
@@ -506,13 +506,13 @@ double getZenith(double e, double nu) {
 
   // The elevation of the sun is the sum of the angular radius of the sun and
   // the angular refraction of the atmosphere.
-  const double atmo_refrac = 0.5667;
+  const double atmo_refrac = kAtmosphericRefraction;
   const double h0_cal = -(sun_radi_deg + atmo_refrac);
   // The default value is based on an apparent angular radius of the sun of
   // 0.26667 degrees (based on a solar distance of 1 au), and an atmospheric
   // refraction of 0.5667 degrees. The result is rounded to three decimal
   // places.
-  const double h0_def = -0.833;
+  const double h0_def = kStandardSunsetElevation;
   if (debug > 0) {
     cout << "Elevation of the Sun" << endl;
     cout << "   default: " << endl;
@@ -553,9 +553,9 @@ double hourAngle(double h0, double phi, double delta) {
   // Calculate the local hour angle
 
   // convert inputs to radians
-  h0 *= DEG2RAD;
-  phi *= DEG2RAD;
-  delta *= DEG2RAD;
+  h0 *= kDeg2Rad;
+  phi *= kDeg2Rad;
+  delta *= kDeg2Rad;
 
   if (debug > 1) {
     cout << "   h0" << endl;
@@ -569,7 +569,7 @@ double hourAngle(double h0, double phi, double delta) {
   }
 
   double cosH = (cos(h0) - sin(phi) * sin(delta)) / (cos(phi) * cos(delta));
-  double H = acos(cosH) * RAD2DEG;
+  double H = acos(cosH) * kRad2Deg;
   if (debug > 0) {
     cout << "Hour angle\n\tHA = " << H << " degrees" << endl;
     cout << "          or " << H / 15.0 << " hours" << endl;
@@ -640,7 +640,7 @@ string timeToEnglish(int hours, int minutes) {
 
 double getSolarNoon(double longitude, double set_timezone) {
   // apparent angular speed of the sun
-  double const w = 360. / 24.;  // 15 degrees per hour
+  double const w = kDegreesPerHour;  // 15 degrees per hour
 
   // divide the geographic longitude by the angular speed to get the solar time
   // zone
@@ -736,8 +736,8 @@ double getSunset(int year, int month, int day, double latitude,
   }
 
   // convert to radians
-  lambda *= DEG2RAD;
-  epsilon *= DEG2RAD;
+  lambda *= kDeg2Rad;
+  epsilon *= kDeg2Rad;
 
   /*
    * Using the corrected quantities
@@ -758,17 +758,17 @@ double getSunset(int year, int month, int day, double latitude,
     // Longitude of the periapsis or longitude of the pericenter
     double tanbar = atan2(
         cos(alpha), sin(alpha) * cos(epsilon) + tan(delta) * sin(epsilon));
-    if (cos(alpha) < 0) tanbar += PI;
+    if (cos(alpha) < 0) tanbar += kPi;
 
     cout << "Longitude of the periapsis" << endl;
     cout << "\ttanbar = " << tanbar << " radians" << endl;
-    cout << "\ttanbar = " << tanbar * RAD2DEG << " degrees" << endl;
+    cout << "\ttanbar = " << tanbar * kRad2Deg << " degrees" << endl;
 
     cout << "\t      cos(R.A.) = " << cos(alpha) << endl;
   }
   // convert to degrees
-  alpha *= RAD2DEG;
-  delta *= RAD2DEG;
+  alpha *= kRad2Deg;
+  delta *= kRad2Deg;
 
   if (debug > 0) {
     cout << "Solar coordinates:" << endl;
@@ -834,9 +834,9 @@ int main() {
   int day = ltm.tm_mday;
 
   // Set the location and timezone from config
-  double latitude = Location::DEFAULT_LATITUDE;
-  double longitude = Location::DEFAULT_LONGITUDE;
-  int set_timezone = Location::DEFAULT_TIMEZONE;
+  double latitude = config::location::kDefaultLatitude;
+  double longitude = config::location::kDefaultLongitude;
+  int set_timezone = config::location::kDefaultTimezone;
 
   // Calculate the sunset time (also get solarNoon and delta for twilight table)
   double solarNoon, delta;
@@ -862,8 +862,8 @@ int main() {
        << endl;
 
   // Calculate leave time (subtract commute time)
-  const double commuteMinutes = Commute::DEFAULT_COMMUTE_MINUTES;
-  double leaveTime = sunsetTime - (commuteMinutes / MINUTES_PER_HOUR);
+  const double commuteMinutes = config::commute::kDefaultCommuteMinutes;
+  double leaveTime = sunsetTime - (commuteMinutes / kMinutesPerHour);
   double timeToLeave = leaveTime - currentTime;
 
   // Convert leave time to readable format (no seconds)
@@ -888,12 +888,12 @@ int main() {
          << " AGO TO GET HOME BY " << sunsetTimeStr << " (SUNSET) ***" << endl;
 
     // Calculate how late you'll be if you leave now
-    double arrivalTime = currentTime + (commuteMinutes / MINUTES_PER_HOUR);
+    double arrivalTime = currentTime + (commuteMinutes / kMinutesPerHour);
     double lateBy = arrivalTime - sunsetTime;
 
     if (lateBy > 0) {
       int lateHours = static_cast<int>(lateBy);
-      int lateMins = static_cast<int>((lateBy - lateHours) * MINUTES_PER_HOUR);
+      int lateMins = static_cast<int>((lateBy - lateHours) * kMinutesPerHour);
       string arrivalTimeStr = hour2time(arrivalTime, false, false);
 
       cout << "If you leave NOW, you'll arrive home at " << arrivalTimeStr
