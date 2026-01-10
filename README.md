@@ -1,5 +1,22 @@
 # cpp
 
+## Repository Status
+
+This is a C++ learning repository containing educational examples and test programs.
+
+### Graduated Programs
+The following programs have been moved to dedicated repositories as they matured:
+- **`uband_diff`** - Migrated to [diff_utils](https://github.com/jonlighthall/diff_utils) repository
+  - Advanced numerical file comparison tool with extensive features
+  - Includes column structure analysis, error accumulation analysis, and more
+  - See [diff_utils/src/cpp](https://github.com/jonlighthall/diff_utils/tree/master/src/cpp)
+
+### Current Programs
+- **`sunset`** - Solar position and twilight calculator
+- **`hello`** - Basic "Hello World" example
+- **`modular_test`** - Testing/demonstration program
+- **`print_aligned`** - Number alignment formatting example
+
 ## WSL 1
 
 EACCES: permission denied, rename home .vscode-server extensions ms-vscode cpptools linux
@@ -27,8 +44,8 @@ run `Makefile:Set launch`... and select target
    * Ctrl-Shift-P SonarLint Configure the compilation...
 3. No compilation databases were found in the workspace
    * link-> How to generate compile commands
-4. Generate a Compilation Database   
-   * create a file named .vscode/compile_commands.json 
+4. Generate a Compilation Database
+   * create a file named .vscode/compile_commands.json
    * settings
    * Makefile Tools
       add the line
