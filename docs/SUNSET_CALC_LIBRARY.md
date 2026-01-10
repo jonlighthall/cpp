@@ -168,6 +168,16 @@ void updateDisplays() {
 
 ## Design Considerations
 
+### Design Philosophy
+The library was extracted from a larger sunset calculation program to enable reuse across different platforms (desktop, Arduino, embedded systems). Key design decisions:
+
+- **Separation of concerns**: Pure calculation functions isolated from I/O and display logic
+- **Minimal dependencies**: Only requires `<cmath>` and `constants.h` for maximum portability
+- **Class-based encapsulation**: `SunsetCalculator` class encapsulates all state and methods
+- **Static utilities**: Time conversion functions provided as static methods (no instance needed)
+- **Optional outputs**: Functions can return additional data (solar noon, declination) via optional pointers
+- **Namespace isolation**: `sunset_calc::` namespace prevents conflicts with existing code
+
 ### Accuracy
 - Calculations accurate to within ±2-3 minutes
 - Includes atmospheric refraction and solar disk size

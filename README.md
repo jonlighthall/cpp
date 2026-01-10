@@ -17,6 +17,17 @@ The following programs have been moved to dedicated repositories as they matured
 - **`modular_test`** - Testing/demonstration program
 - **`print_aligned`** - Number alignment formatting example
 
+### Reusable Libraries
+
+#### Sunset Calculator Library
+A portable astronomical calculation library extracted from the sunset program.
+- **Files**: `include/sunset_calc.h`, `src/sunset_calc.cpp`
+- **Purpose**: Calculate sunset/sunrise times for any location and date
+- **Platforms**: Desktop C++, Arduino, embedded systems
+- **Documentation**: See [docs/SUNSET_CALC_LIBRARY.md](docs/SUNSET_CALC_LIBRARY.md)
+- **Quick Start**: See [examples/QUICK_REFERENCE.md](examples/QUICK_REFERENCE.md)
+- **Example Sketches**: Arduino/Wemos examples in `examples/` directory
+
 ## WSL 1
 
 EACCES: permission denied, rename home .vscode-server extensions ms-vscode cpptools linux
