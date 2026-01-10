@@ -116,15 +116,23 @@ double SunsetCalculator::obliquityOfEcliptic(double T) {
 double SunsetCalculator::equationOfTime(double M, double RA, double DPsi,
                                         double epsilon, double L) {
   // Equation of Time: correction to convert solar time to mean time
-  // This accounts for the elliptical orbit and axial tilt
+  // Using Smart (1956) formula for higher accuracy
+  // W.M. Smart, Text-Book on Spherical Astronomy, Cambridge University Press,
+  // 1956, p. 149
 
-  M *= kDeg2Rad;
+  double e = eccentricity((getJ2000(getJulianDate(2000, 1, 1))) / 36525.0);
+  double y = pow(tan(epsilon * kDeg2Rad / 2.0), 2);
 
-  // Coefficients from NOAA algorithm
-  double eot = 229.18 * (0.000075 + 0.001868 * cos(M) - 0.032077 * sin(M) -
-                         0.014615 * cos(2 * M) - 0.040849 * sin(2 * M));
+  // Convert to radians
+  double L_rad = L * kDeg2Rad;
+  double M_rad = M * kDeg2Rad;
 
-  return eot;
+  double E_rad = y * sin(2 * L_rad) - 2 * e * sin(M_rad) +
+                 4 * e * y * sin(M_rad) * cos(2 * L_rad) -
+                 0.5 * y * y * sin(4 * L_rad) - 1.25 * e * e * sin(2 * M_rad);
+
+  // Convert from radians to hours
+  return E_rad * kRad2Deg / 15.0;
 }
 
 double SunsetCalculator::getZenith(double e, double nu) {
@@ -250,8 +258,16 @@ double SunsetCalculator::getSunset(int year, int month, int day,
   double HA = HA_deg / 15.0;  // Convert degrees to hours
 
   // Step 11: Calculate solar noon in local time
-  double eot = equationOfTime(M, 0, nutation, epsilon, L);  // Equation of Time
-  double solar_noon_utc = 12.0 - (longitude / 15.0) - (eot / 60.0);
+  // Use Smart (1956) equation of time with current eccentricity
+  double y = pow(tan(epsilon * kDeg2Rad / 2.0), 2);
+  double L_rad = L * kDeg2Rad;
+  double M_rad = M * kDeg2Rad;
+  double E_rad = y * sin(2 * L_rad) - 2 * e * sin(M_rad) +
+                 4 * e * y * sin(M_rad) * cos(2 * L_rad) -
+                 0.5 * y * y * sin(4 * L_rad) - 1.25 * e * e * sin(2 * M_rad);
+  double eot = E_rad * kRad2Deg / 15.0;  // Convert to hours
+
+  double solar_noon_utc = 12.0 - (longitude / 15.0) - eot;
 
   // Adjust for timezone
   double solar_noon = solar_noon_utc + timezone;

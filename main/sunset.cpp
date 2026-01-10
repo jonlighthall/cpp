@@ -14,6 +14,7 @@
 
 #include "config.h"
 #include "constants.h"
+#include "sunset_calc.h"
 #include "twilight_table.h"
 
 using namespace std;
@@ -811,6 +812,21 @@ double getSunset(int year, int month, int day, double latitude,
   // Convert to local solar time
   double sunsetTime = solarNoon + HA;
   double sunriseTime = solarNoon - HA;
+
+  // Authoritative result from library (single source of truth)
+  {
+    sunset_calc::SunsetCalculator calc;
+    double libSolarNoon = solarNoon;
+    double libDelta = delta;
+    double libSunset = calc.getSunset(year, month, day, latitude, longitude,
+                                      set_timezone, &libSolarNoon, &libDelta);
+
+    // Overwrite with authoritative values to avoid divergence
+    solarNoon = libSolarNoon;
+    delta = libDelta;
+    sunsetTime = libSunset;
+    sunriseTime = solarNoon - HA;  // reuse HA for symmetry display
+  }
 
   // Print the result
   if (kDebugLevel > -1)

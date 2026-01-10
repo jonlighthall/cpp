@@ -153,14 +153,14 @@ int main() {
       {"Solar noon", 0.0, 0.0, Colors::SOLAR_NOON, false, true},
       {"Sunset", 0.0, 90.0 - kStandardSunsetElevation, Colors::SUNSET, false,
        false},
-      {"Golden hour starts", -6.0, sunAngleToZenith(-6.0),
-       Colors::GOLDEN_START, false, false},
+      {"Golden hour starts", -6.0, sunAngleToZenith(-6.0), Colors::GOLDEN_START,
+       false, false},
       {"Golden hour ends", 4.0, sunAngleToZenith(4.0), Colors::GOLDEN_END,
        false, false},
       {"Civil twilight ends", 6.0, sunAngleToZenith(6.0), Colors::CIVIL, false,
        false},
-      {"Nautical twilight ends", 12.0, sunAngleToZenith(12.0),
-       Colors::NAUTICAL, false, false},
+      {"Nautical twilight ends", 12.0, sunAngleToZenith(12.0), Colors::NAUTICAL,
+       false, false},
       {"Astronomical twilight ends", 18.0, sunAngleToZenith(18.0),
        Colors::ASTRONOMICAL, false, false}};
 
