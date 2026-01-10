@@ -4,6 +4,7 @@
  * Displays a table of solar events with times and relative countdowns
  */
 
+#include <array>
 #include <cmath>
 #include <ctime>
 #include <iomanip>
@@ -72,7 +73,7 @@ int main() {
   }
 
   // Define events in chronological order
-  SolarEvent events[] = {
+  std::array<SolarEvent, 11> events = {{
       {"Astronomical twilight starts", -18.0,
        solar_utils::sunAngleToZenith(18.0), Colors::ASTRONOMICAL, true, false},
       {"Nautical twilight starts", -12.0, solar_utils::sunAngleToZenith(12.0),
@@ -93,7 +94,7 @@ int main() {
       {"Nautical twilight ends", 12.0, solar_utils::sunAngleToZenith(12.0),
        Colors::NAUTICAL, false, false},
       {"Astronomical twilight ends", 18.0, solar_utils::sunAngleToZenith(18.0),
-       Colors::ASTRONOMICAL, false, false}};
+       Colors::ASTRONOMICAL, false, false}}};
 
   // Build table borders
   string topBorder = "┌─" + text_utils::repeatStr("─", ANGLE + 1) + "─┬─" +
