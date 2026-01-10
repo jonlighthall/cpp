@@ -15,29 +15,14 @@
 #include <string>
 #include <vector>
 
+#include "colors.h"
 #include "constants.h"
+#include "solar_utils.h"
 
 using namespace std;
 using namespace astro;
 
-// ANSI color codes for terminal output
-namespace Colors {
-// Golden hour - warm oranges/yellows
-const string GOLDEN_START = "\033[38;5;214m";  // Orange
-const string SUNSET = "\033[38;5;208m";        // Dark orange
-const string GOLDEN_END = "\033[38;5;202m";    // Red-orange
-
-// Twilight - progressively darker blues
-const string CIVIL = "\033[38;5;75m";         // Light blue
-const string NAUTICAL = "\033[38;5;33m";      // Medium blue
-const string ASTRONOMICAL = "\033[38;5;19m";  // Dark blue
-
-// Reset
-const string RESET = "\033[0m";
-
-// Bold
-const string BOLD = "\033[1m";
-}  // namespace Colors
+// ANSI color codes unified in Colors (see include/colors.h)
 
 // Structure for twilight event data
 struct TwilightEvent {
@@ -47,36 +32,9 @@ struct TwilightEvent {
   string colorCode;
 };
 
-// Helper: Convert sun angle (degrees below horizon) to zenith angle
-// For sun above horizon (negative angles): zenith = 90 - sunAngle
-// For sun below horizon (positive angles): zenith = 90 + sunAngle
-// Example: Civil twilight at +6° below horizon → zenith = 96°
-static double sunAngleToZenith(double sunAngle) {
-  if (sunAngle < 0) {
-    // Sun above horizon (e.g., -6° = golden hour start)
-    return 90.0 - sunAngle;  // zenith = 90 - (-6) = 96°
-  } else {
-    // Sun below horizon (e.g., +6° = civil twilight)
-    return 90.0 + sunAngle;  // zenith = 90 + 6 = 96°
-  }
-}
+// Use shared solar utility (see include/solar_utils.h)
 
-// Calculate hour angle for a given zenith angle
-static double calcHourAngle(double zenithAngle, double latitude, double delta) {
-  // Convert to radians
-  double h0 = zenithAngle * kDeg2Rad;
-  double phi = latitude * kDeg2Rad;
-  double d = delta * kDeg2Rad;
-
-  double cosH = (cos(h0) - sin(phi) * sin(d)) / (cos(phi) * cos(d));
-
-  // Check if sun reaches this angle at this latitude
-  if (cosH < -1.0 || cosH > 1.0) {
-    return -1.0;  // Event doesn't occur
-  }
-
-  return acos(cosH) * kRad2Deg;
-}
+// Use shared calcHourAngle from solar_utils
 
 // Convert fractional hour to HH:MM string
 static string formatTime(double fhr) {
@@ -148,14 +106,16 @@ void printTwilightTable(double solarNoon, double latitude, double delta,
   //   - Zenith = 90° - (-0.833°) = 90.833°
 
   vector<TwilightEvent> events = {
-      {"Golden hour starts", -6.0, sunAngleToZenith(-6.0),
+      {"Golden hour starts", -6.0, solar_utils::sunAngleToZenith(-6.0),
        Colors::GOLDEN_START},
       {"Sunset", 0.0, 90.0 - kStandardSunsetElevation, Colors::SUNSET},
-      {"Golden hour ends", 4.0, sunAngleToZenith(4.0), Colors::GOLDEN_END},
-      {"Civil twilight ends", 6.0, sunAngleToZenith(6.0), Colors::CIVIL},
-      {"Nautical twilight ends", 12.0, sunAngleToZenith(12.0),
+      {"Golden hour ends", 4.0, solar_utils::sunAngleToZenith(4.0),
+       Colors::GOLDEN_END},
+      {"Civil twilight ends", 6.0, solar_utils::sunAngleToZenith(6.0),
+       Colors::CIVIL},
+      {"Nautical twilight ends", 12.0, solar_utils::sunAngleToZenith(12.0),
        Colors::NAUTICAL},
-      {"Astronomical twilight ends", 18.0, sunAngleToZenith(18.0),
+      {"Astronomical twilight ends", 18.0, solar_utils::sunAngleToZenith(18.0),
        Colors::ASTRONOMICAL}};
 
   double commuteHours = commuteMinutes / kMinutesPerHour;
@@ -191,7 +151,7 @@ void printTwilightTable(double solarNoon, double latitude, double delta,
 
   // Calculate and print each event
   for (const auto& event : events) {
-    double HA_deg = calcHourAngle(event.zenith, latitude, delta);
+    double HA_deg = solar_utils::calcHourAngle(event.zenith, latitude, delta);
 
     // Format angle with sign (° is 2 bytes UTF-8, so add 1 to display width)
     ostringstream angleOss;

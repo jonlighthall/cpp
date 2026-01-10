@@ -11,27 +11,17 @@
 #include <sstream>
 #include <string>
 
+#include "colors.h"
 #include "config.h"
 #include "constants.h"
+#include "solar_utils.h"
 #include "sunset_calc.h"
 
 using namespace std;
 using namespace astro;
 using namespace config;
 
-// ANSI color codes matching twilight_table
-namespace Colors {
-const string ASTRONOMICAL = "\033[38;5;19m";   // Dark blue
-const string NAUTICAL = "\033[38;5;33m";       // Medium blue
-const string CIVIL = "\033[38;5;75m";          // Light blue
-const string SUNRISE = "\033[38;5;220m";       // Yellow
-const string SOLAR_NOON = "\033[38;5;226m";    // Bright yellow
-const string GOLDEN_START = "\033[38;5;214m";  // Orange
-const string SUNSET = "\033[38;5;208m";        // Dark orange
-const string GOLDEN_END = "\033[38;5;202m";    // Red-orange
-const string RESET = "\033[0m";
-const string BOLD = "\033[1m";
-}  // namespace Colors
+// ANSI color codes unified in Colors (see include/colors.h)
 
 // Event data structure
 struct SolarEvent {
@@ -66,33 +56,16 @@ static string formatRelative(double timeDiff) {
   return oss.str();
 }
 
-// Calculate hour angle
-static double calcHourAngle(double zenithAngle, double latitude, double delta) {
-  double h0 = zenithAngle * kDeg2Rad;
-  double phi = latitude * kDeg2Rad;
-  double d = delta * kDeg2Rad;
+// Use shared calcHourAngle from solar_utils
 
-  double cosH = (cos(h0) - sin(phi) * sin(d)) / (cos(phi) * cos(d));
-  if (cosH < -1.0 || cosH > 1.0) return -1.0;
-
-  return acos(cosH) * kRad2Deg;
-}
-
-// Convert sun angle to zenith
-static double sunAngleToZenith(double sunAngle) {
-  if (sunAngle < 0) {
-    return 90.0 - sunAngle;
-  } else {
-    return 90.0 + sunAngle;
-  }
-}
+// Use shared solar utility (see include/solar_utils.h)
 
 // Column widths
 namespace ColWidth {
 const int ANGLE = 4;
 const int EVENT = 30;
 const int TIME = 5;
-const int RELATIVE = 7;
+const int RELATIVE = 6;  // Accommodate sign in "+hh:mm"
 }  // namespace ColWidth
 
 // Generate repeated string
@@ -142,26 +115,26 @@ int main() {
 
   // Define events in chronological order
   SolarEvent events[] = {
-      {"Astronomical twilight starts", -18.0, sunAngleToZenith(18.0),
-       Colors::ASTRONOMICAL, true, false},
-      {"Nautical twilight starts", -12.0, sunAngleToZenith(12.0),
+      {"Astronomical twilight starts", -18.0,
+       solar_utils::sunAngleToZenith(18.0), Colors::ASTRONOMICAL, true, false},
+      {"Nautical twilight starts", -12.0, solar_utils::sunAngleToZenith(12.0),
        Colors::NAUTICAL, true, false},
-      {"Civil twilight starts", -6.0, sunAngleToZenith(6.0), Colors::CIVIL,
-       true, false},
-      {"Sunrise", 0.0, 90.0 - kStandardSunsetElevation, Colors::SUNRISE, true,
+      {"Civil twilight starts", -6.0, solar_utils::sunAngleToZenith(6.0),
+       Colors::CIVIL, true, false},
+      {"Sunrise", 0.0, 90.0 - kStandardSunsetElevation, Colors::SUNSET, true,
        false},
       {"Solar noon", 0.0, 0.0, Colors::SOLAR_NOON, false, true},
       {"Sunset", 0.0, 90.0 - kStandardSunsetElevation, Colors::SUNSET, false,
        false},
-      {"Golden hour starts", -6.0, sunAngleToZenith(-6.0), Colors::GOLDEN_START,
-       false, false},
-      {"Golden hour ends", 4.0, sunAngleToZenith(4.0), Colors::GOLDEN_END,
-       false, false},
-      {"Civil twilight ends", 6.0, sunAngleToZenith(6.0), Colors::CIVIL, false,
-       false},
-      {"Nautical twilight ends", 12.0, sunAngleToZenith(12.0), Colors::NAUTICAL,
-       false, false},
-      {"Astronomical twilight ends", 18.0, sunAngleToZenith(18.0),
+      {"Golden hour starts", -6.0, solar_utils::sunAngleToZenith(-6.0),
+       Colors::GOLDEN_START, false, false},
+      {"Golden hour ends", 4.0, solar_utils::sunAngleToZenith(4.0),
+       Colors::GOLDEN_END, false, false},
+      {"Civil twilight ends", 6.0, solar_utils::sunAngleToZenith(6.0),
+       Colors::CIVIL, false, false},
+      {"Nautical twilight ends", 12.0, solar_utils::sunAngleToZenith(12.0),
+       Colors::NAUTICAL, false, false},
+      {"Astronomical twilight ends", 18.0, solar_utils::sunAngleToZenith(18.0),
        Colors::ASTRONOMICAL, false, false}};
 
   // Build table borders
@@ -188,7 +161,7 @@ int main() {
   cout << Colors::BOLD << "│ " << left << setw(ColWidth::ANGLE + 1) << "Angle"
        << " │ " << setw(ColWidth::EVENT) << "Event"
        << " │ " << setw(ColWidth::TIME) << "Time"
-       << " │ " << setw(ColWidth::RELATIVE) << "Relative"
+       << " │ " << setw(ColWidth::RELATIVE) << "Rel."
        << " │" << Colors::RESET << endl;
   cout << Colors::BOLD << midBorder << Colors::RESET << endl;
 
@@ -208,7 +181,7 @@ int main() {
         angleOss << fixed << setprecision(0) << event.sunAngle << "°";
       }
 
-      double HA_deg = calcHourAngle(event.zenith, latitude, delta);
+      double HA_deg = solar_utils::calcHourAngle(event.zenith, latitude, delta);
 
       if (HA_deg < 0) {
         // Event doesn't occur
@@ -226,7 +199,10 @@ int main() {
       eventTime = event.isMorning ? solarNoon - HA : solarNoon + HA;
     }
 
-    string angleStr = padRight(angleOss.str(), ColWidth::ANGLE + 1, 1);
+    // Degree symbol is present for non-noon rows (extraBytes=1), but not for
+    // noon (extraBytes=0)
+    int extraBytes = event.isNoon ? 0 : 1;
+    string angleStr = padRight(angleOss.str(), ColWidth::ANGLE + 1, extraBytes);
     double timeDiff = eventTime - currentTime;
     string relativeStr = formatRelative(timeDiff);
 
