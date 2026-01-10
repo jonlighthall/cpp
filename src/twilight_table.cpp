@@ -140,11 +140,17 @@ void printTwilightTable(double solarNoon, double latitude, double delta,
   // Define twilight events using constants from constants.h
   // Sun angle: negative = above horizon, positive = below horizon
   // Zenith angles are derived from sun angles using: zenith = 90 - sunAngle
+  //
+  // NOTE: Sunset uses the standard zenith angle which includes:
+  //   - Sun's angular radius: 0.26667°
+  //   - Atmospheric refraction: 0.5667°
+  //   - Total correction: 0.833° (kStandardSunsetElevation)
+  //   - Zenith = 90° - (-0.833°) = 90.833°
 
   vector<TwilightEvent> events = {
       {"Golden hour starts", -6.0, sunAngleToZenith(-6.0),
        Colors::GOLDEN_START},
-      {"Sunset", 0.0, sunAngleToZenith(0.0), Colors::SUNSET},
+      {"Sunset", 0.0, 90.0 - kStandardSunsetElevation, Colors::SUNSET},
       {"Golden hour ends", 4.0, sunAngleToZenith(4.0), Colors::GOLDEN_END},
       {"Civil twilight ends", 6.0, sunAngleToZenith(6.0), Colors::CIVIL},
       {"Nautical twilight ends", 12.0, sunAngleToZenith(12.0),
