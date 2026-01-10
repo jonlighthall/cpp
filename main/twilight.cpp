@@ -14,8 +14,11 @@
 #include "colors.h"
 #include "config.h"
 #include "constants.h"
+#include "format_utils.h"
 #include "solar_utils.h"
 #include "sunset_calc.h"
+#include "table_layout.h"
+#include "text_utils.h"
 
 using namespace std;
 using namespace astro;
@@ -33,54 +36,9 @@ struct SolarEvent {
   bool isNoon;     // special case for solar noon
 };
 
-// Convert decimal hours to HH:MM
-static string formatTime(double fhr) {
-  if (fhr < 0) return "--:--";
-  int hr = static_cast<int>(floor(fhr));
-  int min = static_cast<int>(floor((fhr - hr) * 60));
-  ostringstream oss;
-  oss << setfill('0') << setw(2) << hr << ":" << setw(2) << min;
-  return oss.str();
-}
-
-// Format relative time
-static string formatRelative(double timeDiff) {
-  bool isLate = timeDiff < 0;
-  double absTime = abs(timeDiff);
-  int hours = static_cast<int>(absTime);
-  int mins = static_cast<int>((absTime - hours) * 60);
-
-  ostringstream oss;
-  oss << (isLate ? "+" : "-") << setfill('0') << setw(2) << hours << ":"
-      << setw(2) << mins;
-  return oss.str();
-}
-
-// Use shared calcHourAngle from solar_utils
-
-// Use shared solar utility (see include/solar_utils.h)
-
-// Column widths
-namespace ColWidth {
-const int ANGLE = 4;
-const int EVENT = 30;
-const int TIME = 5;
-const int RELATIVE = 6;  // Accommodate sign in "+hh:mm"
-}  // namespace ColWidth
-
-// Generate repeated string
-static string repeatStr(const string& s, int n) {
-  string result;
-  for (int i = 0; i < n; ++i) result += s;
-  return result;
-}
-
-// Right-align with padding
-static string padRight(const string& s, int displayWidth, int extraBytes = 0) {
-  int padding = displayWidth - (s.length() - extraBytes);
-  if (padding <= 0) return s;
-  return string(padding, ' ') + s;
-}
+// Use shared utilities (see include/*.h)
+using namespace table_layout::col;
+using table_layout::twilight::RELATIVE;
 
 int main() {
   // Get current time
@@ -138,18 +96,18 @@ int main() {
        Colors::ASTRONOMICAL, false, false}};
 
   // Build table borders
-  string topBorder = "┌─" + repeatStr("─", ColWidth::ANGLE + 1) + "─┬─" +
-                     repeatStr("─", ColWidth::EVENT) + "─┬─" +
-                     repeatStr("─", ColWidth::TIME) + "─┬─" +
-                     repeatStr("─", ColWidth::RELATIVE) + "─┐";
-  string midBorder = "├─" + repeatStr("─", ColWidth::ANGLE + 1) + "─┼─" +
-                     repeatStr("─", ColWidth::EVENT) + "─┼─" +
-                     repeatStr("─", ColWidth::TIME) + "─┼─" +
-                     repeatStr("─", ColWidth::RELATIVE) + "─┤";
-  string botBorder = "└─" + repeatStr("─", ColWidth::ANGLE + 1) + "─┴─" +
-                     repeatStr("─", ColWidth::EVENT) + "─┴─" +
-                     repeatStr("─", ColWidth::TIME) + "─┴─" +
-                     repeatStr("─", ColWidth::RELATIVE) + "─┘";
+  string topBorder = "┌─" + text_utils::repeatStr("─", ANGLE + 1) + "─┬─" +
+                     text_utils::repeatStr("─", EVENT) + "─┬─" +
+                     text_utils::repeatStr("─", TIME) + "─┬─" +
+                     text_utils::repeatStr("─", RELATIVE) + "─┐";
+  string midBorder = "├─" + text_utils::repeatStr("─", ANGLE + 1) + "─┼─" +
+                     text_utils::repeatStr("─", EVENT) + "─┼─" +
+                     text_utils::repeatStr("─", TIME) + "─┼─" +
+                     text_utils::repeatStr("─", RELATIVE) + "─┤";
+  string botBorder = "└─" + text_utils::repeatStr("─", ANGLE + 1) + "─┴─" +
+                     text_utils::repeatStr("─", EVENT) + "─┴─" +
+                     text_utils::repeatStr("─", TIME) + "─┴─" +
+                     text_utils::repeatStr("─", RELATIVE) + "─┘";
 
   // Print header
   cout << "\nSolar Events - " << put_time(&ltm, "%B %d, %Y") << endl;
@@ -158,10 +116,10 @@ int main() {
 
   cout << endl;
   cout << Colors::BOLD << topBorder << Colors::RESET << endl;
-  cout << Colors::BOLD << "│ " << left << setw(ColWidth::ANGLE + 1) << "Angle"
-       << " │ " << setw(ColWidth::EVENT) << "Event"
-       << " │ " << setw(ColWidth::TIME) << "Time"
-       << " │ " << setw(ColWidth::RELATIVE) << "Rel."
+  cout << Colors::BOLD << "│ " << left << setw(ANGLE + 1) << "Angle"
+       << " │ " << setw(EVENT) << "Event"
+       << " │ " << setw(TIME) << "Time"
+       << " │ " << setw(RELATIVE) << "Rel."
        << " │" << Colors::RESET << endl;
   cout << Colors::BOLD << midBorder << Colors::RESET << endl;
 
@@ -185,13 +143,12 @@ int main() {
 
       if (HA_deg < 0) {
         // Event doesn't occur
-        string angleStr = padRight(angleOss.str(), ColWidth::ANGLE + 1, 1);
+        string angleStr = text_utils::padRight(angleOss.str(), ANGLE + 1, 1);
         cout << "│ " << event.colorCode << angleStr << Colors::RESET << " │ "
-             << event.colorCode << left << setw(ColWidth::EVENT) << event.label
-             << Colors::RESET << " │ " << event.colorCode
-             << setw(ColWidth::TIME) << "--:--" << Colors::RESET << " │ "
-             << event.colorCode << right << setw(ColWidth::RELATIVE) << "N/A"
-             << Colors::RESET << " │" << endl;
+             << event.colorCode << left << setw(EVENT) << event.label
+             << Colors::RESET << " │ " << event.colorCode << setw(TIME)
+             << "--:--" << Colors::RESET << " │ " << event.colorCode << right
+             << setw(RELATIVE) << "N/A" << Colors::RESET << " │" << endl;
         continue;
       }
 
@@ -202,16 +159,17 @@ int main() {
     // Degree symbol is present for non-noon rows (extraBytes=1), but not for
     // noon (extraBytes=0)
     int extraBytes = event.isNoon ? 0 : 1;
-    string angleStr = padRight(angleOss.str(), ColWidth::ANGLE + 1, extraBytes);
+    string angleStr =
+        text_utils::padRight(angleOss.str(), ANGLE + 1, extraBytes);
     double timeDiff = eventTime - currentTime;
-    string relativeStr = formatRelative(timeDiff);
+    string relativeStr = format_utils::formatSignedHHMM(timeDiff);
 
     cout << "│ " << event.colorCode << angleStr << Colors::RESET << " │ "
-         << event.colorCode << left << setw(ColWidth::EVENT) << event.label
-         << Colors::RESET << " │ " << event.colorCode << setw(ColWidth::TIME)
-         << formatTime(eventTime) << Colors::RESET << " │ " << event.colorCode
-         << right << setw(ColWidth::RELATIVE) << relativeStr << Colors::RESET
-         << " │" << endl;
+         << event.colorCode << left << setw(EVENT) << event.label
+         << Colors::RESET << " │ " << event.colorCode << setw(TIME)
+         << format_utils::formatHHMM(eventTime) << Colors::RESET << " │ "
+         << event.colorCode << right << setw(RELATIVE) << relativeStr
+         << Colors::RESET << " │" << endl;
   }
 
   cout << Colors::BOLD << botBorder << Colors::RESET << endl;
