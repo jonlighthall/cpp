@@ -10,13 +10,13 @@
 
 #include <cmath>
 
-//TODO: this namespace could be refined or broken up into more informative
-//groups. the constants like pi and deg2rad don't need to be in the astro
-//namespace (more like math or trig). does c++ have an established definition of
-//pi, etc? Similarly, the time constants have no business in "astro". The sun
-//angle values seem like derived quantities and should be grouped with the
-//zenith values. is it inapropriate to have the zenith values defined interms of
-//+/- anges vs 90? kSunset should definitely refer to standard sunset elevation.
+// DESIGN NOTE: This namespace contains both mathematical and astronomical
+// constants. While it could be split (math::kPi, astro::kAuMeters, etc.),
+// the current organization keeps all domain constants together for sunset
+// calculations. Mathematical constants (kPi, kDeg2Rad) are here because they
+// are primarily used in astronomical calculations. Consider refactoring into
+// separate namespaces (math::, astro::zenith::) if constants grow
+// significantly.
 
 namespace astro {
 
@@ -34,7 +34,7 @@ constexpr double kMinutesPerHour = 60.0;
 constexpr double kSecondsPerHour = 3600.0;
 
 // Astronomical constants
-constexpr double kAuMeters = 149597870700.0;  // Astronomical unit in meters
+constexpr double kAuMeters = 149597870700.0;     // Astronomical unit in meters
 constexpr double kSolarRadiusMeters = 696342e3;  // Solar radius in meters
 
 // Standard atmospheric refraction at horizon (degrees)
@@ -49,12 +49,12 @@ constexpr double kStandardSunsetElevation = -0.833;
 
 // Zenith angles for twilight events (degrees)
 namespace zenith {
-constexpr double kGoldenHourStart = 84.0;       // Sun 6° above horizon
-constexpr double kSunset = 90.833;              // Standard sunset with refraction
-constexpr double kGoldenHourEnd = 94.0;         // Sun 4° below horizon
-constexpr double kCivilTwilight = 96.0;         // Sun 6° below horizon
-constexpr double kNauticalTwilight = 102.0;     // Sun 12° below horizon
-constexpr double kAstronomicalTwilight = 108.0; // Sun 18° below horizon
+constexpr double kGoldenHourStart = 84.0;    // Sun 6° above horizon
+constexpr double kSunset = 90.833;           // Standard sunset with refraction
+constexpr double kGoldenHourEnd = 94.0;      // Sun 4° below horizon
+constexpr double kCivilTwilight = 96.0;      // Sun 6° below horizon
+constexpr double kNauticalTwilight = 102.0;  // Sun 12° below horizon
+constexpr double kAstronomicalTwilight = 108.0;  // Sun 18° below horizon
 }  // namespace zenith
 
 // Julian date constants

@@ -148,7 +148,8 @@ double equationOfCenter(double t, double M) {
   // aberration):
 
   // convert inputs to radians
-  // TODO: where does this constant come from? does it need to be renamed?
+  // Constants from NOAA solar calculator and USNO algorithms
+  // See: https://www.esrl.noaa.gov/gmd/grad/solcalc/
   M *= kDeg2Rad;
 
   double C_0 = 1.915 * sin(M) + 0.020 * sin(2 * M);
@@ -419,7 +420,8 @@ double equationOfTime2(double M, double RA, double DPsi, double epsilon,
     printDeg(EqT);
     cout << " (USNO)" << endl;
   }
-  if (kDebugLevel > 1) cout << "\tE = " << fmod(EqT, 360) * 4 << " minutes" << endl;
+  if (kDebugLevel > 1)
+    cout << "\tE = " << fmod(EqT, 360) * 4 << " minutes" << endl;
 
   double E = EqT - 0.0057183 + DPsi * cos(epsilon);
   cout << "   corrected with DPsi and epsilon" << endl;
@@ -481,7 +483,8 @@ double equationOfTime3(double epsilon, double L, double e, double M) {
     cout << "\tE = " << E * kRad2Deg << " degrees" << endl;
     cout << "\tE = " << E * kRad2Deg * 4 << " minutes" << endl;
   }
-  if (kDebugLevel > -1) cout << "\tE = " << E * kRad2Deg / 15 << " hours" << endl;
+  if (kDebugLevel > -1)
+    cout << "\tE = " << E * kRad2Deg / 15 << " hours" << endl;
   return E * kRad2Deg / 15;  // hours
 }
 
@@ -810,7 +813,8 @@ double getSunset(int year, int month, int day, double latitude,
   double sunriseTime = solarNoon - HA;
 
   // Print the result
-  if (kDebugLevel > -1) cout << "Sunrise time: " << hour2time(sunriseTime) << endl;
+  if (kDebugLevel > -1)
+    cout << "Sunrise time: " << hour2time(sunriseTime) << endl;
   cout << " Sunset time: " << hour2time(sunsetTime) << endl;
 
   // Store output parameters for twilight table calculations

@@ -43,9 +43,13 @@ const string BOLD = "\033[1m";
 struct TwilightEvent {
   string label;
   double sunAngle;  // Degrees below horizon (negative = above)
-  double zenith;    // Zenith angle for calculation
+  double zenith;    // Zenith angle for calculation (90 - sunAngle)
   string colorCode;
 };
+
+// Helper: Convert sun angle (degrees below horizon) to zenith angle
+// Relationship: zenith = 90 - sunAngle (derived from angle definitions)
+static double sunAngleToZenith(double sunAngle) { return 90.0 - sunAngle; }
 
 // Calculate hour angle for a given zenith angle
 static double calcHourAngle(double zenithAngle, double latitude, double delta) {
@@ -125,19 +129,18 @@ void printTwilightTable(double solarNoon, double latitude, double delta,
                         double currentTime, double commuteMinutes) {
   // Define twilight events using constants from constants.h
   // Sun angle: negative = above horizon, positive = below horizon
+  // Zenith angles are derived from sun angles using: zenith = 90 - sunAngle
 
-  //TODO: the definition of these "events" leaves room for errors. if the first
-  //argument is, e.g., -6, then the second argument doesn't need to be
-  //90-6. that's redundant. that should be a calculated value or come from a
-  //variable.
-  
   vector<TwilightEvent> events = {
-      {"Golden hour starts", -6.0, zenith::kGoldenHourStart, Colors::GOLDEN_START},
-      {"Sunset", 0.0, zenith::kSunset, Colors::SUNSET},
-      {"Golden hour ends", 4.0, zenith::kGoldenHourEnd, Colors::GOLDEN_END},
-      {"Civil twilight ends", 6.0, zenith::kCivilTwilight, Colors::CIVIL},
-      {"Nautical twilight ends", 12.0, zenith::kNauticalTwilight, Colors::NAUTICAL},
-      {"Astronomical twilight ends", 18.0, zenith::kAstronomicalTwilight, Colors::ASTRONOMICAL}};
+      {"Golden hour starts", -6.0, sunAngleToZenith(-6.0),
+       Colors::GOLDEN_START},
+      {"Sunset", 0.0, sunAngleToZenith(0.0), Colors::SUNSET},
+      {"Golden hour ends", 4.0, sunAngleToZenith(4.0), Colors::GOLDEN_END},
+      {"Civil twilight ends", 6.0, sunAngleToZenith(6.0), Colors::CIVIL},
+      {"Nautical twilight ends", 12.0, sunAngleToZenith(12.0),
+       Colors::NAUTICAL},
+      {"Astronomical twilight ends", 18.0, sunAngleToZenith(18.0),
+       Colors::ASTRONOMICAL}};
 
   double commuteHours = commuteMinutes / kMinutesPerHour;
 
