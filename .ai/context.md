@@ -27,7 +27,9 @@ This is an **experimental learning repository** for C++ development. It is inten
    - Cleanup: All related infrastructure (difference_analyzer, file_reader, format_tracker, line_parser, column_analyzer, tests) removed from cpp repo
 
 ### Active Programs
-- **sunset** (~910 lines) - Solar position calculator; has extracted library but UI remains here
+- **sunset** (~910 lines) - Solar position calculator; evening UI remains here
+- **sunrise** (~200 lines) - Morning commute and dawn twilight planner
+- **twilight** (~200 lines) - Evening twilight table renderer
 - **hello** (~90 lines) - Basic example
 - **modular_test** (~218 lines) - Math operations demo
 - **print_aligned** (~60 lines) - Formatting example
@@ -44,6 +46,8 @@ This is an **experimental learning repository** for C++ development. It is inten
 - **Generic Makefile**: Links ALL object files to ALL executables
 - **Intentional Bloat**: Simplicity for learning over efficiency
 - **Rationale**: Easier for beginners to add new programs without makefile expertise
+
+Note: The makefile links shared table objects (morning/twilight) into all binaries. This is intentional and keeps setup lightweight.
 
 ### Coding Style
 - Mix of procedural and OOP (learning both paradigms)
@@ -81,12 +85,23 @@ This is an **experimental learning repository** for C++ development. It is inten
 - `examples/sunset_display.h` - Desktop wrapper
 - `docs/SUNSET_CALC_LIBRARY.md` - Integration guide
 - `examples/QUICK_REFERENCE.md` - Quick start
+ - Shared utilities for table renderers:
+    - `include/colors.h`, `include/solar_utils.h`, `include/format_utils.h`, `include/text_utils.h`, `include/table_layout.h`
+    - Evening renderer: `src/twilight_table.cpp`
+    - Morning renderer: `src/morning_table.cpp`
 
 **Original Program**: `main/sunset.cpp` remains unchanged (~910 lines with UI/formatting)
 
 **Design Decision**: Library enables Arduino/embedded use while keeping original program as learning example with full debug output
 
 **Key Insight**: This demonstrates separation of concerns without requiring refactor of original code - both can coexist
+
+### New Programs (January 2026)
+**sunrise**: New CLI focuses on morning commute planning. Uses the library for sunrise, then prints a dawn table with golden hour start/end and twilight begin events.
+
+**twilight**: Evening-only table shows sunset, golden hour end, and twilight end events with ETAs.
+
+**Design Decision**: Keep morning and evening views separate for clarity. A future `--morning` flag in `twilight` is possible but not yet implemented.
 
 ### Repository Cleanup (January 2026)
 **Removed**: 14 files related to uband_diff after confirming complete migration
@@ -102,6 +117,7 @@ This is an **experimental learning repository** for C++ development. It is inten
 - Offer alternatives with trade-offs explained
 - Respect the educational nature of examples
 - Consider Arduino/embedded portability for sunset_calc library
+ - Reuse shared headers (colors/solar_utils/format/text/table_layout) for any new tables
 
 **DON'T**:
 - Suggest refactoring learning examples into production patterns
@@ -110,6 +126,7 @@ This is an **experimental learning repository** for C++ development. It is inten
 - Suggest optimizations that obscure learning intent
 - Recommend splitting hello.cpp into multiple files
 - Push for professional software engineering practices in educational code
+ - Merge evening and morning views unless a flag-based UI adds clear value
 
 ### When Creating New Code
 - Match existing patterns in the program being modified
@@ -137,6 +154,10 @@ cpp/
 ├── docs/           # Technical documentation
 └── tests/          # Test programs (if any)
 ```
+
+Renderer modules:
+- Morning: `src/morning_table.cpp` (API in `include/morning_table.h`)
+- Evening: `src/twilight_table.cpp` (API in `include/twilight_table.h`)
 
 ### File Naming Conventions
 - `main/*.cpp` - Executable programs

@@ -12,7 +12,9 @@ The following programs have been moved to dedicated repositories as they matured
   - See [diff_utils/src/cpp](https://github.com/jonlighthall/diff_utils/tree/master/src/cpp)
 
 ### Current Programs
-- **`sunset`** - Solar position and twilight calculator
+- **`sunset`** - Solar position and twilight calculator (evening focus)
+- **`sunrise`** - Morning commute and dawn twilight planner
+- **`twilight`** - Evening twilight event table (golden → astronomical)
 - **`hello`** - Basic "Hello World" example
 - **`modular_test`** - Testing/demonstration program
 - **`print_aligned`** - Number alignment formatting example
@@ -27,6 +29,20 @@ A portable astronomical calculation library extracted from the sunset program.
 - **Documentation**: See [docs/SUNSET_CALC_LIBRARY.md](docs/SUNSET_CALC_LIBRARY.md)
 - **Quick Start**: See [examples/QUICK_REFERENCE.md](examples/QUICK_REFERENCE.md)
 - **Example Sketches**: Arduino/Wemos examples in `examples/` directory
+
+### Shared Utilities
+To reduce duplication across `sunset`, `sunrise`, and `twilight`, several simple headers centralize formatting and math:
+- `include/colors.h` – unified ANSI color palette for terminal tables (xterm-256)
+- `include/solar_utils.h` – helpers for zenith conversion and hour-angle math
+- `include/format_utils.h` – `hh:mm` and signed `±hh:mm` time formatting
+- `include/text_utils.h` – string padding with degree symbol width handling
+- `include/table_layout.h` – shared column widths for consistent tables
+
+Rendering modules:
+- `src/twilight_table.cpp` – evening table (events after sunset)
+- `src/morning_table.cpp` – morning table (events before sunrise)
+
+Design note: `twilight` defaults to evening events to keep the mental model simple. Use the `sunrise` program for morning golden hour and commute planning.
 
 ## WSL 1
 
