@@ -73,28 +73,28 @@ int main() {
   }
 
   // Define events in chronological order
-  std::array<SolarEvent, 11> events = {{
-      {"Astronomical twilight starts", -18.0,
-       solar_utils::sunAngleToZenith(18.0), Colors::ASTRONOMICAL, true, false},
-      {"Nautical twilight starts", -12.0, solar_utils::sunAngleToZenith(12.0),
-       Colors::NAUTICAL, true, false},
-      {"Civil twilight starts", -6.0, solar_utils::sunAngleToZenith(6.0),
-       Colors::CIVIL, true, false},
-      {"Sunrise", 0.0, 90.0 - kStandardSunsetElevation, Colors::SUNSET, true,
-       false},
-      {"Solar noon", 0.0, 0.0, Colors::SOLAR_NOON, false, true},
-      {"Golden hour starts", -6.0, solar_utils::sunAngleToZenith(-6.0),
-       Colors::GOLDEN_START, false, false},
-      {"Sunset", 0.0, 90.0 - kStandardSunsetElevation, Colors::SUNSET, false,
-       false},
-      {"Golden hour ends", 4.0, solar_utils::sunAngleToZenith(4.0),
-       Colors::GOLDEN_END, false, false},
-      {"Civil twilight ends", 6.0, solar_utils::sunAngleToZenith(6.0),
-       Colors::CIVIL, false, false},
-      {"Nautical twilight ends", 12.0, solar_utils::sunAngleToZenith(12.0),
-       Colors::NAUTICAL, false, false},
-      {"Astronomical twilight ends", 18.0, solar_utils::sunAngleToZenith(18.0),
-       Colors::ASTRONOMICAL, false, false}}};
+  std::array<SolarEvent, 11> events = {
+      {{"Astronomical twilight starts", -18.0,
+        solar_utils::sunAngleToZenith(18.0), Colors::ASTRONOMICAL, true, false},
+       {"Nautical twilight starts", -12.0, solar_utils::sunAngleToZenith(12.0),
+        Colors::NAUTICAL, true, false},
+       {"Civil twilight starts", -6.0, solar_utils::sunAngleToZenith(6.0),
+        Colors::CIVIL, true, false},
+       {"Sunrise", 0.0, 90.0 - kStandardSunsetElevation, Colors::SUNSET, true,
+        false},
+       {"Solar noon", 0.0, 0.0, Colors::SOLAR_NOON, false, true},
+       {"Golden hour starts", -6.0, solar_utils::sunAngleToZenith(-6.0),
+        Colors::GOLDEN_START, false, false},
+       {"Sunset", 0.0, 90.0 - kStandardSunsetElevation, Colors::SUNSET, false,
+        false},
+       {"Golden hour ends", 4.0, solar_utils::sunAngleToZenith(4.0),
+        Colors::GOLDEN_END, false, false},
+       {"Civil twilight ends", 6.0, solar_utils::sunAngleToZenith(6.0),
+        Colors::CIVIL, false, false},
+       {"Nautical twilight ends", 12.0, solar_utils::sunAngleToZenith(12.0),
+        Colors::NAUTICAL, false, false},
+       {"Astronomical twilight ends", 18.0, solar_utils::sunAngleToZenith(18.0),
+        Colors::ASTRONOMICAL, false, false}}};
 
   // Build table borders
   string topBorder = "┌─" + text_utils::repeatStr("─", ANGLE + 1) + "─┬─" +

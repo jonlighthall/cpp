@@ -22,9 +22,15 @@ double SunsetCalculator::getJulianDate(int year, int month, int day) {
   return jd;
 }
 
-double SunsetCalculator::getJ2000(double jd) { return jd - kJ2000Epoch; }
+double SunsetCalculator::getJ2000(double jd) {
+  // convert Julian Date to J2000 epoch, that is, the Julian Date since Jan 1,
+  // 2000
+  return jd - kJ2000Epoch;
+}
 
 double SunsetCalculator::getJulianCentury(double J2000) {
+  // convert J2000 date to Julian Ephemeris Century, that is, fraction of a
+  // Julian century
   return J2000 / 36525.0;
 }
 
@@ -34,7 +40,7 @@ double SunsetCalculator::getJulianCentury(double J2000) {
 
 double SunsetCalculator::meanLongitude(double t) {
   // Geometric mean longitude of the sun
-  double L0 = 280.46646 + t * (36000.76983 + t * 0.0003032);
+  double L0 = 280.46646 + t * (36000.76983 + t * 0.0003032);  // NOAA
   // Normalize to 0-360
   while (L0 > 360) L0 -= 360;
   while (L0 < 0) L0 += 360;
@@ -43,7 +49,7 @@ double SunsetCalculator::meanLongitude(double t) {
 
 double SunsetCalculator::meanAnomaly(double t) {
   // Mean anomaly of the sun (degrees)
-  return 357.52911 + t * (35999.05029 - t * 0.0001536);
+  return 357.52911 + t * (35999.05029 - t * 0.0001536);  // NOAA
 }
 
 double SunsetCalculator::equationOfCenter(double t, double M) {
@@ -54,7 +60,7 @@ double SunsetCalculator::equationOfCenter(double t, double M) {
 
   double C_2 = (1.914602 - (0.004817 * t) - (0.000014 * pow(t, 2))) * sin(M) +
                (0.019993 - (0.000101 * t)) * sin(2 * M) +
-               (0.000289 * sin(3 * M));
+               (0.000289 * sin(3 * M));  // NOAA
 
   return C_2;
 }
@@ -62,7 +68,7 @@ double SunsetCalculator::equationOfCenter(double t, double M) {
 double SunsetCalculator::longitudeAscendingNode(double t) {
   // Longitude of the ascending node of the lunar orbit
   // Used in nutation calculations
-  return 125.04 - 1934.136 * t;
+  return 125.04 - 1934.136 * t;  // NOAA
 }
 
 double SunsetCalculator::nutationInLongitude(double Omega, double JCE,
@@ -81,13 +87,16 @@ double SunsetCalculator::nutationInLongitude(double Omega, double JCE,
 }
 
 double SunsetCalculator::eccentricity(double t) {
-  // Eccentricity of Earth's orbit
+  // eccentricity of Earth's orbit
+  // input is Julian century
+  // Meeus pg. 163, Eq. 25.4
+
   return 0.016708634 - t * (0.000042037 + t * 0.0000001267);
 }
 
 double SunsetCalculator::radiusVector(double e, double nu) {
   // Distance from sun to earth (Astronomical Units)
-  return (1.000001018 * (1 - e * e)) / (1 + e * cos(nu * kDeg2Rad));
+  return (1.000001018 * (1 - e * e)) / (1 + e * cos(nu * kDeg2Rad));  // NOAA
 }
 
 double SunsetCalculator::obliquityOfEcliptic(double T) {

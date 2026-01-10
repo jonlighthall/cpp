@@ -110,27 +110,31 @@ class SunsetCalculator {
   static bool validateInputs(int year, int month, int day, double latitude,
                              double longitude, int timezone);
 
+  // Date/time conversion helpers (public for educational use in sunset.cpp)
+  double getJulianDate(int year, int month, int day);
+  double getJ2000(double jd);
+  double getJulianCentury(double J2000);
+
+  // Orbital mechanics helpers (public for educational use)
+  double eccentricity(double t);
+  double hourAngle(double h0, double phi, double delta);
+
  private:
   // Astronomical constants
   static constexpr double kJ2000Epoch = 2451545.0;
   static constexpr double kMinutesPerHour = 60.0;
 
   // Helper calculation functions (all private, internal use only)
-  double getJulianDate(int year, int month, int day);
-  double getJ2000(double jd);
-  double getJulianCentury(double J2000);
   double meanLongitude(double t);
   double meanAnomaly(double t);
   double equationOfCenter(double t, double M);
   double longitudeAscendingNode(double t);
   double nutationInLongitude(double Omega, double JCE, double X1);
-  double eccentricity(double t);
   double radiusVector(double e, double nu);
   double obliquityOfEcliptic(double T);
   double equationOfTime(double M, double RA, double DPsi, double epsilon,
                         double L);
   double getZenith(double e, double nu);
-  double hourAngle(double h0, double phi, double delta);
   double getSolarNoon(double longitude, int timezone);
 
   // Internal calculation state (for chaining operations)

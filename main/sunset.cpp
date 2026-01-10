@@ -34,27 +34,29 @@ const bool do_NOAA = config::algorithm::kUseNoaa;
 
 double getJulianDate(int year, int month, int day) {
   cout << "The input date is " << year << "-" << month << "-" << day << endl;
-  int a = (14 - month) / 12;
-  int y = year + 4800 - a;
-  int m = month + 12 * a - 3;
-  int jd =
-      day + (153 * m + 2) / 5 + 365 * y + y / 4 - y / 100 + y / 400 - 32045;
+
+  // Call library version for calculation
+  sunset_calc::SunsetCalculator calc;
+  double jd = calc.getJulianDate(year, month, day);
+
   if (kDebugLevel > 0) cout << "\tthe Julian date is " << jd << endl;
   return jd;  // are we supposed to return noon?
 }
 
 double getJ2000(double jd) {
-  // convert Julian Date to J2000 epoch, that is, the Julian Date since Jan 1,
-  // 2000
-  double J2000 = jd - kJ2000Epoch;
+  // Call library version for calculation
+  sunset_calc::SunsetCalculator calc;
+  double J2000 = calc.getJ2000(jd);
+
   if (kDebugLevel > 0) cout << "\tthe J2000 date is " << J2000 << endl;
   return J2000;
 }
 
 double getJulianCentury(double J2000) {
-  // convert J2000 date to Julian Ephemeris Century, that is, fraction of a
-  // Julian century
-  double T = J2000 / kJulianCenturyDays;
+  // Call library version for calculation
+  sunset_calc::SunsetCalculator calc;
+  double T = calc.getJulianCentury(J2000);
+
   if (kDebugLevel > 0) cout << "\tthe Julian century is " << T << endl;
   return T;
 }
@@ -243,10 +245,9 @@ double nutationInLongitude(double Omega, double JCE, double X1) {
 }
 
 double eccentricity(double t) {
-  // eccentricity of Earth's orbit
-  // input is Julian century
-  // Meeus pg. 163, Eq. 25.4
-  double e = 0.016708634 - (0.000042037 * t) - (0.0000001267 * pow(t, 2));
+  // Call library version for calculation
+  sunset_calc::SunsetCalculator calc;
+  double e = calc.eccentricity(t);
 
   if (kDebugLevel > 0) {
     cout << "eccentricity\n\t e = " << e << endl;
@@ -556,24 +557,26 @@ double getZenith(double e, double nu) {
 double hourAngle(double h0, double phi, double delta) {
   // Calculate the local hour angle
 
-  // convert inputs to radians
-  h0 *= kDeg2Rad;
-  phi *= kDeg2Rad;
-  delta *= kDeg2Rad;
-
   if (kDebugLevel > 1) {
+    // convert inputs to radians for debug display
+    double h0_rad = h0 * kDeg2Rad;
+    double phi_rad = phi * kDeg2Rad;
+    double delta_rad = delta * kDeg2Rad;
+
     cout << "   h0" << endl;
-    cout << "\t" << cos(h0) << endl;
+    cout << "\t" << cos(h0_rad) << endl;
     cout << "   phi" << endl;
-    cout << "\t" << sin(phi) << endl;
-    cout << "\t" << cos(phi) << endl;
+    cout << "\t" << sin(phi_rad) << endl;
+    cout << "\t" << cos(phi_rad) << endl;
     cout << "   delta" << endl;
-    cout << "\t" << sin(delta) << endl;
-    cout << "\t" << cos(delta) << endl;
+    cout << "\t" << sin(delta_rad) << endl;
+    cout << "\t" << cos(delta_rad) << endl;
   }
 
-  double cosH = (cos(h0) - sin(phi) * sin(delta)) / (cos(phi) * cos(delta));
-  double H = acos(cosH) * kRad2Deg;
+  // Call library version for calculation
+  sunset_calc::SunsetCalculator calc;
+  double H = calc.hourAngle(h0, phi, delta);
+
   if (kDebugLevel > 0) {
     cout << "Hour angle\n\tHA = " << H << " degrees" << endl;
     cout << "          or " << H / 15.0 << " hours" << endl;
