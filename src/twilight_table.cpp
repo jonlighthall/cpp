@@ -48,8 +48,18 @@ struct TwilightEvent {
 };
 
 // Helper: Convert sun angle (degrees below horizon) to zenith angle
-// Relationship: zenith = 90 - sunAngle (derived from angle definitions)
-static double sunAngleToZenith(double sunAngle) { return 90.0 - sunAngle; }
+// For sun above horizon (negative angles): zenith = 90 - sunAngle
+// For sun below horizon (positive angles): zenith = 90 + sunAngle
+// Example: Civil twilight at +6° below horizon → zenith = 96°
+static double sunAngleToZenith(double sunAngle) {
+  if (sunAngle < 0) {
+    // Sun above horizon (e.g., -6° = golden hour start)
+    return 90.0 - sunAngle;  // zenith = 90 - (-6) = 96°
+  } else {
+    // Sun below horizon (e.g., +6° = civil twilight)
+    return 90.0 + sunAngle;  // zenith = 90 + 6 = 96°
+  }
+}
 
 // Calculate hour angle for a given zenith angle
 static double calcHourAngle(double zenithAngle, double latitude, double delta) {

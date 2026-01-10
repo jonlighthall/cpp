@@ -53,6 +53,24 @@ This is an **experimental learning repository** for C++ development. It is inten
 
 ## Recent Significant Changes
 
+### Sunset Calculator Hardening (January 2026)
+**What Happened**: Added input validation and error handling to sunset_calc library
+
+**Added**:
+- `SunsetCalculator::validateInputs()` - Validates all input parameters
+- Input range checking (year: 1900-2100, month: 1-12, day: 1-31, latitude: -90 to 90, longitude: -180 to 180, timezone: -12 to 14)
+- Error return codes (returns 24.0 for invalid sunset, -1.0 for invalid sunrise)
+- Main program now checks for calculation failures and reports errors
+
+**Known Limitations** (documented):
+- Does not handle polar regions (latitude near ±90°) where sun is above/below horizon continuously
+- Timezone must be integer hours (doesn't support +5:30, +9:45, etc.)
+- No daylight saving time adjustment
+- Month-specific day validation not implemented (e.g., doesn't reject Feb 30)
+- Date normalization needs improvement when calculations cross midnight
+
+**Design Philosophy**: Educational code can be strict about inputs while remaining simple
+
 ### Sunset Calculator Library Extraction (January 2026)
 **What Happened**: Extracted core astronomical calculations from `sunset.cpp` into reusable library
 

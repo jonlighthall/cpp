@@ -94,6 +94,22 @@ class SunsetCalculator {
                                    bool includeMinutes = true,
                                    bool includeSeconds = true);
 
+  /**
+   * Validate input parameters for sunset/sunrise calculation.
+   * Returns true if all inputs are within valid ranges.
+   *
+   * @param year      - Calendar year (valid: 1900-2100)
+   * @param month     - Month (valid: 1-12)
+   * @param day       - Day of month (valid: 1-31)
+   * @param latitude  - Geographic latitude (valid: -90 to 90)
+   * @param longitude - Geographic longitude (valid: -180 to 180)
+   * @param timezone  - UTC offset (valid: -12 to 14)
+   *
+   * @return True if all parameters are valid, false otherwise
+   */
+  static bool validateInputs(int year, int month, int day, double latitude,
+                             double longitude, int timezone);
+
  private:
   // Astronomical constants
   static constexpr double kJ2000Epoch = 2451545.0;

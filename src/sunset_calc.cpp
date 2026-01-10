@@ -201,6 +201,14 @@ double SunsetCalculator::getSunset(int year, int month, int day,
                                    double latitude, double longitude,
                                    int timezone, double* out_solarNoon,
                                    double* out_delta) {
+  // Validate input parameters
+  if (!validateInputs(year, month, day, latitude, longitude, timezone)) {
+    // Return invalid time (24.0) to indicate calculation failure
+    if (out_solarNoon) *out_solarNoon = -1.0;
+    if (out_delta) *out_delta = -999.0;
+    return 24.0;
+  }
+
   // Step 1: Convert calendar date to Julian Date
   double jd = getJulianDate(year, month, day);
 
@@ -270,10 +278,24 @@ double SunsetCalculator::getSunrise(int year, int month, int day,
                                     double latitude, double longitude,
                                     int timezone, double* out_solarNoon,
                                     double* out_delta) {
+  // Validate input parameters
+  if (!validateInputs(year, month, day, latitude, longitude, timezone)) {
+    if (out_solarNoon) *out_solarNoon = -1.0;
+    if (out_delta) *out_delta = -999.0;
+    return -1.0;
+  }
+
   // Get solar noon and declination from sunset calculation
   double solar_noon, delta;
   getSunset(year, month, day, latitude, longitude, timezone, &solar_noon,
             &delta);
+
+  // Safety check: if getSunset returned invalid time, propagate error
+  if (solar_noon < 0.0 || solar_noon >= 24.0) {
+    if (out_solarNoon) *out_solarNoon = -1.0;
+    if (out_delta) *out_delta = -999.0;
+    return -1.0;
+  }
 
   // For sunrise, we need to recalculate with the same method
   // Simplified version: sunrise is symmetric around solar noon
@@ -336,6 +358,32 @@ void SunsetCalculator::decimalHoursToString(double hours, char* buffer,
   } else {
     snprintf(buffer, bufferSize, "%02d", h);
   }
+}
+
+bool SunsetCalculator::validateInputs(int year, int month, int day,
+                                      double latitude, double longitude,
+                                      int timezone) {
+  // Validate year (reasonable range for astronomical calculations)
+  if (year < 1900 || year > 2100) return false;
+
+  // Validate month (1-12)
+  if (month < 1 || month > 12) return false;
+
+  // Validate day (1-31; note: doesn't check month-specific limits)
+  if (day < 1 || day > 31) return false;
+
+  // Validate latitude (-90 to 90 degrees)
+  if (latitude < -90.0 || latitude > 90.0) return false;
+
+  // Validate longitude (-180 to 180 degrees)
+  if (longitude < -180.0 || longitude > 180.0) return false;
+
+  // Validate timezone (-12 to +14 hours covers all practical timezones)
+  // Note: This assumes integer timezone; fractional offsets like +5:30 would
+  // need the timezone parameter to be a double instead
+  if (timezone < -12 || timezone > 14) return false;
+
+  return true;
 }
 
 }  // namespace sunset_calc
