@@ -148,16 +148,9 @@ double SunsetCalculator::getZenith(double e, double nu) {
   // Solar zenith angle at standard sunset/sunrise
   // Includes solar radius and atmospheric refraction
 
-  // True longitude of the Sun
-  double sun_lon = e + nu;
-
-  // Apparent longitude of sun
-  double lambda = sun_lon;  // Simplified, could add nutation correction
-
-  // Geocentric declination of the Sun
-  double delta =
-      asin(sin(obliquityOfEcliptic(0) * kDeg2Rad) * sin(lambda * kDeg2Rad)) *
-      kRad2Deg;
+  // True longitude of the Sun (not used in simplified version)
+  // double sun_lon = e + nu;
+  // double lambda = sun_lon;  // Simplified, could add nutation correction
 
   // Standard elevation angle for sunset/sunrise
   // = -(solar_radius + atmospheric_refraction)

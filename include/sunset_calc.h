@@ -110,12 +110,19 @@ class SunsetCalculator {
   static bool validateInputs(int year, int month, int day, double latitude,
                              double longitude, int timezone);
 
-  // Date/time conversion helpers (public for educational use in sunset.cpp)
+  /**
+   * Educational helper functions - public to support demonstrations.
+   * These are used by main/sunset.cpp to show calculation steps.
+   * Arduino users can call these if studying the algorithm, but the
+   * recommended API is getSunset() and getSunrise().
+   */
+
+  // Date/time conversion helpers
   double getJulianDate(int year, int month, int day);
   double getJ2000(double jd);
   double getJulianCentury(double J2000);
 
-  // Orbital mechanics helpers (public for educational use)
+  // Orbital mechanics helpers
   double eccentricity(double t);
   double hourAngle(double h0, double phi, double delta);
 
