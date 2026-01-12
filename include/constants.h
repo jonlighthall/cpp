@@ -25,13 +25,11 @@ constexpr double kPi = atan(1) * 4;
 
 // Angle conversion factors
 constexpr double kDeg2Rad = kPi / 180.0;
-constexpr double kRad2Deg = 180.0 / kPi;
+constexpr double kRad2Deg = 1.0 / kDeg2Rad;
 
 // Time conversion factors
-constexpr double kHoursPerDegree = 1.0 / 15.0;  // 15 degrees per hour
 constexpr double kDegreesPerHour = 15.0;
 constexpr double kMinutesPerHour = 60.0;
-constexpr double kSecondsPerHour = 3600.0;
 
 // Astronomical constants
 constexpr double kAuMeters = 149597870700.0;     // Astronomical unit in meters
@@ -44,13 +42,15 @@ constexpr double kAtmosphericRefraction = 0.5667;
 constexpr double kSolarAngularRadius = 0.26667;
 
 // Standard elevation for sunset/sunrise calculations (degrees)
-// This is -(solar_radius + atmospheric_refraction), rounded
-constexpr double kStandardSunsetElevation = -0.833;
+// This is -(solar_radius + atmospheric_refraction)
+constexpr double kStandardSunsetElevation =
+    -(kSolarAngularRadius + kAtmosphericRefraction);
 
 // Zenith angles for twilight events (degrees)
 namespace zenith {
-constexpr double kGoldenHourStart = 84.0;    // Sun 6° above horizon
-constexpr double kSunset = 90.833;           // Standard sunset with refraction
+constexpr double kGoldenHourStart = 84.0;  // Sun 6° above horizon
+constexpr double kSunset =
+    90.0 - kStandardSunsetElevation;         // Standard sunset with refraction
 constexpr double kGoldenHourEnd = 94.0;      // Sun 4° below horizon
 constexpr double kCivilTwilight = 96.0;      // Sun 6° below horizon
 constexpr double kNauticalTwilight = 102.0;  // Sun 12° below horizon
@@ -58,8 +58,8 @@ constexpr double kAstronomicalTwilight = 108.0;  // Sun 18° below horizon
 }  // namespace zenith
 
 // Julian date constants
-constexpr double kJ2000Epoch = 2451545.0;  // Julian date of J2000.0 epoch
-constexpr double kJulianCenturyDays = 36525.0;
+constexpr double kJ2000Epoch = 2451545.0;       // Julian date of J2000.0 epoch
+constexpr double kJulianCenturyDays = 36525.0;  // exactly 365.25 * 100
 
 }  // namespace astro
 
