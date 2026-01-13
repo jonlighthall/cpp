@@ -12,9 +12,26 @@ The following programs have been moved to dedicated repositories as they matured
   - See [diff_utils/src/cpp](https://github.com/jonlighthall/diff_utils/tree/master/src/cpp)
 
 ### Current Programs
-- **`sunset`** - Solar position and twilight calculator (evening focus)
-- **`sunrise`** - Morning commute and dawn twilight planner
-- **`twilight`** - Evening twilight event table (golden → astronomical)
+
+**Educational/Research:**
+- **`ephemeris`** - Algorithm comparison tool showing NOAA/USNO/Laskar calculations
+  - Full debug output demonstrating every calculation step
+  - Shows alternative algorithms and their differences
+  - Research tool for validating calculation methodology
+
+**Production/Practical:**
+- **`sunset`** - Simple evening commute planner
+  - Uses library (NOAA defaults) for efficient calculation
+  - Shows civil twilight ending time and "leave by" time calculation
+  - Includes twilight event table for reference
+- **`sunrise`** - Morning/evening dual commute planner
+  - Shows morning arrival time (single commute) and evening departure time (2× commute + workday)
+  - Status messages reference **getting back home by civil twilight**
+- **`twilight`** - Evening twilight event table
+  - Shows golden hour, twilight phases, and "legally dark" times
+  - Uses library implementation for accurate calculations
+
+**Learning Examples:**
 - **`hello`** - Basic "Hello World" example
 - **`modular_test`** - Testing/demonstration program
 - **`print_aligned`** - Number alignment formatting example
@@ -25,13 +42,16 @@ The following programs have been moved to dedicated repositories as they matured
 A portable astronomical calculation library extracted from the sunset program.
 - **Files**: `include/sunset_calc.h`, `src/sunset_calc.cpp`
 - **Purpose**: Calculate sunset/sunrise times for any location and date
+- **Accuracy**: Authoritative ephemeris-quality calculations using NOAA/Meeus methods (not approximations)
 - **Platforms**: Desktop C++, Arduino, embedded systems
+- **Arduino Constraint**: Must fit on Wemos D1 Mini (minimal dependencies, ~500 bytes RAM)
+- **Algorithm Defaults**: NOAA (authoritative, widely adopted); academic variants (USNO, Laskar) available for research
 - **Documentation**: See [docs/SUNSET_CALC_LIBRARY.md](docs/SUNSET_CALC_LIBRARY.md)
 - **Quick Start**: See [examples/QUICK_REFERENCE.md](examples/QUICK_REFERENCE.md)
 - **Example Sketches**: Arduino/Wemos examples in `examples/` directory
 
 ### Shared Utilities
-To reduce duplication across `sunset`, `sunrise`, and `twilight`, several simple headers centralize formatting and math:
+To reduce duplication across `sunset`, `sunrise`, `twilight`, and `ephemeris`, several simple headers centralize formatting and math:
 - `include/colors.h` – unified ANSI color palette for terminal tables (xterm-256)
 - `include/solar_utils.h` – helpers for zenith conversion and hour-angle math
 - `include/format_utils.h` – `hh:mm` and signed `±hh:mm` time formatting
@@ -42,7 +62,7 @@ Rendering modules:
 - `src/twilight_table.cpp` – evening table (events after sunset)
 - `src/morning_table.cpp` – morning table (events before sunrise)
 
-Design note: `twilight` defaults to evening events to keep the mental model simple. Use the `sunrise` program for morning golden hour and commute planning.
+Design note: `twilight` defaults to evening events and `ephemeris` shows algorithms. Use `sunrise` for morning golden hour and commute planning.
 
 ## WSL 1
 

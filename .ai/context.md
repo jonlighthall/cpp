@@ -27,9 +27,28 @@ This is an **experimental learning repository** for C++ development. It is inten
    - Cleanup: All related infrastructure (difference_analyzer, file_reader, format_tracker, line_parser, column_analyzer, tests) removed from cpp repo
 
 ### Active Programs
-- **sunset** (~910 lines) - Solar position calculator; evening UI remains here
+
+**Educational/Research:**
+- **ephemeris** (~600 lines) - Algorithm comparison showing NOAA/USNO/Laskar calculations
+  - Full debug output demonstrating every calculation step
+  - Shows alternative algorithms and their differences
+  - Research tool for validating calculation methodology
+  - **Extracted from sunset.cpp** (Jan 2026): Separated pedagogical code into dedicated program
+
+**Production/Practical:**
+- **sunset** (~200 lines) - Simple evening commute planner
+  - Uses library defaults (NOAA) for efficient calculation
+  - Shows civil twilight ending time and "leave by" calculation
+  - Includes twilight event table for reference
+  - **Refactored from sunset.cpp** (Jan 2026): Removed all debug/comparison code
 - **sunrise** (~200 lines) - Morning commute and dawn twilight planner
-- **twilight** (~200 lines) - Evening twilight table renderer
+  - Uses library defaults (NOAA) for efficient calculation
+  - Dual table: morning arrival + evening departure
+- **twilight** (~200 lines) - Evening twilight event table
+  - Uses library defaults
+  - Prints multiple twilight types for comparison with online resources
+
+**Learning Examples:**
 - **hello** (~90 lines) - Basic example
 - **modular_test** (~218 lines) - Math operations demo
 - **print_aligned** (~60 lines) - Formatting example
@@ -56,6 +75,35 @@ Note: The makefile links shared table objects (morning/twilight) into all binari
 - Debug output often left in code for learning
 
 ## Recent Significant Changes
+
+### Program Split: Pedagogical vs Production (January 2026)
+**What Happened**: Separated educational algorithm comparison code from practical commute planner
+
+**Created**:
+- `main/ephemeris.cpp` (~600 lines) - Educational algorithm comparison
+  - Shows NOAA, USNO, Laskar calculations with full debug output
+  - Demonstrates every calculation step for learning
+  - Research tool for validating algorithm differences
+  - **Extracted from sunset.cpp**: All `_Debug` functions and comparison logic
+
+**Refactored**:
+- `main/sunset.cpp` (~200 lines) - Simple evening commute planner
+  - Removed all pedagogical debug code
+  - Uses library defaults (NOAA) for efficient calculation
+  - Shows civil twilight ending time and "leave by" calculation
+  - Includes twilight event table for reference
+  - Clean, simple output focused on practical commute planning
+
+**Design Pattern**:
+- Separation of concerns: Educational vs production use
+- Programs split by PURPOSE, not COMPLEXITY
+- Makefile automatically picks up new `ephemeris.cpp` executable
+- Both programs use same library (`sunset_calc`) as single source of truth
+
+**Benefit**: Users can choose:
+- Run `ephemeris` to understand *how* calculations work
+- Run `sunset` to get practical commute times
+- Both use identical library for authoritative results
 
 ### Sunset Calculator Hardening (January 2026)
 **What Happened**: Added input validation and error handling to sunset_calc library
@@ -97,15 +145,64 @@ Note: The makefile links shared table objects (morning/twilight) into all binari
 **Key Insight**: This demonstrates separation of concerns without requiring refactor of original code - both can coexist
 
 ### New Programs (January 2026)
-**sunrise**: New CLI focuses on morning commute planning. Uses the library for sunrise, then prints a dawn table with golden hour start/end and twilight begin events.
+**sunrise**: New CLI focuses on morning commute planning. Uses the library for sunrise, then prints a dawn table with golden hour start/end and twilight begin events. **Status messages reference civil twilight ending** (6° below horizon, legally dark for driving) rather than sunset for practical commute planning.
 
-**twilight**: Evening-only table shows sunset, golden hour end, and twilight end events with ETAs.
+**twilight**: Evening-only table shows sunset, golden hour end, and twilight end events with ETAs. Also uses civil twilight as primary reference.
 
 **Design Decision**: Keep morning and evening views separate for clarity. A future `--morning` flag in `twilight` is possible but not yet implemented.
+
+### Morning Table Enhancement (January 2026)
+**What Happened**: Enhanced morning_table to show both morning arrival and evening departure timing
+
+**Design**:
+- **Two-section display**: Morning arrival uses single commute time, evening departure uses 2× commute + 8.5-hour workday
+- **Practical focus**: Status messages reference "getting back home by civil twilight" rather than sunrise
+- **Civil twilight as reference**: Both sunrise and sunset programs use civil twilight ending (6° below horizon) as the practical "legally dark" threshold for commute planning
+
+**Rationale**: Civil twilight ending (~20 minutes after sunset) is when it becomes legally dark for driving, making it a more relevant reference for evening commute planning than astronomical sunset.
+
+### Algorithm Source Attribution (January 2026)
+**What Happened**: Added source-specific enums for functions with multiple authoritative implementations
+
+**Pattern Established**:
+- Generic `Algorithm` enum (NOAA, USNO, LASKAR) for functions with polynomial order variants
+- Function-specific enums (e.g., `LongitudeAscendingNodeFormulation`) when algorithms come from different authoritative sources
+
+**Example: longitudeAscendingNode**:
+- NOAA uses linear approximation: `125.04 - 1934.136 * t`
+- Reda & Andreas (2008) NREL/TP-560-34302 uses cubic: `125.04452 - 1934.136261 * t + 0.0020708 * t² + t³/450000`
+- These are from different authoritative sources, not just polynomial variants
+
+**Moved to Public API**: `longitudeAscendingNode()` now available in public interface for advanced users needing nutation calculations
 
 ### Repository Cleanup (January 2026)
 **Removed**: 14 files related to uband_diff after confirming complete migration
 **Updated**: README with "Repository Status" section documenting graduated programs
+
+## Design Philosophy & Priorities
+
+### Algorithm Selection Strategy
+**Default = NOAA** (authoritative, widely adopted, "good enough")
+- Primary API uses NOAA algorithms as defaults
+- Well-documented, matches major online calculators
+- Appropriate precision for practical applications
+
+**Academic Variants = Research/Comparison**
+- Reda & Andreas (2008): Higher precision for scientific work
+- Laskar (1986): Maximum polynomial precision
+- Available but not default; used for validation and educational comparison
+
+### Platform Constraints
+**Arduino Target**: Wemos D1 Mini
+- Library must fit in limited memory
+- Keep dependencies minimal (only `<cmath>` and `constants.h`)
+- Avoid heavy standard library features (no `iostream` in library code)
+
+### Known Limitations (Future Work)
+- **Fractional timezones**: Not intentionally excluded, but personal use unlikely to need +5:30 offsets
+- **DST handling**: Should be added (check if implemented)
+- **Polar regions**: Edge cases (continuous day/night) not a priority
+- **Formal uncertainty analysis**: "Good enough" precision acceptable for now
 
 ## AI Assistant Guidelines
 
@@ -118,6 +215,7 @@ Note: The makefile links shared table objects (morning/twilight) into all binari
 - Respect the educational nature of examples
 - Consider Arduino/embedded portability for sunset_calc library
  - Reuse shared headers (colors/solar_utils/format/text/table_layout) for any new tables
+- Default to NOAA algorithms unless explicitly researching alternatives
 
 **DON'T**:
 - Suggest refactoring learning examples into production patterns
@@ -139,6 +237,22 @@ Note: The makefile links shared table objects (morning/twilight) into all binari
 - Generic makefile linking is intentional, not a mistake
 - Simple patterns in hello/modular_test are for learning
 - sunset_calc library must remain Arduino-compatible (minimal dependencies)
+
+### Terminology & Messaging Standards
+**Twilight references:**
+- Formal: "civil twilight ending" / "civil twilight beginning"
+- Casual (status messages): "civil twilight ends" / "before dark"
+- Consistent across programs: Both sunrise and sunset use civil twilight as practical reference
+
+**Angle conventions:**
+- Latitude: positive north, negative south (-90 to +90°)
+- Longitude: positive east, negative west (-180 to +180°)
+- Timezone: positive east of UTC (e.g., -5 for EST, +1 for CET)
+- Sun angles: positive above horizon, negative below
+
+**Status message style:**
+- Production programs (sunrise/twilight): concise, practical
+- Educational program (sunset): verbose with calculation steps
 
 ## Code Organization Patterns
 
