@@ -88,6 +88,9 @@ OBJS := $(addprefix $(OBJDIR)/,$(OBJS.o))
 # dependency files
 DEPS := $(OBJS:.o=.d)
 
+# header files - track all headers in include/ and src/ for dependency purposes
+HEADERS := $(wildcard include/*.h) $(wildcard src/*.h)
+
 # strip file extensions from main files
 EXECS.main = $(patsubst %.cxx,%,$(patsubst %.cpp,%,$(patsubst %.cc,%,$(patsubst %.c,%,$(MAINS)))))
 EXECS.main := $(strip $(EXECS.main))
@@ -177,6 +180,9 @@ $(TEST_EXECUTABLE): $(TEST_OBJECTS) $(OBJS) | $(TESTBINDIR)
 
 #
 # generic recipes
+# All object files depend on header changes to force recompilation
+$(OBJS): $(HEADERS)
+
 # Rules to build (link) each executable
 # Executables in the root directory
 $(BINDIR)/%: %.c $(OBJS) | $(BINDIR)
