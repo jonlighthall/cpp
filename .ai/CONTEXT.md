@@ -31,6 +31,8 @@
 - Avoid editorial "we" ("we believe...", "we recommend...")
 - Heavy commenting for educational purposes
 
+**Productivity note:** The author occasionally fixates on formatting minutiae. If diminishing returns are apparent, it's appropriate to gently suggest moving on.
+
 ---
 
 ## Repository Identity
@@ -135,6 +137,38 @@ Note: The makefile links shared table objects (morning/twilight) into all binari
 - Run `ephemeris` to understand *how* calculations work
 - Run `sunset` to get practical commute times
 - Both use identical library for authoritative results
+
+### Config File 3-Way Split (January 2026)
+**What Happened**: Split monolithic `config.h` into purpose-specific files
+
+**Created**:
+- `config_location.h` - Used by ALL programs (lat/lon/tz/altitude)
+- `config_commute.h` - Used by sunrise/sunset only (commute time, workday hours)
+- `config_ephemeris.h` - Used by ephemeris only (debug level, algorithm flags)
+
+**Rationale**: Each program includes only what it needs. Library uses only location config.
+
+### Debug Level Standardization (January 2026)
+**What Happened**: Established consistent debug output semantics in ephemeris.cpp
+
+**Debug Levels**:
+- `-1`: Minimal output (sunrise/sunset times only)
+- `0`: Major calculations
+- `1`: Each calculation step, **single unit per value**
+- `2`: Every variable, **multiple unit conversions** (degrees, hours, minutes)
+
+**Pattern**: Multi-unit conversions (e.g., hours AND minutes for same value) moved to level 2. Level 1 shows one canonical unit per value.
+
+**Exceptions OK at Level 1**: 360° modulo display, semidiameter calculations (these clarify rather than add verbosity)
+
+### Makefile Header Dependency Fix (January 2026)
+**What Happened**: Fixed makefile to rebuild when headers change
+
+**Added**:
+- `HEADERS := $(wildcard include/*.h) $(wildcard src/*.h)`
+- `$(OBJS): $(HEADERS)` - Global dependency rule
+
+**Effect**: Any header change now forces full rebuild. Previously, changing `config_ephemeris.h` didn't trigger recompilation.
 
 ### Sunset Calculator Hardening (January 2026)
 **What Happened**: Added input validation and error handling to sunset_calc library

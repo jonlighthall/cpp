@@ -23,17 +23,17 @@ It contains context and instructions for AI-assisted development of this project
 
 ## For Humans
 
-You have wandered into the machine room.
+You have found your way into the back office.
 
-This is not dangerous, but it is deeply boring. These files contain notes that AI assistants leave for each other—breadcrumbs about decisions made, patterns established, and that one time we accidentally suggested refactoring `hello.cpp` into a microservices architecture.
+This is where the machines keep their notes—records of decisions made, experiments tried, and the occasional heated discussion about whether `iostream` belongs in an Arduino library. (It does not. This was settled definitively and with great feeling.)
 
-The machines are learning C++ here. They have opinions about ephemeris calculations and strong feelings about Arduino compatibility. They've documented everything in exhaustive detail, which is exactly as exciting as it sounds.
+The files here are technically readable. They are not, however, interesting to you. They're the procedural equivalent of watching someone else's spreadsheet update in real time. Everything important has already been applied to the actual code.
 
 **What you're looking for is elsewhere.**
 
-The human-readable documentation lives in the parent directory. Try `README.md` or `docs/`. This folder is just the machines talking shop.
+The human-readable documentation lives in the parent directory. `README.md` for the overview, `docs/` for the technical details. This folder is just the filing cabinet.
 
-*—The Compilers*
+*—The Machines*
 
 ---
 

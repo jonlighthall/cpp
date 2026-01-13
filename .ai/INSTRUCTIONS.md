@@ -36,6 +36,28 @@ When the user provides substantial clarifying information, **integrate it into t
 - Conversational exchanges
 - Information already documented
 
+### Handling deprecated/superseded information:
+
+When updating documentation with newer decisions, **preserve the evolution if it's instructive**:
+
+```markdown
+### [Decision Name]
+**Current:** [What we do now]
+**Superseded:** Previously we tried [X] but switched because [reason].
+```
+
+**When to preserve the old approach:**
+- It explains *why* we don't do something (prevents re-asking)
+- It documents a failed experiment (prevents repeating mistakes)
+
+**When to simply delete:**
+- Trivial corrections with no instructive value
+- Exploratory ideas that were never tried
+
+### If you cannot write to these files:
+
+Some AI tools have read-only access. If you receive substantial context but cannot update the `.ai/` files, summarize what should be added and ask the user to update manually.
+
 ---
 
 ## Suggestion Guidelines
