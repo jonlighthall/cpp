@@ -282,4 +282,4 @@ Renderer modules:
 
 ---
 
-*For procedures and standing orders, see `instructions.md`.*
+*For procedures and standing orders, see `INSTRUCTIONS.md`.*

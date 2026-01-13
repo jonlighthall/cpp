@@ -7,7 +7,7 @@
 ## Quick Start
 
 1. Read this file for procedures
-2. Read `context.md` for project facts and decisions
+2. Read `CONTEXT.md` for project facts and decisions
 3. Follow suggestion guidelines below
 
 ---
@@ -20,8 +20,8 @@ When the user provides substantial clarifying information, **integrate it into t
 
 | Type of Information | Destination |
 |---------------------|-------------|
-| Project-wide decisions, facts, history | `context.md` |
-| Project-wide procedures, standing orders | `instructions.md` |
+| Project-wide decisions, facts, history | `CONTEXT.md` |
+| Project-wide procedures, standing orders | `INSTRUCTIONS.md` |
 
 ### When to update:
 
@@ -126,17 +126,17 @@ Programs are split by **purpose**, not complexity:
 
 ### Before Editing:
 1. Verify you have sufficient context
-2. Check terminology against `context.md`
+2. Check terminology against `CONTEXT.md`
 3. Consider Arduino portability for library code
 
 ### After Editing:
 1. Verify compilation succeeds
-2. Update `context.md` if you made decisions that should persist
+2. Update `CONTEXT.md` if you made decisions that should persist
 3. Check for errors introduced
 
 ### When Uncertain:
 - Ask clarifying questions before making changes
-- Document assumptions in `context.md`
+- Document assumptions in `CONTEXT.md`
 - Prefer minimal changes over extensive rewrites
 
 ---
@@ -188,4 +188,4 @@ Before suggesting major changes:
 
 ---
 
-*For detailed project history and decisions, see `context.md`.*
+*For detailed project history and decisions, see `CONTEXT.md`.*
