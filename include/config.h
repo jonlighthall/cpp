@@ -21,6 +21,7 @@ namespace location {
 constexpr double kDefaultLatitude = 30.4275784357249;
 constexpr double kDefaultLongitude = -90.0914955109431;
 constexpr int kDefaultTimezone = -6;  // CST (Central Standard Time)
+constexpr double kDefaultObserverAltitude = 1.8224;  // meters (6 feet)
 }  // namespace location
 
 // Commute settings

@@ -32,19 +32,25 @@ constexpr double kDegreesPerHour = 15.0;
 constexpr double kMinutesPerHour = 60.0;
 
 // Astronomical constants
-constexpr double kAuMeters = 149597870700.0;     // Astronomical unit in meters
+constexpr double kAuMeters = 149597870700.0;  // Astronomical unit in meters
+
+// measured solar radius from Mercury transits (2011 study)
+// https://arxiv.org/abs/1203.4898
+// 696,342 ± 65km
 constexpr double kSolarRadiusMeters = 696342e3;  // Solar radius in meters
 
 // Standard atmospheric refraction at horizon (degrees)
 constexpr double kAtmosphericRefraction = 0.5667;
 
 // Standard solar angular radius at 1 AU (degrees)
-constexpr double kSolarAngularRadius = 0.26667;
+// Calculated from physical size: atan(radius/distance) converted to degrees
+constexpr double kSolarAngularRadius =
+    atan(kSolarRadiusMeters / kAuMeters) * kRad2Deg;  // ≈ 0.26667 degrees
 
 // Standard elevation for sunset/sunrise calculations (degrees)
 // This is -(solar_radius + atmospheric_refraction)
 constexpr double kStandardSunsetElevation =
-    -(kSolarAngularRadius + kAtmosphericRefraction);
+    -(kSolarAngularRadius + kAtmosphericRefraction);  // ≈ -0.83337 degrees
 
 // Zenith angles for twilight events (degrees)
 namespace zenith {

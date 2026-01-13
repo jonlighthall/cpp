@@ -8,7 +8,7 @@ The **sunset_calc** library provides a portable, lightweight astronomical calcul
 
 This library implements **authoritative, production-quality ephemeris calculations**:
 - **NOAA algorithms** - Uses formulas from the National Oceanic and Atmospheric Administration
-- **Meeus (1991)** - Based on *Astronomical Algorithms*, the standard reference for astronomical calculations  
+- **Meeus (1991)** - Based on *Astronomical Algorithms*, the standard reference for astronomical calculations
 - **USNO methods** - Implements U.S. Naval Observatory formulas where applicable
 - **High precision** - Includes nutation corrections, equation of center with multiple harmonic terms, and quintic expansions
 - **Physical constants** - Uses measured values (e.g., solar radius from Mercury transit observations)
@@ -158,7 +158,7 @@ The library includes support for multiple astronomical algorithm implementations
 ### Available Algorithms
 
 ```cpp
-enum class Algorithm { 
+enum class Algorithm {
   NOAA,    // Default: NOAA formulas (quadratic fits, well-balanced)
   USNO,    // U.S. Naval Observatory (linear approximations)
   LASKAR   // Laskar (1986) high-order polynomials (highest precision)
@@ -190,7 +190,7 @@ enum class LongitudeAscendingNodeFormulation {
 };
 
 double longitudeAscendingNode(
-  double t, 
+  double t,
   LongitudeAscendingNodeFormulation form = LongitudeAscendingNodeFormulation::REDA_ANDREAS_SPA
 );
 ```
