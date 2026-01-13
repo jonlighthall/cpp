@@ -12,9 +12,18 @@
 
 **Primary tools:**
 - C++ (GCC/G++)
-- VS Code
+- VS Code with extensions:
+  - GitHub Copilot & Copilot Chat (AI assistance)
+  - C/C++ (ms-vscode.cpptools)
+  - Python suite (Python, Pylance, Black formatter, debugpy, vscode-python-envs)
+  - Google Test adapter (gtest-adapter) + Test Explorer (for C++ unit testing)
+  - GitLens, GitHub Pull Requests
+  - Fortran linter (gfortran), MATLAB language support
+  - LaTeX Workshop
+  - Code Spell Checker
 - Linux (WSL and native)
 - Arduino/embedded (Wemos D1 Mini)
+- Languages: C++, Fortran, Python, Bash, MATLAB, LaTeX
 
 **Writing preferences:**
 - Impersonal voice for expository writing
