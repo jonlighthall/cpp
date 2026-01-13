@@ -1,6 +1,28 @@
-# AI Context - cpp Repository
+# Context
 
-> **Purpose**: This file provides context for AI assistants to better understand this repository's purpose, structure, and development patterns. Information here may not be obvious from code inspection alone.
+**Purpose:** Facts, decisions, and history for AI agents working on this project.
+
+---
+
+## Author
+
+**Name:** Jon Lighthall
+**GitHub:** jonlighthall
+**Domain:** Embedded systems, astronomical calculations, C++ learning
+
+**Primary tools:**
+- C++ (GCC/G++)
+- VS Code
+- Linux (WSL and native)
+- Arduino/embedded (Wemos D1 Mini)
+
+**Writing preferences:**
+- Impersonal voice for expository writing
+- Mathematical "we" acceptable ("we substitute...", "we obtain...")
+- Avoid editorial "we" ("we believe...", "we recommend...")
+- Heavy commenting for educational purposes
+
+---
 
 ## Repository Identity
 
@@ -204,57 +226,9 @@ Note: The makefile links shared table objects (morning/twilight) into all binari
 - **Polar regions**: Edge cases (continuous day/night) not a priority
 - **Formal uncertainty analysis**: "Good enough" precision acceptable for now
 
-## AI Assistant Guidelines
+---
 
-### When Suggesting Code Changes
-
-**DO**:
-- Suggest improvements that enhance learning
-- Explain why something works the way it does
-- Offer alternatives with trade-offs explained
-- Respect the educational nature of examples
-- Consider Arduino/embedded portability for sunset_calc library
- - Reuse shared headers (colors/solar_utils/format/text/table_layout) for any new tables
-- Default to NOAA algorithms unless explicitly researching alternatives
-
-**DON'T**:
-- Suggest refactoring learning examples into production patterns
-- Recommend complex abstractions for simple programs
-- Propose moving all programs to classes/modules
-- Suggest optimizations that obscure learning intent
-- Recommend splitting hello.cpp into multiple files
-- Push for professional software engineering practices in educational code
- - Merge evening and morning views unless a flag-based UI adds clear value
-
-### When Creating New Code
-- Match existing patterns in the program being modified
-- Keep it simple unless complexity teaches something
-- Add comments explaining "why" not just "what"
-- Consider whether it belongs in this repo or should graduate
-
-### When Analyzing Code
-- Remember sunset.cpp has debug output by design
-- Generic makefile linking is intentional, not a mistake
-- Simple patterns in hello/modular_test are for learning
-- sunset_calc library must remain Arduino-compatible (minimal dependencies)
-
-### Terminology & Messaging Standards
-**Twilight references:**
-- Formal: "civil twilight ending" / "civil twilight beginning"
-- Casual (status messages): "civil twilight ends" / "before dark"
-- Consistent across programs: Both sunrise and sunset use civil twilight as practical reference
-
-**Angle conventions:**
-- Latitude: positive north, negative south (-90 to +90°)
-- Longitude: positive east, negative west (-180 to +180°)
-- Timezone: positive east of UTC (e.g., -5 for EST, +1 for CET)
-- Sun angles: positive above horizon, negative below
-
-**Status message style:**
-- Production programs (sunrise/twilight): concise, practical
-- Educational program (sunset): verbose with calculation steps
-
-## Code Organization Patterns
+## Code Organization
 
 ### Directory Structure
 ```
@@ -266,7 +240,7 @@ cpp/
 ├── obj/            # Object files (generated)
 ├── examples/       # Example code and documentation
 ├── docs/           # Technical documentation
-└── tests/          # Test programs (if any)
+└── .ai/            # AI agent context (this folder)
 ```
 
 Renderer modules:
@@ -279,83 +253,33 @@ Renderer modules:
 - `include/*.h` - Public interfaces
 - No .hpp distinction (keep it simple)
 
-### Constants and Configuration
-- `include/config.h` - Runtime configuration (location, debug levels, algorithm choice)
+### Configuration Files
+- `include/config_location.h` - Location settings (lat/lon/tz/altitude)
+- `include/config_commute.h` - Commute settings (used by sunrise/sunset)
+- `include/config_ephemeris.h` - Debug/algorithm settings (ephemeris only)
 - `include/constants.h` - Astronomical/mathematical constants
-- Namespace usage: `astro::`, `config::`, `sunset_calc::`
+- Namespace usage: `config::`, `sunset_calc::`
 
-## Common Pitfalls for AI Assistants
-
-### Misunderstandings to Avoid
-1. **"This makefile is wrong"** - It's intentionally simple/bloated for learning
-2. **"sunset.cpp should use the library"** - Keeping both shows two approaches
-3. **"Too much debug output"** - Educational code benefits from verbosity
-4. **"These should be classes"** - Not all learning code needs OOP
-5. **"Missing error handling"** - Learning examples can be permissive
-6. **"sunset_calc should use iostream"** - No! Must stay Arduino-compatible
-
-### Context Confusion
-- **cpp repo** = learning/experiments
-- **diff_utils repo** = production code
-- Don't suggest production patterns for cpp programs unless they're graduating
-- Don't suggest cpp-style simplicity for diff_utils programs
+---
 
 ## Testing and Validation
 
 ### Current Approach
 - Manual testing with known good values
-- Compare against NOAA solar calculator for sunset calculations
+- Compare against NOAA solar calculator
 - Validated against USNO algorithms
 - No formal test framework (learning repo)
 
-### When to Suggest Tests
-- For graduated programs moving to production
-- For libraries intended for reuse (like sunset_calc)
-- Not for simple examples (hello, print_aligned)
+---
 
-## Future Considerations
-
-### Potential Graduates
-Watch these programs - they may graduate if they grow significantly:
-- **sunset** - Currently 910 lines; already has extracted library; main program may stay as example
-- **None currently at risk** - Other programs are intentionally small examples
-
-### Areas for Learning
-The repository owner is learning:
-- C++ standard library features
-- Build systems (make, cmake potential future)
-- Embedded development (Arduino)
-- Astronomical algorithms
-- Cross-platform development
-
-## References and External Context
+## References
 
 ### Sunset Calculator Sources
 - NOAA Solar Calculator: https://www.esrl.noaa.gov/gmd/grad/solcalc/
 - USNO: https://aa.usno.navy.mil/faq/sun_approx
 - James Still's article: https://squarewidget.com/solar-coordinates/
-- Meeus, Jean (1991). Astronomical Algorithms
-
-### Development Environment
-- Primary: VS Code with C++ extensions
-- Platform: Linux (WSL and native)
-- Compiler: GCC/G++ with -Wall -g flags
-- Git for version control
-
-## Questions AI Assistants Should Ask
-
-Before suggesting major changes, consider asking:
-1. "Is this program intended to graduate to a production repo?"
-2. "Should this remain simple for learning purposes?"
-3. "Does this need to work on Arduino/embedded systems?"
-4. "Is the current approach demonstrating a specific learning concept?"
-5. "Would this change obscure the educational intent?"
-
-## Version History Context
-
-This context file created: January 10, 2026
-Last major repo changes: January 10, 2026 (uband_diff cleanup, sunset_calc extraction)
+- Meeus, Jean (1991). *Astronomical Algorithms*
 
 ---
 
-**Note to AI Assistants**: This file is specifically for you! It contains context that experienced developers might infer but isn't explicit in code. When in doubt about suggestions, refer back to the "Repository Identity" and "Development Philosophy" sections.
+*For procedures and standing orders, see `instructions.md`.*
