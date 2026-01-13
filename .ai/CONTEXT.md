@@ -210,6 +210,23 @@ Note: The makefile links shared table objects (morning/twilight) into all binari
 **Removed**: 14 files related to uband_diff after confirming complete migration
 **Updated**: README with "Repository Status" section documenting graduated programs
 
+### Documentation Cleanup (January 2026)
+**Identified for Removal**: Five markdown files documenting uband_diff migration (no longer relevant)
+- `MIGRATION_GUIDE.md` - Step-by-step FileComparator refactoring guide
+- `MIGRATION_STATUS.md` - Progress tracker for 52-method class decomposition
+- `REFACTORING_GUIDE.md` - Architectural design for component separation
+- `refactoring_suggestions.md` - Optimization suggestions for uband_diff.cpp
+- `validate_migration.sh` - Test script comparing original vs refactored implementations
+
+**Rationale**: These files documented the internal restructuring of uband_diff before its graduation to diff_utils repository. Since uband_diff is no longer maintained in this repo, the migration documentation serves no purpose here.
+
+**Keeping**:
+- `README.md` - General project overview (correctly lists graduated programs)
+- `docs/SUNSET_CALC_LIBRARY.md` - Library integration guide (still relevant)
+- `examples/QUICK_REFERENCE.md` - Arduino quick start (still relevant)
+
+**Pattern**: Documentation should describe what IS in the repo, not what WAS migrated out.
+
 ## Design Philosophy & Priorities
 
 ### Algorithm Selection Strategy
