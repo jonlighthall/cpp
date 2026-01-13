@@ -38,44 +38,112 @@ double SunsetCalculator::getJulianCentury(double J2000) {
 // Solar Position Calculations (Geocentric Coordinates)
 // ============================================================================
 
-double SunsetCalculator::meanLongitude(double t) {
+double SunsetCalculator::meanLongitude(double t, Algorithm algo) {
   // Geometric mean longitude of the sun
-  double L0 = 280.46646 + t * (36000.76983 + t * 0.0003032);  // NOAA
-  // Normalize to 0-360
-  while (L0 > 360) L0 -= 360;
-  while (L0 < 0) L0 += 360;
-  return L0;
+  // Three implementations for research/comparison purposes
+
+  if (algo == Algorithm::USNO) {
+    // Linear approximation from U.S. Naval Observatory
+    double L0 = 280.460 + 36000.771 * t;
+    while (L0 > 360) L0 -= 360;
+    while (L0 < 0) L0 += 360;
+    return L0;
+  } else if (algo == Algorithm::LASKAR) {
+    // High-order polynomial from Laskar (1986)
+    double L0 = 280.4664567 + 36000.76982779 * t + 0.03032028 * pow(t, 2) +
+                pow(t, 3) / 49931 - pow(t, 4) / 15300 - pow(t, 5) / 2e6;
+    while (L0 > 360) L0 -= 360;
+    while (L0 < 0) L0 += 360;
+    return L0;
+  } else {  // Algorithm::NOAA (default)
+    // Quadratic fit from NOAA
+    double L0 = 280.46646 + t * (36000.76983 + t * 0.0003032);
+    while (L0 > 360) L0 -= 360;
+    while (L0 < 0) L0 += 360;
+    return L0;
+  }
 }
 
-double SunsetCalculator::meanAnomaly(double t) {
+double SunsetCalculator::meanAnomaly(double t, Algorithm algo) {
   // Mean anomaly of the sun (degrees)
-  return 357.52911 + t * (35999.05029 - t * 0.0001536);  // NOAA
+
+  if (algo == Algorithm::USNO) {
+    // Linear approximation
+    return 357.528 + 35999.050 * t;
+  } else if (algo == Algorithm::LASKAR) {
+    // Cubic fit from Reda & Andreas (2008)
+    return 357.52772 + 35999.050340 * t - 0.0001603 * pow(t, 2) +
+           pow(t, 3) / 300000;
+  } else {  // Algorithm::NOAA (default)
+    // Quadratic fit
+    return 357.52911 + t * (35999.05029 - t * 0.0001536);
+  }
 }
 
-double SunsetCalculator::equationOfCenter(double t, double M) {
+double SunsetCalculator::equationOfCenter(double t, double M, Algorithm algo) {
   // Sun's equation of center
   // Geocentric apparent ecliptic longitude of the Sun (adjusted for
   // aberration)
   M *= kDeg2Rad;
 
-  double C_2 = (1.914602 - (0.004817 * t) - (0.000014 * pow(t, 2))) * sin(M) +
+  if (algo == Algorithm::USNO) {
+    // Constant coefficients (simplest)
+    return 1.915 * sin(M) + 0.020 * sin(2 * M);
+  } else if (algo == Algorithm::LASKAR) {
+    // Same as NOAA (both use time-dependent coefficients)
+    double C = (1.914602 - (0.004817 * t) - (0.000014 * pow(t, 2))) * sin(M) +
                (0.019993 - (0.000101 * t)) * sin(2 * M) +
-               (0.000289 * sin(3 * M));  // NOAA
-
-  return C_2;
+               (0.000289 * sin(3 * M));
+    return C;
+  } else {  // Algorithm::NOAA (default)
+    // Time-dependent coefficients from NOAA
+    double C = (1.914602 - (0.004817 * t) - (0.000014 * pow(t, 2))) * sin(M) +
+               (0.019993 - (0.000101 * t)) * sin(2 * M) +
+               (0.000289 * sin(3 * M));
+    return C;
+  }
 }
 
-double SunsetCalculator::longitudeAscendingNode(double t) {
+double SunsetCalculator::longitudeAscendingNode(
+    double t, LongitudeAscendingNodeFormulation form) {
   // Longitude of the ascending node of the lunar orbit
   // Used in nutation calculations
-  return 125.04 - 1934.136 * t;  // NOAA
+  //
+  // Two formulations available:
+  // - NOAA_LINEAR: Simple approximation, used by NOAA
+  // - REDA_ANDREAS_SPA: More precise cubic polynomial from Reda & Andreas
+  // (2008)
+
+  switch (form) {
+    case LongitudeAscendingNodeFormulation::NOAA_LINEAR:
+      // Simple linear form from NOAA
+      return (125.04 - 1934.136 * t) * kDeg2Rad;
+
+    case LongitudeAscendingNodeFormulation::REDA_ANDREAS_SPA:
+      // Higher precision cubic polynomial
+      // From: Reda, I., & Andreas, A. (2008). Solar position algorithm for
+      // solar radiation applications. NREL Technical Report NREL/TP-560-34302.
+      // This is Eq. 19 (X4) from the SPA algorithm
+      return (125.04452 - 1934.136261 * t + 0.0020708 * pow(t, 2) +
+              pow(t, 3) / 450000.0) *
+             kDeg2Rad;
+
+    default:
+      // Default to higher precision
+      return (125.04452 - 1934.136261 * t + 0.0020708 * pow(t, 2) +
+              pow(t, 3) / 450000.0) *
+             kDeg2Rad;
+  }
 }
 
-double SunsetCalculator::nutationInLongitude(double Omega, double JCE,
-                                             double X1) {
+double SunsetCalculator::nutationInLongitude(
+    double Omega, double JCE, double X1,
+    LongitudeAscendingNodeFormulation form) {
   // Nutation in longitude (degrees)
   // This accounts for small periodic variations in Earth's axis
   // JCE is Julian Ephemeris Century
+  // form parameter is passed for consistency but not used in simple nutation
+  // calculation
   Omega *= kDeg2Rad;
 
   double psi = -17.20 / 3600.0 * sin(Omega);
@@ -99,23 +167,35 @@ double SunsetCalculator::radiusVector(double e, double nu) {
   return (1.000001018 * (1 - e * e)) / (1 + e * cos(nu * kDeg2Rad));  // NOAA
 }
 
-double SunsetCalculator::obliquityOfEcliptic(double T) {
+double SunsetCalculator::obliquityOfEcliptic(double T, Algorithm algo) {
   // Obliquity of the ecliptic (angle of Earth's axial tilt)
   // This is the angle between Earth's equatorial plane and orbital plane
 
-  // Mean obliquity
-  double seconds = 21.448 - T * (46.8150 + T * (0.00059 - T * (0.001813)));
-  double epsilon0 = 23.0 + (26.0 + seconds / 60.0) / 60.0;
+  // Reference obliquity at J2000 epoch
+  double epsilon0 = 23.0 + (26.0 + 21.448 / 60.0) / 60.0;  // 23.439291°
 
-  // Calculate nutation components
-  double Omega = longitudeAscendingNode(T);
-  double X1 = meanLongitude(T);
+  // Convert Julian centuries to 10,000 Julian years for Laskar
+  double U = T / 100.0;
 
-  // Nutation in obliquity
-  double epsilon_c = 9.452 / 3600.0 * cos(Omega * kDeg2Rad);
-  epsilon_c += 0.016 / 3600.0 * cos(2 * X1 * kDeg2Rad);
-
-  return epsilon0 + epsilon_c;
+  if (algo == Algorithm::USNO) {
+    // Linear fit used by USNO
+    double t0 = epsilon0 * 3600.0;  // in arcseconds
+    double epsilon = t0 - 4680.93 * U;
+    return epsilon / 3600.0;  // convert back to degrees
+  } else if (algo == Algorithm::LASKAR) {
+    // Tenth-degree polynomial from Laskar (1986)
+    double t0 = epsilon0 * 3600.0;
+    double epsilon = t0 - 1.55 * pow(U, 2) + 1999.25 * pow(U, 3) -
+                     51.38 * pow(U, 4) - 249.67 * pow(U, 5) -
+                     39.05 * pow(U, 6) + 7.12 * pow(U, 7) + 27.87 * pow(U, 8) +
+                     5.79 * pow(U, 9) + 2.45 * pow(U, 10);
+    return epsilon / 3600.0;
+  } else {  // Algorithm::NOAA (default)
+    // Cubic fit used by NOAA
+    double t0 = epsilon0 * 3600.0;
+    double epsilon = t0 - 4681.5 * U - 5.9 * pow(U, 2) + 1813 * pow(U, 3);
+    return epsilon / 3600.0;
+  }
 }
 
 // ============================================================================
@@ -144,9 +224,10 @@ double SunsetCalculator::equationOfTime(double M, double RA, double DPsi,
   return E_rad * kRad2Deg / 15.0;
 }
 
-double SunsetCalculator::getZenith(double e, double nu) {
+double SunsetCalculator::getZenith(double e, double nu,
+                                   double altitude_meters) {
   // Solar zenith angle at standard sunset/sunrise
-  // Includes solar radius and atmospheric refraction
+  // Includes solar radius, atmospheric refraction, and altitude correction
 
   // True longitude of the Sun (not used in simplified version)
   // double sun_lon = e + nu;
@@ -156,6 +237,14 @@ double SunsetCalculator::getZenith(double e, double nu) {
   // = -(solar_radius + atmospheric_refraction)
   // ≈ -0.833 degrees
   double apparentSunsetElevation = -0.833;
+
+  // Altitude correction (observer at elevation sees sun for longer)
+  // Formula from MATLAB sunrise.m: -2.076*sqrt(alt)/60 degrees
+  // where alt is altitude in meters
+  if (altitude_meters > 0) {
+    double altitudeCorrection = -2.076 * sqrt(altitude_meters) / 60.0;
+    apparentSunsetElevation += altitudeCorrection;
+  }
 
   // Convert elevation to zenith angle
   return 90.0 - apparentSunsetElevation;
@@ -209,8 +298,8 @@ double SunsetCalculator::getSolarNoon(double longitude, int timezone) {
 
 double SunsetCalculator::getSunset(int year, int month, int day,
                                    double latitude, double longitude,
-                                   int timezone, double* out_solarNoon,
-                                   double* out_delta) {
+                                   int timezone, double altitude_meters,
+                                   double* out_solarNoon, double* out_delta) {
   // Validate input parameters
   if (!validateInputs(year, month, day, latitude, longitude, timezone)) {
     // Return invalid time (24.0) to indicate calculation failure
@@ -248,7 +337,8 @@ double SunsetCalculator::getSunset(int year, int month, int day,
       e, nu);  // Calculated for completeness in simplified algorithm
 
   // Step 8: Apparent solar diameter and zenith angle
-  double zenith = 90.0 + 0.833;  // Standard sunset zenith angle
+  double zenith =
+      getZenith(nu, C, altitude_meters);  // Includes altitude correction
 
   // Step 9: Calculate solar declination
   double epsilon = obliquityOfEcliptic(t);
@@ -294,8 +384,8 @@ double SunsetCalculator::getSunset(int year, int month, int day,
 
 double SunsetCalculator::getSunrise(int year, int month, int day,
                                     double latitude, double longitude,
-                                    int timezone, double* out_solarNoon,
-                                    double* out_delta) {
+                                    int timezone, double altitude_meters,
+                                    double* out_solarNoon, double* out_delta) {
   // Validate input parameters
   if (!validateInputs(year, month, day, latitude, longitude, timezone)) {
     if (out_solarNoon) *out_solarNoon = -1.0;
@@ -305,8 +395,8 @@ double SunsetCalculator::getSunrise(int year, int month, int day,
 
   // Get solar noon and declination from sunset calculation
   double solar_noon, delta;
-  getSunset(year, month, day, latitude, longitude, timezone, &solar_noon,
-            &delta);
+  getSunset(year, month, day, latitude, longitude, timezone, altitude_meters,
+            &solar_noon, &delta);
 
   // Safety check: if getSunset returned invalid time, propagate error
   if (solar_noon < 0.0 || solar_noon >= 24.0) {
@@ -334,7 +424,8 @@ double SunsetCalculator::getSunrise(int year, int month, int day,
   double calculated_delta =
       asin(sin(epsilon * kDeg2Rad) * sin(lambda * kDeg2Rad)) * kRad2Deg;
 
-  double zenith = 90.0 + 0.833;
+  double zenith =
+      getZenith(M + C, C, altitude_meters);  // Includes altitude correction
   double HA_deg = hourAngle(zenith, latitude, calculated_delta);
   double HA = HA_deg / 15.0;
 

@@ -13,7 +13,7 @@
 #include <string>
 
 #include "colors.h"
-#include "config.h"
+#include "config_location.h"
 #include "constants.h"
 #include "format_utils.h"
 #include "solar_utils.h"
@@ -64,8 +64,9 @@ int main() {
   // Calculate using library
   sunset_calc::SunsetCalculator calc;
   double solarNoon, delta;
-  double sunsetTime = calc.getSunset(year, month, day, latitude, longitude,
-                                     timezone, &solarNoon, &delta);
+  double sunsetTime = calc.getSunset(
+      year, month, day, latitude, longitude, timezone,
+      config::location::kDefaultObserverAltitude, &solarNoon, &delta);
 
   if (sunsetTime >= 24.0) {
     cerr << "ERROR: Invalid calculation" << endl;

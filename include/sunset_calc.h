@@ -21,7 +21,29 @@
 
 #include <cmath>
 
+#include "config_location.h"
+
 namespace sunset_calc {
+
+/**
+ * Algorithm selection for multi-variant calculations.
+ * NOAA: Most common, good balance of accuracy and simplicity
+ * USNO: Linear approximation from U.S. Naval Observatory
+ * LASKAR: High-order polynomial from Laskar (1986), highest accuracy
+ */
+enum class Algorithm { NOAA, USNO, LASKAR };
+
+/**
+ * Formulation selection for longitude of ascending node.
+ * Different authoritative sources use different equations.
+ * NOAA_LINEAR: Simple linear form from NOAA
+ *   125.04 - 1934.136 * t
+ * REDA_ANDREAS_SPA: Cubic polynomial from Reda & Andreas (2008)
+ *   "Solar position algorithm for solar radiation applications"
+ *   NREL Technical Report NREL/TP-560-34302
+ *   National Renewable Energy Laboratory, Solar Radiation Research Laboratory
+ */
+enum class LongitudeAscendingNodeFormulation { NOAA_LINEAR, REDA_ANDREAS_SPA };
 
 /**
  * Main class for sunset calculations.
@@ -33,40 +55,49 @@ class SunsetCalculator {
   /**
    * Calculate sunset time for a given date and location.
    *
-   * @param year      - Calendar year (e.g., 2026)
-   * @param month     - Month (1-12)
-   * @param day       - Day of month (1-31)
-   * @param latitude  - Geographic latitude in degrees (-90 to 90)
-   * @param longitude - Geographic longitude in degrees (-180 to 180)
-   * @param timezone  - UTC offset in hours (e.g., -5 for EST)
-   * @param out_solarNoon - (optional) Pointer to store calculated solar noon
-   * @param out_delta     - (optional) Pointer to store solar declination
+   * @param year           - Calendar year (e.g., 2026)
+   * @param month          - Month (1-12)
+   * @param day            - Day of month (1-31)
+   * @param latitude       - Geographic latitude in degrees (-90 to 90)
+   * @param longitude      - Geographic longitude in degrees (-180 to 180)
+   * @param timezone       - UTC offset in hours (e.g., -5 for EST)
+   * @param altitude_meters - (optional) Observer altitude above sea level in
+   * meters (default: 0)
+   * @param out_solarNoon  - (optional) Pointer to store calculated solar noon
+   * @param out_delta      - (optional) Pointer to store solar declination
    *
    * @return Sunset time as decimal hours (e.g., 17.25 = 5:15 PM local time)
+   * @note Higher altitude extends sunset time (geometric horizon is lower)
    */
-  double getSunset(int year, int month, int day, double latitude,
-                   double longitude, int timezone,
-                   double* out_solarNoon = nullptr,
-                   double* out_delta = nullptr);
+  double getSunset(
+      int year, int month, int day, double latitude, double longitude,
+      int timezone,
+      double altitude_meters = config::location::kDefaultObserverAltitude,
+      double* out_solarNoon = nullptr, double* out_delta = nullptr);
 
   /**
    * Calculate sunrise time for a given date and location.
    *
-   * @param year      - Calendar year (e.g., 2026)
-   * @param month     - Month (1-12)
-   * @param day       - Day of month (1-31)
-   * @param latitude  - Geographic latitude in degrees (-90 to 90)
-   * @param longitude - Geographic longitude in degrees (-180 to 180)
-   * @param timezone  - UTC offset in hours (e.g., -5 for EST)
-   * @param out_solarNoon - (optional) Pointer to store calculated solar noon
-   * @param out_delta     - (optional) Pointer to store solar declination
+   * @param year           - Calendar year (e.g., 2026)
+   * @param month          - Month (1-12)
+   * @param day            - Day of month (1-31)
+   * @param latitude       - Geographic latitude in degrees (-90 to 90)
+   * @param longitude      - Geographic longitude in degrees (-180 to 180)
+   * @param timezone       - UTC offset in hours (e.g., -5 for EST)
+   * @param altitude_meters - (optional) Observer altitude above sea level in
+   * meters (default: 0)
+   * @param out_solarNoon  - (optional) Pointer to store calculated solar noon
+   * @param out_delta      - (optional) Pointer to store solar declination
    *
    * @return Sunrise time as decimal hours (e.g., 6.5 = 6:30 AM local time)
+   * @note Higher altitude extends sunrise time (sun appears earlier from
+   * elevated locations)
    */
-  double getSunrise(int year, int month, int day, double latitude,
-                    double longitude, int timezone,
-                    double* out_solarNoon = nullptr,
-                    double* out_delta = nullptr);
+  double getSunrise(
+      int year, int month, int day, double latitude, double longitude,
+      int timezone,
+      double altitude_meters = config::location::kDefaultObserverAltitude,
+      double* out_solarNoon = nullptr, double* out_delta = nullptr);
 
   /**
    * Convert decimal hours to hours, minutes, seconds.
@@ -126,22 +157,52 @@ class SunsetCalculator {
   double eccentricity(double t);
   double hourAngle(double h0, double phi, double delta);
 
+  // Algorithm selection helpers - used by pedagogical sunset.cpp
+  double meanLongitude(double t, Algorithm algo = Algorithm::NOAA);
+  double meanAnomaly(double t, Algorithm algo = Algorithm::NOAA);
+  double equationOfCenter(double t, double M, Algorithm algo = Algorithm::NOAA);
+  double obliquityOfEcliptic(double T, Algorithm algo = Algorithm::NOAA);
+
+  /**
+   * Calculate longitude of the ascending node of the Moon's mean orbit.
+   * Used for nutation and aberration corrections.
+   *
+   * Two formulations available:
+   * - NOAA_LINEAR: Simple linear form (lower precision, faster)
+   * - REDA_ANDREAS_SPA: Cubic polynomial (higher precision, production
+   * recommended)
+   *
+   * References:
+   * - NOAA: https://www.esrl.noaa.gov/gmd/grad/solcalc/
+   * - Reda, I., & Andreas, A. (2008). Solar position algorithm for solar
+   * radiation applications. NREL Technical Report NREL/TP-560-34302. National
+   * Renewable Energy Laboratory.
+   *
+   * @param t Julian centuries since J2000.0
+   * @param form Formulation to use (defaults to REDA_ANDREAS_SPA for higher
+   * precision)
+   * @return Longitude in radians
+   */
+  double longitudeAscendingNode(
+      double t, LongitudeAscendingNodeFormulation form =
+                    LongitudeAscendingNodeFormulation::REDA_ANDREAS_SPA);
+
  private:
   // Astronomical constants
   static constexpr double kJ2000Epoch = 2451545.0;
   static constexpr double kMinutesPerHour = 60.0;
 
-  // Helper calculation functions (all private, internal use only)
-  double meanLongitude(double t);
-  double meanAnomaly(double t);
-  double equationOfCenter(double t, double M);
-  double longitudeAscendingNode(double t);
-  double nutationInLongitude(double Omega, double JCE, double X1);
+  // Helper calculation functions (internal use only)
+  double nutationInLongitude(
+      double Omega, double JCE, double X1,
+      LongitudeAscendingNodeFormulation form =
+          LongitudeAscendingNodeFormulation::REDA_ANDREAS_SPA);
   double radiusVector(double e, double nu);
-  double obliquityOfEcliptic(double T);
   double equationOfTime(double M, double RA, double DPsi, double epsilon,
                         double L);
-  double getZenith(double e, double nu);
+  double getZenith(
+      double e, double nu,
+      double altitude_meters = config::location::kDefaultObserverAltitude);
   double getSolarNoon(double longitude, int timezone);
 
   // Internal calculation state (for chaining operations)
