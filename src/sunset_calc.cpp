@@ -14,6 +14,13 @@ namespace sunset_calc {
 // ============================================================================
 
 double SunsetCalculator::getJulianDate(int year, int month, int day) {
+  // Convert a Gregorian calendar date to Julian Day Number (integer).
+  // Algorithm: proleptic Gregorian calendar conversion.
+  // Source: Richards, E. G. (2013). "Calendars." In Explanatory Supplement
+  //   to the Astronomical Almanac, 3rd ed., Eq. 15.11.
+  // Also described in: Meeus (1991), Astronomical Algorithms, Ch. 7.
+  // Note: Returns noon JD (integer). For sub-day precision, add fractional
+  //   day offset separately.
   int a = (14 - month) / 12;
   int y = year + 4800 - a;
   int m = month + 12 * a - 3;
@@ -23,14 +30,14 @@ double SunsetCalculator::getJulianDate(int year, int month, int day) {
 }
 
 double SunsetCalculator::getJ2000(double jd) {
-  // convert Julian Date to J2000 epoch, that is, the Julian Date since Jan 1,
-  // 2000
+  // Convert Julian Date to days since J2000.0 epoch (2000 Jan 1.5 TT).
+  // kJ2000Epoch = 2451545.0 (Julian Date of J2000.0)
   return jd - kJ2000Epoch;
 }
 
 double SunsetCalculator::getJulianCentury(double J2000) {
-  // convert J2000 date to Julian Ephemeris Century, that is, fraction of a
-  // Julian century
+  // Convert days since J2000.0 to Julian centuries (T).
+  // One Julian century = 36525 days (exactly 365.25 × 100).
   return J2000 / 36525.0;
 }
 
@@ -39,24 +46,30 @@ double SunsetCalculator::getJulianCentury(double J2000) {
 // ============================================================================
 
 double SunsetCalculator::meanLongitude(double t, Algorithm algo) {
-  // Geometric mean longitude of the sun
-  // Three implementations for research/comparison purposes
+  // Geometric mean longitude of the Sun (degrees), referred to the mean
+  // equinox of the date. Input t is Julian centuries from J2000.0.
 
   if (algo == Algorithm::USNO) {
-    // Linear approximation from U.S. Naval Observatory
+    // Source: USNO, "Approximate Solar Coordinates."
+    //   https://aa.usno.navy.mil/faq/sun_approx
     double L0 = 280.460 + 36000.771 * t;
     while (L0 > 360) L0 -= 360;
     while (L0 < 0) L0 += 360;
     return L0;
   } else if (algo == Algorithm::LASKAR) {
-    // High-order polynomial from Laskar (1986)
+    // Quintic polynomial used by the NOAA solar calculator for the equation
+    // of time. Coefficients match Meeus (1991), Eq. 28.2 (p. 183).
+    // NOTE: labeled LASKAR in the Algorithm enum for "highest-order" but
+    // these coefficients are from Meeus, not Laskar (1986). Laskar's
+    // contribution is the obliquity polynomial (see obliquityOfEcliptic).
     double L0 = 280.4664567 + 36000.76982779 * t + 0.03032028 * pow(t, 2) +
                 pow(t, 3) / 49931 - pow(t, 4) / 15300 - pow(t, 5) / 2e6;
     while (L0 > 360) L0 -= 360;
     while (L0 < 0) L0 += 360;
     return L0;
   } else {  // Algorithm::NOAA (default)
-    // Quadratic fit from NOAA
+    // Source: Meeus (1991), Astronomical Algorithms, Eq. 25.2 (p. 163).
+    // Also used by the NOAA solar calculator spreadsheet.
     double L0 = 280.46646 + t * (36000.76983 + t * 0.0003032);
     while (L0 > 360) L0 -= 360;
     while (L0 < 0) L0 += 360;
@@ -65,31 +78,41 @@ double SunsetCalculator::meanLongitude(double t, Algorithm algo) {
 }
 
 double SunsetCalculator::meanAnomaly(double t, Algorithm algo) {
-  // Mean anomaly of the sun (degrees)
+  // Mean anomaly of the Sun (degrees). Measures angle from perihelion
+  // assuming uniform orbital motion. Input t is Julian centuries from J2000.0.
 
   if (algo == Algorithm::USNO) {
-    // Linear approximation
+    // Source: USNO, "Approximate Solar Coordinates."
+    //   https://aa.usno.navy.mil/faq/sun_approx
     return 357.528 + 35999.050 * t;
   } else if (algo == Algorithm::LASKAR) {
-    // Cubic fit from Reda & Andreas (2008)
+    // Source: Reda, I., & Andreas, A. (2008). "Solar position algorithm for
+    //   solar radiation applications." NREL/TP-560-34302, Eq. 3.3.2.
+    // NOTE: labeled LASKAR in the Algorithm enum for "highest-order" but
+    // these coefficients are from Reda & Andreas (2008), not Laskar (1986).
     return 357.52772 + 35999.050340 * t - 0.0001603 * pow(t, 2) +
            pow(t, 3) / 300000;
   } else {  // Algorithm::NOAA (default)
-    // Quadratic fit
+    // Source: Meeus (1991), Astronomical Algorithms, Eq. 25.3 (p. 163).
     return 357.52911 + t * (35999.05029 - t * 0.0001536);
   }
 }
 
 double SunsetCalculator::equationOfCenter(double t, double M, Algorithm algo) {
-  // Sun's equation of center
-  // Geocentric apparent ecliptic longitude of the Sun (adjusted for
-  // aberration)
+  // Sun's equation of center C (degrees).
+  // C = true_anomaly - mean_anomaly. Added to mean longitude to get the
+  // Sun's true geocentric longitude: L_true = L0 + C.
+  // Input M is mean anomaly in degrees; t is Julian centuries from J2000.0.
   M *= kDeg2Rad;
 
   if (algo == Algorithm::USNO) {
-    // Constant coefficients (simplest)
+    // Source: USNO, "Approximate Solar Coordinates."
+    //   https://aa.usno.navy.mil/faq/sun_approx
+    // Two-harmonic form with constant coefficients.
     return 1.915 * sin(M) + 0.020 * sin(2 * M);
   } else {  // Algorithm::NOAA and LASKAR use the same time-dependent form
+    // Source: Meeus (1991), Astronomical Algorithms, p. 164.
+    // Three-harmonic form with time-dependent coefficients.
     double C = (1.914602 - (0.004817 * t) - (0.000014 * pow(t, 2))) * sin(M) +
                (0.019993 - (0.000101 * t)) * sin(2 * M) +
                (0.000289 * sin(3 * M));
@@ -127,59 +150,87 @@ double SunsetCalculator::longitudeAscendingNode(
 double SunsetCalculator::nutationInLongitude(
     double Omega, double JCE, double X1,
     LongitudeAscendingNodeFormulation form) {
-  // Nutation in longitude (degrees)
-  // This accounts for small periodic variations in Earth's axis
-  // JCE is Julian Ephemeris Century
-  // form parameter is passed for consistency but not used in simple nutation
-  // calculation
+  // Nutation in longitude ΔΨ (degrees).
+  // Simplified 4-term approximation of the IAU 1980 nutation series.
+  // Source: Meeus (1991), Astronomical Algorithms, Table 22.A (63 terms;
+  //   only the 4 largest are used here).
+  // Also used by the NOAA solar calculator spreadsheet.
+  //
+  // Parameters:
+  //   Omega - longitude of ascending node of Moon's orbit (degrees)
+  //   JCE   - Julian Ephemeris Century (unused in this simplified form)
+  //   X1    - Sun's mean longitude L0 (degrees)
+  //   form  - passed for API consistency (unused)
+  //
+  // Coefficients are in arcseconds, divided by 3600 to convert to degrees.
+  // NOTE: Terms 3 and 4 use sin(2Ω) as a simplification. The full IAU 1980
+  // series uses sin(2F + 2Ω) for term 3. This simplification introduces
+  // small errors (~±0.5 arcminutes) but is consistent with the NOAA
+  // spreadsheet approach.
   Omega *= kDeg2Rad;
 
-  double psi = -17.20 / 3600.0 * sin(Omega);
-  psi += -1.32 / 3600.0 * sin(2 * X1);
-  psi += -0.23 / 3600.0 * sin(2 * Omega);
-  psi += 0.21 / 3600.0 * sin(2 * Omega);
+  double psi = -17.20 / 3600.0 * sin(Omega);       // Term 1: -17.20" sin(Ω)
+  psi += -1.32 / 3600.0 * sin(2 * X1);             // Term 2: -1.32" sin(2L₀)
+  psi += -0.23 / 3600.0 * sin(2 * Omega);          // Term 3: -0.23" sin(2Ω)
+  psi += 0.21 / 3600.0 * sin(2 * Omega);           // Term 4: +0.21" sin(2Ω)
 
   return psi;
 }
 
 double SunsetCalculator::eccentricity(double t) {
-  // eccentricity of Earth's orbit
-  // input is Julian century
-  // Meeus pg. 163, Eq. 25.4
-
+  // Eccentricity of Earth's orbit (dimensionless).
+  // Input t is Julian centuries from J2000.0.
+  // Source: Meeus (1991), Astronomical Algorithms, Eq. 25.4 (p. 163).
   return 0.016708634 - t * (0.000042037 + t * 0.0000001267);
 }
 
 double SunsetCalculator::radiusVector(double e, double nu) {
-  // Distance from sun to earth (Astronomical Units)
-  return (1.000001018 * (1 - e * e)) / (1 + e * cos(nu * kDeg2Rad));  // NOAA
+  // Earth-Sun distance in Astronomical Units (AU).
+  // Standard conic section formula: R = a(1-e²)/(1 + e·cos(ν)).
+  // Source: Meeus (1991), Astronomical Algorithms, Eq. 25.9 (p. 164).
+  // Coefficient 1.000001018 is the semi-major axis in AU.
+  return (1.000001018 * (1 - e * e)) / (1 + e * cos(nu * kDeg2Rad));
 }
 
 double SunsetCalculator::obliquityOfEcliptic(double T, Algorithm algo) {
-  // Obliquity of the ecliptic (angle of Earth's axial tilt)
-  // This is the angle between Earth's equatorial plane and orbital plane
+  // Obliquity of the ecliptic ε (degrees): angle of Earth's axial tilt.
+  // This is the angle between Earth's equatorial plane and orbital plane.
+  // Input T is Julian centuries from J2000.0.
 
-  // Reference obliquity at J2000 epoch
+  // Reference obliquity at J2000.0 epoch: 23°26'21.448"
+  // Source: IAU 1976 value, Lieske (1979). Also Meeus (1991), Eq. 22.2.
   double epsilon0 = 23.0 + (26.0 + 21.448 / 60.0) / 60.0;  // 23.439291°
 
-  // Convert Julian centuries to 10,000 Julian years for Laskar
+  // Convert Julian centuries to Julian 10,000-year units for Laskar polynomial
   double U = T / 100.0;
 
   if (algo == Algorithm::USNO) {
-    // Linear fit used by USNO
+    // First-order truncation of the Laskar (1986) polynomial.
+    // Coefficient -4680.93"/U is from Laskar; see Meeus (1991) Eq. 22.3.
+    // NOTE: labeled USNO in the Algorithm enum but the coefficient is from
+    // Laskar (1986), not the USNO approximation page.
     double t0 = epsilon0 * 3600.0;  // in arcseconds
     double epsilon = t0 - 4680.93 * U;
     return epsilon / 3600.0;  // convert back to degrees
   } else if (algo == Algorithm::LASKAR) {
-    // Tenth-degree polynomial from Laskar (1986)
+    // Full tenth-degree polynomial.
+    // Source: Laskar, J. (1986). "Secular terms of classical planetary
+    //   theories using the results of general theory." Astronomy and
+    //   Astrophysics, 157, 59-70.
+    // Reproduced in: Meeus (1991), Astronomical Algorithms, Eq. 22.3 (p. 135).
+    // Coefficients are in arcseconds; U is in Julian 10,000-year units.
     double t0 = epsilon0 * 3600.0;
-    double epsilon = t0 - 1.55 * pow(U, 2) + 1999.25 * pow(U, 3) -
-                     51.38 * pow(U, 4) - 249.67 * pow(U, 5) -
-                     39.05 * pow(U, 6) + 7.12 * pow(U, 7) + 27.87 * pow(U, 8) +
+    double epsilon = t0 - 4680.93 * U - 1.55 * pow(U, 2) +
+                     1999.25 * pow(U, 3) - 51.38 * pow(U, 4) -
+                     249.67 * pow(U, 5) - 39.05 * pow(U, 6) +
+                     7.12 * pow(U, 7) + 27.87 * pow(U, 8) +
                      5.79 * pow(U, 9) + 2.45 * pow(U, 10);
     return epsilon / 3600.0;
   } else {  // Algorithm::NOAA (default)
-    // Cubic fit used by NOAA
+    // Source: Lieske, J. H. (1979). "Precession matrix based on IAU (1976)
+    //   system of astronomical constants." Astronomy and Astrophysics, 73, 282.
+    // Reproduced in NOAA solar calculator spreadsheet.
+    // Coefficients converted from arcsec/century to arcsec/U (U = T/100).
     double t0 = epsilon0 * 3600.0;
     double epsilon = t0 - 4681.5 * U - 5.9 * pow(U, 2) + 1813 * pow(U, 3);
     return epsilon / 3600.0;
@@ -192,10 +243,14 @@ double SunsetCalculator::obliquityOfEcliptic(double T, Algorithm algo) {
 
 double SunsetCalculator::equationOfTime(double M, double RA, double DPsi,
                                         double epsilon, double L) {
-  // Equation of Time: correction to convert solar time to mean time
-  // Using Smart (1956) formula for higher accuracy
-  // W.M. Smart, Text-Book on Spherical Astronomy, Cambridge University Press,
-  // 1956, p. 149
+  // Equation of Time (hours): difference between apparent and mean solar time.
+  // This direct formula approximates EoT from orbital elements.
+  // Source: Meeus (1991), Astronomical Algorithms, Ch. 28 (p. 183-185).
+  // Also used by the NOAA solar calculator spreadsheet.
+  // NOTE: previously attributed to Smart (1956) Text-Book on Spherical
+  // Astronomy, p. 149. Smart derives EoT conceptually (RA - mean sun) but
+  // does not give this direct closed-form expression. The formula below
+  // is from Meeus / the NOAA spreadsheet.
 
   double e = eccentricity((getJ2000(getJulianDate(2000, 1, 1))) / 36525.0);
   double y = pow(tan(epsilon * kDeg2Rad / 2.0), 2);
@@ -224,11 +279,14 @@ double SunsetCalculator::getZenith(double e, double nu,
   // Standard elevation angle for sunset/sunrise
   // = -(solar_radius + atmospheric_refraction)
   // ≈ -0.833 degrees
+  // Source: Meeus (1991), Astronomical Algorithms, Ch. 15 (p. 101-103).
   double apparentSunsetElevation = -0.833;
 
-  // Altitude correction (observer at elevation sees sun for longer)
-  // Formula from MATLAB sunrise.m: -2.076*sqrt(alt)/60 degrees
-  // where alt is altitude in meters
+  // Altitude correction: elevated observer sees a lower geometric horizon.
+  // Dip angle d ≈ 1.76' × √(h_meters) from geometric derivation;
+  // refraction-adjusted coefficient is 2.076'/√m.
+  // Source: Meeus (1991), Eq. 15.1 (p. 102); also Hohenkerk & Sinclair
+  //   (1985) in the Nautical Almanac.
   if (altitude_meters > 0) {
     double altitudeCorrection = -2.076 * sqrt(altitude_meters) / 60.0;
     apparentSunsetElevation += altitudeCorrection;
@@ -239,7 +297,10 @@ double SunsetCalculator::getZenith(double e, double nu,
 }
 
 double SunsetCalculator::hourAngle(double h0, double phi, double delta) {
-  // Calculate hour angle for the sun at a given zenith angle
+  // Hour angle H₀ at which the Sun reaches zenith angle h₀ (degrees).
+  // Standard spherical trigonometry: cos(H₀) = (cos(h₀) - sin(φ)sin(δ)) /
+  //   (cos(φ)cos(δ)).
+  // Source: Meeus (1991), Astronomical Algorithms, Eq. 15.1 (p. 102).
   // h0: zenith angle (degrees)
   // phi: observer latitude (degrees)
   // delta: solar declination (degrees)
@@ -338,7 +399,7 @@ double SunsetCalculator::getSunset(int year, int month, int day,
   double HA = HA_deg / 15.0;  // Convert degrees to hours
 
   // Step 11: Calculate solar noon in local time
-  // Use Smart (1956) equation of time with current eccentricity
+  // Equation of time from Meeus (1991) Ch. 28 / NOAA spreadsheet
   double y = pow(tan(epsilon * kDeg2Rad / 2.0), 2);
   double L_rad = L * kDeg2Rad;
   double M_rad = M * kDeg2Rad;

@@ -40,19 +40,29 @@ constexpr double kAuMeters = 149597870700.0;  // Astronomical unit in meters
 constexpr double kSolarRadiusMeters = 696342e3;  // Solar radius in meters
 
 // Standard atmospheric refraction at horizon (degrees)
+// The atmosphere refracts light so the Sun appears ~34' higher than geometric.
+// Source: Meeus (1991), Astronomical Algorithms, Ch. 16 (p. 105-107);
+//   Bennett, G. G. (1982). "The Calculation of Astronomical Refraction in
+//   Marine Navigation." Journal of Navigation, 35(2), 255-259.
+// 0.5667° = 34.002' (standard value at sea level, average conditions).
 constexpr double kAtmosphericRefraction = 0.5667;
 
 // Standard solar angular radius at 1 AU (degrees)
-// Calculated from physical size: atan(radius/distance) converted to degrees
+// Derived from physical solar radius and 1 AU distance:
+//   α = atan(R_sun / 1 AU) ≈ 0.2667° = 16.0'
+// See also: Meeus (1991), Astronomical Algorithms, Ch. 15 (p. 101).
 constexpr double kSolarAngularRadius =
     atan(kSolarRadiusMeters / kAuMeters) * kRad2Deg;  // ≈ 0.26667 degrees
 
 // Standard elevation for sunset/sunrise calculations (degrees)
 // This is -(solar_radius + atmospheric_refraction)
+// Source: Meeus (1991), Ch. 15; NOAA solar calculator.
 constexpr double kStandardSunsetElevation =
     -(kSolarAngularRadius + kAtmosphericRefraction);  // ≈ -0.83337 degrees
 
 // Zenith angles for twilight events (degrees)
+// Source: standard definitions from the Nautical Almanac and IAU.
+// See also: Meeus (1991), Ch. 15 (p. 101-103).
 namespace zenith {
 constexpr double kGoldenHourStart = 84.0;  // Sun 6° above horizon
 constexpr double kSunset =
@@ -64,8 +74,9 @@ constexpr double kAstronomicalTwilight = 108.0;  // Sun 18° below horizon
 }  // namespace zenith
 
 // Julian date constants
+// Source: IAU 1976 System of Astronomical Constants.
 constexpr double kJ2000Epoch = 2451545.0;       // Julian date of J2000.0 epoch
-constexpr double kJulianCenturyDays = 36525.0;  // exactly 365.25 * 100
+constexpr double kJulianCenturyDays = 36525.0;  // exactly 365.25 × 100
 
 }  // namespace astro
 

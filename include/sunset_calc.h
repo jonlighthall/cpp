@@ -10,10 +10,27 @@
  *   // Returns sunset time in hours (e.g., 17.25 = 5:15 PM)
  *
  * References:
- *   - James Still's solar coordinates:
- * https://squarewidget.com/solar-coordinates/
- *   - USNO: https://aa.usno.navy.mil/faq/sun_approx
- *   - Meeus, Jean (1991). Astronomical Algorithms.
+ *   - Meeus, Jean (1991). Astronomical Algorithms. Willmann-Bell.
+ *     Primary source for orbital element polynomials, equation of center,
+ *     eccentricity, equation of time, and hour angle.
+ *   - NOAA Solar Calculator:
+ *     https://www.esrl.noaa.gov/gmd/grad/solcalc/
+ *     Default algorithm implementations; spreadsheet formulas from Meeus.
+ *   - USNO, "Approximate Solar Coordinates":
+ *     https://aa.usno.navy.mil/faq/sun_approx
+ *     Simplified linear approximations for mean longitude and anomaly.
+ *   - Laskar, J. (1986). "Secular terms of classical planetary theories
+ *     using the results of general theory." A&A, 157, 59-70.
+ *     Tenth-degree obliquity of the ecliptic polynomial.
+ *   - Reda, I., & Andreas, A. (2008). "Solar position algorithm for solar
+ *     radiation applications." NREL/TP-560-34302.
+ *     Ascending node longitude polynomial; mean anomaly cubic.
+ *   - Lieske, J. H. (1979). "Precession matrix based on IAU (1976) system
+ *     of astronomical constants." A&A, 73, 282.
+ *     Obliquity polynomial used by NOAA.
+ *   - James Still, "Solar Coordinates":
+ *     https://squarewidget.com/solar-coordinates/
+ *     Tutorial reference for the overall calculation flow.
  */
 
 #ifndef SUNSET_CALC_H
@@ -27,9 +44,12 @@ namespace sunset_calc {
 
 /**
  * Algorithm selection for multi-variant calculations.
- * NOAA: Most common, good balance of accuracy and simplicity
- * USNO: Linear approximation from U.S. Naval Observatory
- * LASKAR: High-order polynomial from Laskar (1986), highest accuracy
+ * NOAA:   Quadratic fits from the NOAA solar calculator (via Meeus 1991).
+ * USNO:   Linear approximations from U.S. Naval Observatory.
+ * LASKAR: Highest-order polynomial available for each function. Named after
+ *         Laskar (1986) whose obliquity polynomial is the defining variant,
+ *         but note that for other functions (meanLongitude, meanAnomaly) the
+ *         "LASKAR" branch uses Meeus or Reda & Andreas coefficients.
  */
 enum class Algorithm { NOAA, USNO, LASKAR };
 

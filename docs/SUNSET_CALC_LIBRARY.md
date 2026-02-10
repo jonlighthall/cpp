@@ -6,14 +6,14 @@ The **sunset_calc** library provides a portable, lightweight astronomical calcul
 
 ### Calculation Accuracy
 
-This library implements **authoritative, production-quality ephemeris calculations**:
+This library implements **well-established ephemeris calculations**:
 - **NOAA algorithms** - Uses formulas from the National Oceanic and Atmospheric Administration
 - **Meeus (1991)** - Based on *Astronomical Algorithms*, the standard reference for astronomical calculations
 - **USNO methods** - Implements U.S. Naval Observatory formulas where applicable
-- **High precision** - Includes nutation corrections, equation of center with multiple harmonic terms, and quintic expansions
+- **Nutation correction** - Includes simplified (4-term) nutation in longitude
 - **Physical constants** - Uses measured values (e.g., solar radius from Mercury transit observations)
 
-This is NOT a simplified approximation - it provides the same level of accuracy as professional astronomical software, suitable for scientific and navigation applications.
+Accuracy is ±2–3 minutes for sunrise/sunset times, suitable for practical applications (commute planning, home automation, photography). For professional navigation or observatory-grade work (±1 second), use the full NOAA SPA or JPL ephemeris.
 
 ### Algorithm Defaults by Function
 
@@ -21,13 +21,13 @@ The library **defaults to NOAA** algorithms (authoritative, widely adopted, appr
 
 | Function | Default Algorithm | Alternative(s) | Purpose |
 |----------|-------------------|----------------|----------|
-| `meanLongitude()` | NOAA (quadratic) | USNO (linear), LASKAR (quintic) | Geometric mean longitude |
-| `meanAnomaly()` | NOAA (quadratic) | USNO (linear), LASKAR (cubic) | Mean solar anomaly |
-| `equationOfCenter()` | NOAA (multi-harmonic) | USNO (constant) | Sun's equation of center |
-| `obliquityOfEcliptic()` | NOAA (Lieske 1977 cubic) | USNO (linear), LASKAR (10th-order) | Earth's axial tilt |
+| `meanLongitude()` | NOAA (quadratic, Meeus Eq. 25.2) | USNO (linear), LASKAR (quintic, Meeus Ch. 28) | Geometric mean longitude |
+| `meanAnomaly()` | NOAA (quadratic, Meeus Eq. 25.3) | USNO (linear), LASKAR (cubic, Reda & Andreas 2008) | Mean solar anomaly |
+| `equationOfCenter()` | NOAA (3-harmonic, Meeus p. 164) | USNO (constant, 2-harmonic) | Sun's equation of center |
+| `obliquityOfEcliptic()` | NOAA (Lieske 1979 cubic) | USNO (Laskar 1st-order), LASKAR (10th-order) | Earth's axial tilt |
 | `longitudeAscendingNode()` | Reda & Andreas SPA (cubic) | NOAA (linear) | Ascending node for nutation |
 
-**Design rationale**: NOAA provides the best balance of accuracy and simplicity. Academic variants (Laskar, Reda & Andreas) offer higher precision for research but aren't needed for typical applications. The library makes NOAA the default while keeping alternatives accessible for validation and comparison.
+**Design rationale**: NOAA provides the best balance of accuracy and simplicity. The LASKAR enum selects the highest-order polynomial available for each function — for `obliquityOfEcliptic()` this is genuinely from Laskar (1986), while for other functions it selects coefficients from Meeus or Reda & Andreas. The library makes NOAA the default while keeping alternatives accessible for validation and comparison.
 
 ## Files
 
@@ -159,9 +159,12 @@ The library includes support for multiple astronomical algorithm implementations
 
 ```cpp
 enum class Algorithm {
-  NOAA,    // Default: NOAA formulas (quadratic fits, well-balanced)
+  NOAA,    // Default: NOAA formulas (quadratic fits from Meeus 1991)
   USNO,    // U.S. Naval Observatory (linear approximations)
-  LASKAR   // Laskar (1986) high-order polynomials (highest precision)
+  LASKAR   // Highest-order polynomial available. Named after Laskar (1986)
+           // whose obliquity polynomial is the defining variant, but note
+           // that for meanLongitude the coefficients are from Meeus Ch. 28
+           // and for meanAnomaly they are from Reda & Andreas (2008).
 };
 ```
 
@@ -505,10 +508,15 @@ for (auto& loc : locations) {
 
 ## References
 
-- **Solar Position Algorithm**: [James Still's Solar Coordinates](https://squarewidget.com/solar-coordinates/)
-- **NOAA Calculator**: [ESRL Global Monitoring Laboratory](https://www.esrl.noaa.gov/gmd/grad/solcalc/)
-- **USNO Algorithm**: [U.S. Naval Observatory](https://aa.usno.navy.mil/faq/sun_approx)
-- **Astronomical Algorithms**: Jean Meeus (1991)
+- **Meeus, Jean (1991)**. *Astronomical Algorithms*. Willmann-Bell. Primary source for orbital element polynomials (Eq. 25.2–25.9), equation of time (Ch. 28), obliquity (Eq. 22.2–22.3), hour angle (Eq. 15.1), and atmospheric refraction (Ch. 16).
+- **NOAA Solar Calculator**: [ESRL Global Monitoring Laboratory](https://www.esrl.noaa.gov/gmd/grad/solcalc/) — Default algorithm source; spreadsheet formulas adapted from Meeus.
+- **USNO, "Approximate Solar Coordinates"**: [U.S. Naval Observatory](https://aa.usno.navy.mil/faq/sun_approx) — Linear approximations for mean longitude and anomaly.
+- **Laskar, J. (1986)**. "Secular terms of classical planetary theories using the results of general theory." *Astronomy and Astrophysics*, 157, 59-70. — Tenth-degree obliquity polynomial.
+- **Reda, I., & Andreas, A. (2008)**. "Solar position algorithm for solar radiation applications." NREL Technical Report NREL/TP-560-34302. — Ascending node cubic; mean anomaly cubic.
+- **Lieske, J. H. (1979)**. "Precession matrix based on IAU (1976) system of astronomical constants." *Astronomy and Astrophysics*, 73, 282. — Obliquity polynomial used by NOAA.
+- **Bennett, G. G. (1982)**. "The Calculation of Astronomical Refraction in Marine Navigation." *Journal of Navigation*, 35(2), 255-259. — Standard atmospheric refraction value.
+- **Emilio, M., et al. (2012)**. "Measuring the solar radius from space during the 2003 and 2006 Mercury transits." [arXiv:1203.4898](https://arxiv.org/abs/1203.4898). — Solar radius constant.
+- **James Still, "Solar Coordinates"**: [squarewidget.com](https://squarewidget.com/solar-coordinates/) — Tutorial reference for the calculation flow.
 
 ## License
 

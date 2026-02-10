@@ -19,6 +19,9 @@ constexpr double kGoldenEndAngle = 4.0;     // degrees (below horizon)
 inline double sunAngleToZenith(double sunAngle) { return 90.0 + sunAngle; }
 
 // Calculate hour angle for a given zenith angle and latitude/declination.
+// Standard spherical trigonometry: cos(H) = (cos(z) - sin(φ)sin(δ)) /
+//   (cos(φ)cos(δ)).
+// Source: Meeus (1991), Astronomical Algorithms, Eq. 15.1 (p. 102).
 // Returns degrees; caller can convert to hours by dividing by 15.
 inline double calcHourAngle(double zenithAngle, double latitude, double delta) {
   double h0 = zenithAngle * astro::kDeg2Rad;
