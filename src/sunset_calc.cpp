@@ -89,14 +89,7 @@ double SunsetCalculator::equationOfCenter(double t, double M, Algorithm algo) {
   if (algo == Algorithm::USNO) {
     // Constant coefficients (simplest)
     return 1.915 * sin(M) + 0.020 * sin(2 * M);
-  } else if (algo == Algorithm::LASKAR) {
-    // Same as NOAA (both use time-dependent coefficients)
-    double C = (1.914602 - (0.004817 * t) - (0.000014 * pow(t, 2))) * sin(M) +
-               (0.019993 - (0.000101 * t)) * sin(2 * M) +
-               (0.000289 * sin(3 * M));
-    return C;
-  } else {  // Algorithm::NOAA (default)
-    // Time-dependent coefficients from NOAA
+  } else {  // Algorithm::NOAA and LASKAR use the same time-dependent form
     double C = (1.914602 - (0.004817 * t) - (0.000014 * pow(t, 2))) * sin(M) +
                (0.019993 - (0.000101 * t)) * sin(2 * M) +
                (0.000289 * sin(3 * M));
@@ -120,16 +113,11 @@ double SunsetCalculator::longitudeAscendingNode(
       return (125.04 - 1934.136 * t) * kDeg2Rad;
 
     case LongitudeAscendingNodeFormulation::REDA_ANDREAS_SPA:
-      // Higher precision cubic polynomial
+    default:
+      // Higher precision cubic polynomial (default)
       // From: Reda, I., & Andreas, A. (2008). Solar position algorithm for
       // solar radiation applications. NREL Technical Report NREL/TP-560-34302.
       // This is Eq. 19 (X4) from the SPA algorithm
-      return (125.04452 - 1934.136261 * t + 0.0020708 * pow(t, 2) +
-              pow(t, 3) / 450000.0) *
-             kDeg2Rad;
-
-    default:
-      // Default to higher precision
       return (125.04452 - 1934.136261 * t + 0.0020708 * pow(t, 2) +
               pow(t, 3) / 450000.0) *
              kDeg2Rad;
@@ -393,10 +381,10 @@ double SunsetCalculator::getSunrise(int year, int month, int day,
     return -1.0;
   }
 
-  // Get solar noon and declination from sunset calculation
+  // Get solar noon, declination, and sunset from common calculation
   double solar_noon, delta;
-  getSunset(year, month, day, latitude, longitude, timezone, altitude_meters,
-            &solar_noon, &delta);
+  double sunset = getSunset(year, month, day, latitude, longitude, timezone,
+                            altitude_meters, &solar_noon, &delta);
 
   // Safety check: if getSunset returned invalid time, propagate error
   if (solar_noon < 0.0 || solar_noon >= 24.0) {
@@ -405,37 +393,16 @@ double SunsetCalculator::getSunrise(int year, int month, int day,
     return -1.0;
   }
 
-  // For sunrise, we need to recalculate with the same method
-  // Simplified version: sunrise is symmetric around solar noon
-  double jd = getJulianDate(year, month, day);
-  double J2000 = getJ2000(jd);
-  double t = getJulianCentury(J2000);
-
-  double L = meanLongitude(t);
-  double M = meanAnomaly(t);
-  double C = equationOfCenter(t, M);
-  double sun_lon = L + C;
-
-  double Omega = longitudeAscendingNode(t);
-  double nutation = nutationInLongitude(Omega, t, L);
-  double lambda = sun_lon + nutation;
-
-  double epsilon = obliquityOfEcliptic(t);
-  double calculated_delta =
-      asin(sin(epsilon * kDeg2Rad) * sin(lambda * kDeg2Rad)) * kRad2Deg;
-
-  double zenith =
-      getZenith(M + C, C, altitude_meters);  // Includes altitude correction
-  double HA_deg = hourAngle(zenith, latitude, calculated_delta);
-  double HA = HA_deg / 15.0;
-
+  // Sunrise is symmetric around solar noon: sunrise = noon - HA, sunset =
+  // noon + HA. Instead of recalculating, derive HA from the sunset result.
+  double HA = sunset - solar_noon;
   double sunrise_time = solar_noon - HA;
 
   while (sunrise_time >= 24.0) sunrise_time -= 24.0;
   while (sunrise_time < 0.0) sunrise_time += 24.0;
 
   if (out_solarNoon) *out_solarNoon = solar_noon;
-  if (out_delta) *out_delta = calculated_delta;
+  if (out_delta) *out_delta = delta;
 
   return sunrise_time;
 }

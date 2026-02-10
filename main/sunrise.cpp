@@ -12,36 +12,16 @@
 #include "morning_table.h"
 #include "solar_utils.h"
 #include "sunset_calc.h"
+#include "time_init.h"
 
 using namespace std;
 using namespace astro;
 
-// Minimal helper: plain-English time difference (hours, minutes)
-static string timeToEnglish(int hours, int minutes) {
-  ostringstream oss;
-  if (hours != 0) {
-    oss << abs(hours) << (abs(hours) == 1 ? " hour" : " hours");
-  }
-  if (minutes != 0) {
-    if (hours != 0) oss << " ";
-    oss << abs(minutes) << (abs(minutes) == 1 ? " minute" : " minutes");
-  }
-  if (hours == 0 && minutes == 0) oss << "0 minutes";
-  return oss.str();
-}
-
 int main() {
-  // Current local date/time
-  time_t now = time(nullptr);
   tm ltm;
-#ifdef _WIN32
-  localtime_s(&ltm, &now);
-#else
-  localtime_r(&now, &ltm);
-#endif
-  int year = ltm.tm_year + 1900;
-  int month = ltm.tm_mon + 1;
-  int day = ltm.tm_mday;
+  time_init::getLocalTime(ltm);
+  int year, month, day;
+  time_init::getDate(ltm, year, month, day);
 
   // Location and timezone from config
   double latitude = config::location::kDefaultLatitude;
@@ -67,12 +47,12 @@ int main() {
 
   // Current time and friendly display
   cout << "Current time: " << put_time(&ltm, "%H:%M:%S");
-  double currentTime = ltm.tm_hour + ltm.tm_min / 60.0 + ltm.tm_sec / 3600.0;
+  double currentTime = time_init::toFractionalHours(ltm);
   double untilSunrise = sunriseTime - currentTime;
   int diffHours = static_cast<int>(untilSunrise);
   int diffMinutes = static_cast<int>((untilSunrise - diffHours) * 60);
-  cout << " (" << timeToEnglish(diffHours, diffMinutes) << " until sunrise)"
-       << endl;
+  cout << " (" << format_utils::timeToEnglish(diffHours, diffMinutes)
+       << " until sunrise)" << endl;
 
   // Commute planning to arrive by sunrise
   const double commuteMinutes = config::commute::kDefaultCommuteMinutes;
@@ -97,12 +77,13 @@ int main() {
     int leaveHours = static_cast<int>(timeToLeave);
     int leaveMins = static_cast<int>((timeToLeave - leaveHours) * 60);
     cout << "Leave by " << leaveHHMM << " (in "
-         << timeToEnglish(leaveHours, leaveMins) << ") to arrive by "
-         << sunriseHHMM << " (sunrise)" << endl;
+         << format_utils::timeToEnglish(leaveHours, leaveMins)
+         << ") to arrive by " << sunriseHHMM << " (sunrise)" << endl;
   } else {
     int lateHours = static_cast<int>(-timeToLeaveForHome);
     int lateMins = static_cast<int>((-timeToLeaveForHome - lateHours) * 60);
-    cout << "*** YOU SHOULD HAVE LEFT " << timeToEnglish(lateHours, lateMins)
+    cout << "*** YOU SHOULD HAVE LEFT "
+         << format_utils::timeToEnglish(lateHours, lateMins)
          << " AGO TO GET BACK HOME BY " << civilTwilightHHMM
          << " (CIVIL TWILIGHT END) ***" << endl;
 
@@ -114,7 +95,7 @@ int main() {
       int afterMins = static_cast<int>((afterBy - afterHours) * 60);
       string arrivalHHMM = format_utils::formatHHMM(arrivalHomeTime);
       cout << "If you leave NOW, you'll be back home at " << arrivalHHMM << " ("
-           << timeToEnglish(afterHours, afterMins)
+           << format_utils::timeToEnglish(afterHours, afterMins)
            << " after civil twilight ends)" << endl;
     }
   }

@@ -21,89 +21,21 @@
 #include "config_commute.h"
 #include "config_location.h"
 #include "constants.h"
+#include "format_utils.h"
 #include "solar_utils.h"
 #include "sunset_calc.h"
+#include "time_init.h"
 #include "twilight_table.h"
 
 using namespace std;
 using namespace astro;
 using namespace config;
 
-// Utility function to convert fractional hours to HH:MM format
-
-string hour2time(double fhr, bool do_fractional_second = true,
-                 bool show_seconds = true) {
-  // convert fractional hour into hr:min:sec string
-  auto hr = int(floor(fhr));
-  double fmin = (fhr - hr) * 60;
-  auto min = int(floor(fmin));
-  double fsec = (fmin - min) * 60;
-
-  struct Time {
-    int hr;
-    int min;
-    double fsec;
-  };
-
-  Time time;
-  if (do_fractional_second) {
-    time.hr = hr;
-    time.min = min;
-    time.fsec = fsec;
-  } else {
-    time.hr = hr;
-    time.min = min;
-    time.fsec = int(floor(fsec));
-  }
-
-  std::ostringstream time_string;
-  time_string << std::setfill('0') << std::setw(2) << time.hr << ":"
-              << std::setfill('0') << std::setw(2) << time.min;
-
-  if (show_seconds) {
-    time_string << ":" << std::fixed << std::setprecision(2)
-                << std::setfill('0') << std::setw(5) << time.fsec;
-  }
-
-  return time_string.str();
-}
-
-string timeToEnglish(int hours, int minutes) {
-  // Convert hours and minutes to plain English
-  std::ostringstream english_time;
-
-  if (hours == 0 && minutes == 0) {
-    return "0 minutes";
-  }
-
-  if (hours > 0) {
-    english_time << hours << " hour";
-    if (hours > 1) english_time << "s";
-
-    if (minutes > 0) {
-      english_time << " " << minutes << " minute";
-      if (minutes > 1) english_time << "s";
-    }
-  } else if (minutes > 0) {
-    english_time << minutes << " minute";
-    if (minutes > 1) english_time << "s";
-  }
-
-  return english_time.str();
-}
-
 int main() {
-  // Get the current date and time
-  time_t now = time(nullptr);
   tm ltm;
-#ifdef _WIN32
-  localtime_s(&ltm, &now);
-#else
-  localtime_r(&now, &ltm);
-#endif
-  int year = ltm.tm_year + 1900;
-  int month = ltm.tm_mon + 1;
-  int day = ltm.tm_mday;
+  time_init::getLocalTime(ltm);
+  int year, month, day;
+  time_init::getDate(ltm, year, month, day);
 
   // Set the location and timezone from config
   double latitude = config::location::kDefaultLatitude;
@@ -129,7 +61,7 @@ int main() {
   cout << "Current time: " << put_time(&ltm, "%H:%M:%S");
 
   // Calculate the difference between the current time and civil twilight ending
-  double currentTime = ltm.tm_hour + ltm.tm_min / 60.0 + ltm.tm_sec / 3600.0;
+  double currentTime = time_init::toFractionalHours(ltm);
   double timeDifference = civilTwilightEndTime - currentTime;
 
   // Convert the time difference to hours and minutes
@@ -137,7 +69,7 @@ int main() {
   int diffMinutes = static_cast<int>((timeDifference - diffHours) * 60);
 
   // Print the time difference in plain English
-  cout << " (" << timeToEnglish(diffHours, diffMinutes)
+  cout << " (" << format_utils::timeToEnglish(diffHours, diffMinutes)
        << " until civil twilight ends)" << endl;
 
   // Calculate leave time (subtract commute time)
@@ -146,24 +78,26 @@ int main() {
   double timeToLeave = leaveTime - currentTime;
 
   // Convert leave time to readable format (no seconds)
-  string leaveTimeStr = hour2time(leaveTime, false, false);
+  string leaveTimeStr = format_utils::formatHHMM(leaveTime);
 
   // Convert time to leave to hours and minutes
   int leaveHours = static_cast<int>(timeToLeave);
   int leaveMins = static_cast<int>((timeToLeave - leaveHours) * 60);
 
   // Get civil twilight ending time as string for summary (no seconds)
-  string civilTwilightStr = hour2time(civilTwilightEndTime, false, false);
+  string civilTwilightStr = format_utils::formatHHMM(civilTwilightEndTime);
 
   // Print the clear summary
   cout << endl;
   if (timeToLeave > 0) {
     cout << "Leave by " << leaveTimeStr << " (in "
-         << timeToEnglish(leaveHours, leaveMins) << ") to get home by "
-         << civilTwilightStr << " (civil twilight ends)" << endl;
+         << format_utils::timeToEnglish(leaveHours, leaveMins)
+         << ") to get home by " << civilTwilightStr << " (civil twilight ends)"
+         << endl;
   } else {
     cout << "*** YOU SHOULD HAVE LEFT "
-         << timeToEnglish(std::abs(leaveHours), std::abs(leaveMins))
+         << format_utils::timeToEnglish(std::abs(leaveHours),
+                                        std::abs(leaveMins))
          << " AGO TO GET HOME BY " << civilTwilightStr
          << " (CIVIL TWILIGHT END) ***" << endl;
 
@@ -174,10 +108,10 @@ int main() {
     if (lateBy > 0) {
       int lateHours = static_cast<int>(lateBy);
       int lateMins = static_cast<int>((lateBy - lateHours) * kMinutesPerHour);
-      string arrivalTimeStr = hour2time(arrivalTime, false, false);
+      string arrivalTimeStr = format_utils::formatHHMM(arrivalTime);
 
       cout << "If you leave NOW, you'll be home at " << arrivalTimeStr << " ("
-           << timeToEnglish(lateHours, lateMins)
+           << format_utils::timeToEnglish(lateHours, lateMins)
            << " after civil twilight ends)" << endl;
     }
   }
