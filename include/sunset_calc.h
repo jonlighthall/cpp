@@ -44,14 +44,18 @@ namespace sunset_calc {
 
 /**
  * Algorithm selection for multi-variant calculations.
- * NOAA:   Quadratic fits from the NOAA solar calculator (via Meeus 1991).
- * USNO:   Linear approximations from U.S. Naval Observatory.
- * LASKAR: Highest-order polynomial available for each function. Named after
- *         Laskar (1986) whose obliquity polynomial is the defining variant,
- *         but note that for other functions (meanLongitude, meanAnomaly) the
- *         "LASKAR" branch uses Meeus or Reda & Andreas coefficients.
+ * NOAA:     Quadratic fits from the NOAA solar calculator (via Meeus 1991).
+ *           Results can be benchmarked against the NOAA online calculator.
+ * USNO:     Linear approximations from U.S. Naval Observatory.
+ *           Results can be benchmarked against the USNO online calculator.
+ * EXTENDED: Highest-order polynomial available for each function, drawn from
+ *           the best published source. For obliquityOfEcliptic this is the
+ *           10th-degree Laskar (1986) polynomial; for meanLongitude a quintic
+ *           from VSOP87 (Bretagnon & Francou, 1988) via Meeus Ch. 28; for
+ *           meanAnomaly a cubic from Reda & Andreas (2008) / Simon et al.
+ *           (1994). Not benchmarkable against a single online calculator.
  */
-enum class Algorithm { NOAA, USNO, LASKAR };
+enum class Algorithm { NOAA, USNO, EXTENDED };
 
 /**
  * Formulation selection for longitude of ascending node.

@@ -2,7 +2,7 @@
  * Educational Ephemeris Calculator
  *
  * This program demonstrates multiple astronomical calculation methods
- * (NOAA, USNO, Laskar) for computing solar coordinates and events.
+ * (NOAA, USNO, Extended) for computing solar coordinates and events.
  *
  * It shows every step of the calculation with full debug output,
  * allowing comparison between different algorithms and data sources.
@@ -94,7 +94,7 @@ double meanLongitude(double t) {
   sunset_calc::SunsetCalculator calc;
   double L_1 = calc.meanLongitude(t, sunset_calc::Algorithm::USNO);
   double L_2 = calc.meanLongitude(t, sunset_calc::Algorithm::NOAA);
-  double L_5 = calc.meanLongitude(t, sunset_calc::Algorithm::LASKAR);
+  double L_5 = calc.meanLongitude(t, sunset_calc::Algorithm::EXTENDED);
 
   if (kDebugLevel > 0) {
     cout << "Geometric Mean Longitude of the Sun" << endl;
@@ -142,7 +142,7 @@ double meanAnomaly(double t) {
   sunset_calc::SunsetCalculator calc;
   double M_1 = calc.meanAnomaly(t, sunset_calc::Algorithm::USNO);
   double M_2 = calc.meanAnomaly(t, sunset_calc::Algorithm::NOAA);
-  double M_3 = calc.meanAnomaly(t, sunset_calc::Algorithm::LASKAR);
+  double M_3 = calc.meanAnomaly(t, sunset_calc::Algorithm::EXTENDED);
 
   if (kDebugLevel > 0) {
     cout << "Mean Anomaly of the Sun" << endl;
@@ -370,7 +370,7 @@ double obliquityOfEcliptic(double T) {
   double epsilon_1 = calc.obliquityOfEcliptic(T, sunset_calc::Algorithm::USNO);
   double epsilon_L = calc.obliquityOfEcliptic(T, sunset_calc::Algorithm::NOAA);
   double epsilon_NGT =
-      calc.obliquityOfEcliptic(T, sunset_calc::Algorithm::LASKAR);
+      calc.obliquityOfEcliptic(T, sunset_calc::Algorithm::EXTENDED);
 
   if (kDebugLevel > 0) {
     cout << "Obliquity of the ecliptic" << endl;
@@ -382,7 +382,7 @@ double obliquityOfEcliptic(double T) {
     cout << " Lieske et al. 1977 (NOAA)" << endl;
     cout << "\t 10poly: ";
     printDeg(epsilon_NGT);
-    cout << " Laskar 1986" << endl;
+    cout << " Laskar 1986 (extended)" << endl;
   }
   if (do_NOAA)
     return epsilon_L;

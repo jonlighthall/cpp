@@ -21,13 +21,13 @@ The library **defaults to NOAA** algorithms (authoritative, widely adopted, appr
 
 | Function | Default Algorithm | Alternative(s) | Purpose |
 |----------|-------------------|----------------|----------|
-| `meanLongitude()` | NOAA (quadratic, Meeus Eq. 25.2) | USNO (linear), LASKAR (quintic, Meeus Ch. 28) | Geometric mean longitude |
-| `meanAnomaly()` | NOAA (quadratic, Meeus Eq. 25.3) | USNO (linear), LASKAR (cubic, Reda & Andreas 2008) | Mean solar anomaly |
+| `meanLongitude()` | NOAA (quadratic, Meeus Eq. 25.2) | USNO (linear), EXTENDED (quintic, VSOP87 via Meeus Ch. 28) | Geometric mean longitude |
+| `meanAnomaly()` | NOAA (quadratic, Meeus Eq. 25.3) | USNO (linear), EXTENDED (cubic, Reda & Andreas 2008) | Mean solar anomaly |
 | `equationOfCenter()` | NOAA (3-harmonic, Meeus p. 164) | USNO (constant, 2-harmonic) | Sun's equation of center |
-| `obliquityOfEcliptic()` | NOAA (Lieske 1979 cubic) | USNO (Laskar 1st-order), LASKAR (10th-order) | Earth's axial tilt |
+| `obliquityOfEcliptic()` | NOAA (Lieske 1979 cubic) | USNO (Laskar 1st-order), EXTENDED (Laskar 10th-order) | Earth's axial tilt |
 | `longitudeAscendingNode()` | Reda & Andreas SPA (cubic) | NOAA (linear) | Ascending node for nutation |
 
-**Design rationale**: NOAA provides the best balance of accuracy and simplicity. The LASKAR enum selects the highest-order polynomial available for each function — for `obliquityOfEcliptic()` this is genuinely from Laskar (1986), while for other functions it selects coefficients from Meeus or Reda & Andreas. The library makes NOAA the default while keeping alternatives accessible for validation and comparison.
+**Design rationale**: NOAA provides the best balance of accuracy and simplicity. The EXTENDED enum selects the highest-order polynomial available for each function from the best published source — Laskar (1986) for obliquity, VSOP87 for mean longitude, Reda & Andreas / Simon et al. for mean anomaly. The library makes NOAA the default while keeping alternatives accessible for validation and comparison.
 
 ## Files
 
@@ -159,12 +159,11 @@ The library includes support for multiple astronomical algorithm implementations
 
 ```cpp
 enum class Algorithm {
-  NOAA,    // Default: NOAA formulas (quadratic fits from Meeus 1991)
-  USNO,    // U.S. Naval Observatory (linear approximations)
-  LASKAR   // Highest-order polynomial available. Named after Laskar (1986)
-           // whose obliquity polynomial is the defining variant, but note
-           // that for meanLongitude the coefficients are from Meeus Ch. 28
-           // and for meanAnomaly they are from Reda & Andreas (2008).
+  NOAA,      // Default: NOAA formulas (quadratic fits from Meeus 1991)
+  USNO,      // U.S. Naval Observatory (linear approximations)
+  EXTENDED   // Highest-order polynomial from best published source.
+             // obliquity: Laskar (1986), meanLongitude: VSOP87 via
+             // Meeus Ch. 28, meanAnomaly: Reda & Andreas (2008).
 };
 ```
 
@@ -239,9 +238,9 @@ SunsetCalculator calc;
 double t = 0.26;  // Julian centuries from J2000
 double L_noaa = calc.meanLongitude(t, Algorithm::NOAA);
 double L_usno = calc.meanLongitude(t, Algorithm::USNO);
-double L_laskar = calc.meanLongitude(t, Algorithm::LASKAR);
+double L_extended = calc.meanLongitude(t, Algorithm::EXTENDED);
 
-printf("Mean Longitude - NOAA: %.6f, USNO: %.6f, LASKAR: %.6f\n", L_noaa, L_usno, L_laskar);
+printf("Mean Longitude - NOAA: %.6f, USNO: %.6f, EXTENDED: %.6f\n", L_noaa, L_usno, L_extended);
 ```
 
 ### Recommendation
@@ -345,10 +344,59 @@ The library was extracted from a larger sunset calculation program to enable reu
 - **Optional outputs**: Functions can return additional data (solar noon, declination) via optional pointers
 - **Namespace isolation**: `sunset_calc::` namespace prevents conflicts with existing code
 
-### Accuracy
-- Calculations accurate to within ±2-3 minutes
-- Includes atmospheric refraction and solar disk size
-- Uses NOAA algorithm (reference: https://www.esrl.noaa.gov/gmd/grad/solcalc/)
+### Accuracy & Precision Ceiling
+
+Accuracy is ±2–3 minutes for sunrise/sunset times, suitable for practical applications (commute planning, home automation, photography). For professional navigation or observatory-grade work (±1 second), use the full NOAA SPA or JPL ephemeris.
+
+#### What does "accuracy" mean for sunset calculations?
+
+There is no closed-form solution for predicting sunrise and sunset. The Earth–Sun–Moon system is a three-body problem; all published "formulas" are polynomial fits to numerical integrations of the equations of motion (e.g., VSOP87) or to observational data. The NOAA spreadsheet, the USNO approximation page, and this library all use different truncations of these polynomial series. "Higher precision" means more polynomial terms — not a different physical model.
+
+This library was born from the NOAA solar calculator spreadsheet. The original goal was to implement the NOAA spreadsheet in C++, then push beyond it by incorporating higher-order polynomial fits from the literature. The EXTENDED algorithm variant represents that effort: for each orbital element, it uses the highest-order polynomial available from authoritative published sources.
+
+#### Where this library is at or near the precision ceiling
+
+For the individual orbital element polynomials, this library already uses the best available published coefficients:
+
+| Quantity | This library (EXTENDED) | Best available (SPA / literature) | Gap |
+|----------|------------------------|-----------------------------------|-----|
+| Obliquity of ecliptic | Laskar (1986) 10th-degree | Same | None — this is the standard |
+| Mean longitude | Quintic from VSOP87 / Meeus Ch. 28 | Same or numerical VSOP87 tables | Negligible |
+| Mean anomaly | Cubic from Reda & Andreas (2008) | Same | None |
+| Eccentricity | Meeus Eq. 25.4 (quadratic) | Same | None |
+| Equation of center | 3-harmonic Meeus (time-dependent) | Solve Kepler's equation iteratively | ~0.001° for \|t\| < 1 century |
+
+These polynomials cannot be meaningfully improved without switching to numerical integration (e.g., the full VSOP87 series with thousands of terms, or JPL Development Ephemeris data files).
+
+#### Remaining gaps between this library and the full NOAA SPA
+
+The accuracy budget is dominated not by the polynomials but by *corrections and methodology*:
+
+| Missing correction | Physical meaning | Effect on sunrise/sunset | Difficulty to add |
+|--------------------|-----------------|--------------------------|-------------------|
+| **Nutation: 4 terms vs. 63** | Earth's axis wobbles with a dominant 18.6-year period. The full IAU 1980 series is a 63-term trigonometric series (not a 63rd-degree polynomial). Each term is sin/cos of a linear combination of 5 fundamental arguments. Our 4 terms capture ~97% of the effect; the remaining 59 terms collectively contribute <1 arcsecond. The modern IAU 2000A model uses 1365 terms. | ±30 seconds | Medium (~100 lines: table lookup) |
+| **Annual aberration** | The apparent shift in the Sun's position caused by Earth's orbital velocity (v ≈ 29.8 km/s) combined with the finite speed of light. Not related to atmospheric refraction or chromatic aberration in optics. The constant of aberration κ = v/c × 206265" ≈ 20.496" (IAU value). Applied as a correction to ecliptic longitude: λ_apparent = λ − κ/3600°. Source: Meeus (1991), Eq. 23.2 (p. 151). | ~15 seconds | Easy (1 line + comment) |
+| **ΔT (TT − UT1)** | All polynomial formulas compute positions in **Terrestrial Time (TT)**, a uniform atomic-clock timescale. But sunrise/sunset times are experienced in **Universal Time (UT1)**, which tracks Earth's actual rotation. They diverge because tidal friction from the Moon gradually slows Earth's rotation. Currently ΔT ≈ 69.4 seconds. For historical dates (e.g., 1900) ΔT ≈ −3 seconds; for 2100 it may reach ~200 seconds. | ~69 seconds (current), grows for non-current dates | Easy (polynomial lookup table, ~20 lines) |
+| **Iterative solar transit** | The single-pass calculation computes orbital elements at noon UT, derives the equation of time, and gets an estimated transit time. But the orbital elements *at the actual transit time* differ slightly from those at noon. Iterating (recompute elements at new transit estimate → re-derive transit → repeat) converges in 2–3 passes and improves transit accuracy by ~10–15 seconds. The full SPA (Reda & Andreas 2008) uses this iterative approach. | ±15 seconds | Medium (~30 lines) |
+| **Equation of time from full RA** | The current EoT uses a direct closed-form approximation. The SPA derives EoT from the full apparent right ascension calculation chain, which automatically incorporates nutation, aberration, and obliquity corrections. | ±10 seconds | Hard (requires full RA pipeline) |
+
+Adding items 1–3 (63-term nutation, aberration, and ΔT) would move accuracy from ±2–3 minutes to roughly ±1 minute.
+
+#### Irreducible uncertainties (the precision wall)
+
+Beyond the orbital model, certain physical factors introduce irreducible uncertainty in observed rise/set times:
+
+- **Atmospheric refraction at the horizon** varies with temperature, pressure, and humidity. The standard value (34') assumes 10°C and 1013.25 hPa at sea level. Actual refraction can vary by ±0.5° (~±2 minutes in rise/set time) depending on weather conditions. No orbital model can predict this — it requires a local weather station.
+- **Observer altitude** requires knowing your height above the reference geoid to ±1 meter for ±1 second accuracy. The 2.076'/√m correction assumes a geometric horizon; terrain obstructions are not modeled.
+- **Earth's shape** — the WGS-84 ellipsoid differs from a sphere by up to 21 km at the poles, but the effect on rise/set times is <0.5 minutes for typical latitudes.
+
+This means that even a perfect orbital model with ±0.01" positional accuracy would still predict rise/set times with ±1–2 minutes of uncertainty due to atmospheric conditions. The library's ±2–3 minute accuracy is therefore within a factor of ~2 of the physical limit for any model that doesn't incorporate real-time atmospheric data.
+
+#### Project origin
+
+This library began as a C++ reimplementation of the [NOAA solar calculator spreadsheet](https://www.esrl.noaa.gov/gmd/grad/solcalc/). During development, the author traced the NOAA formulas back to their original published sources (Meeus, Laskar, Reda & Andreas, etc.) and, where available, substituted higher-order polynomial fits from the literature. The EXTENDED algorithm variant represents this effort. The goal was to produce an ephemeris that uses the best published polynomial coefficients rather than the truncated forms in the NOAA spreadsheet.
+
+The equations themselves are standard astronomical algorithms — the novelty is in the software architecture: the multi-algorithm comparison framework, the Arduino-portable library design, the commute-planning application layer, and the pedagogical ephemeris program that exposes every intermediate calculation step.
 
 ### Performance
 - `getSunset()` calculation: ~1-2ms on modern systems, ~5-10ms on Arduino
@@ -382,9 +430,10 @@ The library was extracted from a larger sunset calculation program to enable reu
 - **Performance**: ~5-10ms per sunset calculation on Arduino, ~1-2ms on desktop
 
 **Precision:**
-- Sunset/sunrise: ±2-3 minutes typical accuracy
-- "Good enough" for practical applications (commute planning, automation)
-- Not intended for professional navigation or precise astronomical research
+- Sunset/sunrise: ±2–3 minutes typical accuracy
+- Individual orbital element polynomials are at or near the precision ceiling of published coefficients (see Accuracy section above)
+- The remaining accuracy gap is dominated by simplified nutation (4 vs. 63 terms), missing aberration correction, and missing ΔT correction — not the polynomial fits
+- The irreducible physical limit (~±1–2 minutes) is set by atmospheric refraction variability, which no orbital model can predict
 
 ## Porting to Arduino
 

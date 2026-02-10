@@ -31,10 +31,10 @@ constexpr int kDefaultDebugLevel = -1;
 namespace algorithm {
 
 // Which algorithm family to highlight by default in comparisons
-// Note: ephemeris shows all three algorithms (NOAA, USNO, LASKAR) regardless
+// Note: ephemeris shows all three algorithms (NOAA, USNO, EXTENDED) regardless
 // This flag only indicates which one is "the recommendation"
 constexpr bool kUseNoaa =
-    true;  // true = recommend NOAA, false = recommend LASKAR
+    true;  // true = recommend NOAA, false = recommend EXTENDED
 
 }  // namespace algorithm
 }  // namespace config

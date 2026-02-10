@@ -84,7 +84,7 @@ Some AI tools have read-only access. If you receive substantial context but cann
 Programs are split by **purpose**, not complexity:
 
 1. **Educational/Research Program**
-   - `ephemeris.cpp` - Algorithm comparison (NOAA/USNO/Laskar)
+   - `ephemeris.cpp` - Algorithm comparison (NOAA/USNO/Extended)
    - Full debug output showing every calculation step
    - Research tool for validating algorithm differences
 
@@ -123,7 +123,7 @@ Programs are split by **purpose**, not complexity:
 - Well-documented, appropriate precision
 - Use for practical programs
 
-**Academic variants** (USNO, LASKAR) for:
+**Academic variants** (USNO, EXTENDED) for:
 - Research/validation in ephemeris.cpp
 - Educational comparison only
 

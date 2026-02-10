@@ -62,7 +62,7 @@ This is an **experimental learning repository** for C++ development. It is inten
 ### Active Programs
 
 **Educational/Research:**
-- **ephemeris** (~600 lines) - Algorithm comparison showing NOAA/USNO/Laskar calculations
+- **ephemeris** (~600 lines) - Algorithm comparison showing NOAA/USNO/Extended calculations
   - Full debug output demonstrating every calculation step
   - Shows alternative algorithms and their differences
   - Research tool for validating calculation methodology
@@ -114,7 +114,7 @@ Note: The makefile links shared table objects (morning/twilight) into all binari
 
 **Created**:
 - `main/ephemeris.cpp` (~600 lines) - Educational algorithm comparison
-  - Shows NOAA, USNO, Laskar calculations with full debug output
+  - Shows NOAA, USNO, Extended calculations with full debug output
   - Demonstrates every calculation step for learning
   - Research tool for validating algorithm differences
   - **Extracted from sunset.cpp**: All `_Debug` functions and comparison logic
@@ -230,7 +230,7 @@ Note: The makefile links shared table objects (morning/twilight) into all binari
 **What Happened**: Added source-specific enums for functions with multiple authoritative implementations
 
 **Pattern Established**:
-- Generic `Algorithm` enum (NOAA, USNO, LASKAR) for functions with polynomial order variants
+- Generic `Algorithm` enum (NOAA, USNO, EXTENDED) for functions with polynomial order variants
 - Function-specific enums (e.g., `LongitudeAscendingNodeFormulation`) when algorithms come from different authoritative sources
 
 **Example: longitudeAscendingNode**:
@@ -271,7 +271,7 @@ Note: The makefile links shared table objects (morning/twilight) into all binari
 
 **Academic Variants = Research/Comparison**
 - Reda & Andreas (2008): Higher precision for scientific work
-- Laskar (1986): Maximum polynomial precision
+- Extended: Highest-order polynomial from best published source per function
 - Available but not default; used for validation and educational comparison
 
 ### Platform Constraints

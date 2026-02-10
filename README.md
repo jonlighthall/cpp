@@ -14,7 +14,7 @@ The following programs have been moved to dedicated repositories as they matured
 ### Current Programs
 
 **Educational/Research:**
-- **`ephemeris`** - Algorithm comparison tool showing NOAA/USNO/Laskar calculations
+- **`ephemeris`** - Algorithm comparison tool showing NOAA/USNO/Extended-precision calculations
   - Full debug output demonstrating every calculation step
   - Shows alternative algorithms and their differences
   - Research tool for validating calculation methodology
@@ -42,10 +42,10 @@ The following programs have been moved to dedicated repositories as they matured
 A portable astronomical calculation library extracted from the sunset program.
 - **Files**: `include/sunset_calc.h`, `src/sunset_calc.cpp`
 - **Purpose**: Calculate sunset/sunrise times for any location and date
-- **Accuracy**: Authoritative ephemeris-quality calculations using NOAA/Meeus methods (not approximations)
+- **Accuracy**: Well-established ephemeris calculations using NOAA/Meeus methods (±2–3 minutes for sunrise/sunset)
 - **Platforms**: Desktop C++, Arduino, embedded systems
 - **Arduino Constraint**: Must fit on Wemos D1 Mini (minimal dependencies, ~500 bytes RAM)
-- **Algorithm Defaults**: NOAA (authoritative, widely adopted); academic variants (USNO, Laskar) available for research
+- **Algorithm Defaults**: NOAA (authoritative, widely adopted); extended-precision variants (USNO, Extended) available for research
 - **Documentation**: See [docs/SUNSET_CALC_LIBRARY.md](docs/SUNSET_CALC_LIBRARY.md)
 - **Quick Start**: See [examples/QUICK_REFERENCE.md](examples/QUICK_REFERENCE.md)
 - **Example Sketches**: Arduino/Wemos examples in `examples/` directory
